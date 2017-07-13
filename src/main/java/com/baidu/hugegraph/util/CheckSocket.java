@@ -17,7 +17,7 @@ package com.baidu.hugegraph.util;
 import java.net.InetAddress;
 import java.net.Socket;
 
-public class CheckSocket {
+public final class CheckSocket {
 
     public static final int E_USAGE  = 1;
     public static final int E_FAILED = 2;
