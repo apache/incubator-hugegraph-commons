@@ -31,6 +31,9 @@
         <javax.json.version>1.0</javax.json.version>
         <jsr305.version>3.0.1</jsr305.version>
         <javassist.version>3.21.0-GA</javassist.version>
+        <metrics.version>3.0.1</metrics.version>
+        <ganglia.version>3.0.1</ganglia.version>
+        <graphite.version>3.0.1</graphite.version>
     </properties>
 
     <dependencies>
@@ -49,6 +52,23 @@
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
             <version>${slf4j.version}</version>
+        </dependency>
+
+        <!-- Metrics -->
+        <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-core</artifactId>
+            <version>${metrics.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-ganglia</artifactId>
+            <version>${ganglia.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.codahale.metrics</groupId>
+            <artifactId>metrics-graphite</artifactId>
+            <version>${graphite.version}</version>
         </dependency>
 
         <!-- Utility -->
