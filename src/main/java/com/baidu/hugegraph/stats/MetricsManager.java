@@ -19,6 +19,21 @@
 
 package com.baidu.hugegraph.stats;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.time.Duration;
+import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
+
+import javax.management.MBeanServer;
+import javax.management.MBeanServerFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.baidu.hugegraph.util.Log;
 import com.codahale.metrics.ConsoleReporter;
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.CsvReporter;
@@ -28,23 +43,11 @@ import com.codahale.metrics.MetricFilter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Slf4jReporter;
 import com.codahale.metrics.Timer;
-import com.google.common.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.management.MBeanServer;
-import javax.management.MBeanServerFactory;
-import java.io.File;
-import java.io.IOException;
-import java.net.InetSocketAddress;
-import java.time.Duration;
-import java.util.List;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
-
 import com.codahale.metrics.ganglia.GangliaReporter;
 import com.codahale.metrics.graphite.Graphite;
 import com.codahale.metrics.graphite.GraphiteReporter;
+import com.google.common.base.Preconditions;
+
 import info.ganglia.gmetric4j.gmetric.GMetric;
 import info.ganglia.gmetric4j.gmetric.GMetric.UDPAddressingMode;
 
@@ -53,10 +56,9 @@ import info.ganglia.gmetric4j.gmetric.GMetric.UDPAddressingMode;
  */
 public class MetricsManager {
 
-    private static final MetricsManager INSTANCE = new MetricsManager();
+    private static final Logger LOG = Log.logger(MetricsManager.class);
 
-    private static final Logger logger =
-            LoggerFactory.getLogger(MetricsManager.class);
+    private static final MetricsManager INSTANCE = new MetricsManager();
 
     private final MetricRegistry registry;
     private ConsoleReporter consoleReporter = null;
@@ -70,7 +72,7 @@ public class MetricsManager {
      * Private constructor for singleton.
      */
     private MetricsManager() {
-        registry = new MetricRegistry();
+        this.registry = new MetricRegistry();
     }
 
     /**
@@ -89,7 +91,7 @@ public class MetricsManager {
      *         Metrics monitoring
      */
     public MetricRegistry getRegistry() {
-        return registry;
+        return this.registry;
     }
 
     /**
@@ -100,14 +102,13 @@ public class MetricsManager {
      *            time to wait between dumping metrics to the console
      */
     public synchronized void addConsoleReporter(Duration reportInterval) {
-        if (consoleReporter != null) {
-            logger.debug("Metrics ConsoleReporter already active; " +
-                         "not creating another");
+        if (this.consoleReporter != null) {
+            LOG.debug("Metrics ConsoleReporter already active");
             return;
         }
 
-        consoleReporter = ConsoleReporter.forRegistry(getRegistry()).build();
-        consoleReporter.start(reportInterval.toMillis(), TimeUnit.MILLISECONDS);
+        this.consoleReporter = ConsoleReporter.forRegistry(getRegistry()).build();
+        this.consoleReporter.start(reportInterval.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -117,10 +118,10 @@ public class MetricsManager {
      * call to the associated add method.
      */
     public synchronized void removeConsoleReporter() {
-        if (consoleReporter != null) {
-            consoleReporter.stop();
+        if (this.consoleReporter != null) {
+            this.consoleReporter.stop();
         }
-        consoleReporter = null;
+        this.consoleReporter = null;
     }
 
     /**
@@ -142,20 +143,19 @@ public class MetricsManager {
 
         File outputDir = new File(output);
 
-        if (csvReporter != null) {
-            logger.debug("Metrics CsvReporter already active; " +
-                         "not creating another");
+        if (this.csvReporter != null) {
+            LOG.debug("Metrics CsvReporter already active");
             return;
         }
 
         if (!outputDir.exists()) {
             if (!outputDir.mkdirs()) {
-                logger.warn("Failed to create CSV metrics dir {}", outputDir);
+                LOG.warn("Failed to create CSV metrics dir {}", outputDir);
             }
         }
 
-        csvReporter = CsvReporter.forRegistry(getRegistry()).build(outputDir);
-        csvReporter.start(reportInterval.toMillis(), TimeUnit.MILLISECONDS);
+        this.csvReporter = CsvReporter.forRegistry(getRegistry()).build(outputDir);
+        this.csvReporter.start(reportInterval.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -165,10 +165,10 @@ public class MetricsManager {
      * before the first call to the associated add method.
      */
     public synchronized void removeCsvReporter() {
-        if (csvReporter != null) {
-            csvReporter.stop();
+        if (this.csvReporter != null) {
+            this.csvReporter.stop();
         }
-        csvReporter = null;
+        this.csvReporter = null;
     }
 
     /**
@@ -190,9 +190,8 @@ public class MetricsManager {
      *            the JMX agent ID
      */
     public synchronized void addJmxReporter(String domain, String agentId) {
-        if (jmxReporter != null) {
-            logger.debug("Metrics JmxReporter already active; " +
-                         "not creating another");
+        if (this.jmxReporter != null) {
+            LOG.debug("Metrics JmxReporter already active");
             return;
         }
 
@@ -208,13 +207,13 @@ public class MetricsManager {
             if (servs != null && servs.size() == 1) {
                 builder.registerWith(servs.get(0));
             } else {
-                logger.error("Metrics Slf4jReporter agentId {} does not " +
-                             "resolve to a single MBeanServer", agentId);
+                LOG.error("Metrics Slf4jReporter agentId {} does not " +
+                          "resolve to a single MBeanServer", agentId);
             }
         }
 
-        jmxReporter = builder.build();
-        jmxReporter.start();
+        this.jmxReporter = builder.build();
+        this.jmxReporter.start();
     }
 
     /**
@@ -224,10 +223,10 @@ public class MetricsManager {
      * call to the associated add method.
      */
     public synchronized void removeJmxReporter() {
-        if (jmxReporter != null) {
-            jmxReporter.stop();
+        if (this.jmxReporter != null) {
+            this.jmxReporter.stop();
         }
-        jmxReporter = null;
+        this.jmxReporter = null;
     }
 
     /**
@@ -238,16 +237,14 @@ public class MetricsManager {
      * default Slf4j logger name is used instead.
      *
      * @param reportInterval
-     *            time to wait between writing metrics to the Slf4j
-     *            logger
+     *            time to wait between writing metrics to the Slf4j logger
      * @param loggerName
      *            the name of the Slf4j logger that receives metrics
      */
     public synchronized void addSlf4jReporter(Duration reportInterval,
                                               String loggerName) {
-        if (slf4jReporter != null) {
-            logger.debug("Metrics Slf4jReporter already active; " +
-                         "not creating another");
+        if (this.slf4jReporter != null) {
+            LOG.debug("Metrics Slf4jReporter already active");
             return;
         }
 
@@ -259,13 +256,13 @@ public class MetricsManager {
             if (slfLogger != null) {
                 builder.outputTo(slfLogger);
             } else {
-                logger.error("Logger with name {} could not be obtained",
-                             loggerName);
+                LOG.error("Logger with name {} could not be obtained",
+                          loggerName);
             }
         }
 
-        slf4jReporter = builder.build();
-        slf4jReporter.start(reportInterval.toMillis(), TimeUnit.MILLISECONDS);
+        this.slf4jReporter = builder.build();
+        this.slf4jReporter.start(reportInterval.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -275,10 +272,10 @@ public class MetricsManager {
      * before the first call to the associated add method.
      */
     public synchronized void removeSlf4jReporter() {
-        if (slf4jReporter != null) {
-            slf4jReporter.stop();
+        if (this.slf4jReporter != null) {
+            this.slf4jReporter.stop();
         }
-        slf4jReporter = null;
+        this.slf4jReporter = null;
     }
 
     /**
@@ -323,9 +320,8 @@ public class MetricsManager {
         Preconditions.checkNotNull(groupOrHost);
         Preconditions.checkNotNull(addressingMode);
 
-        if (gangliaReporter != null) {
-            logger.debug("Metrics GangliaReporter already active;" +
-                         "not creating another");
+        if (this.gangliaReporter != null) {
+            LOG.debug("Metrics GangliaReporter already active");
             return;
         }
 
@@ -338,13 +334,14 @@ public class MetricsManager {
         GangliaReporter.Builder builder =
                 GangliaReporter.forRegistry(getRegistry());
 
-        gangliaReporter = builder.build(ganglia);
-        gangliaReporter.start(reportInterval.toMillis(), TimeUnit.MILLISECONDS);
+        this.gangliaReporter = builder.build(ganglia);
+        this.gangliaReporter.start(reportInterval.toMillis(),
+                                   TimeUnit.MILLISECONDS);
 
-        logger.info("Configured Ganglia Metrics reporter host={} interval={} " +
-                    "port={} addrmode={} ttl={} proto31={} uuid={} spoof={}",
-                    groupOrHost, reportInterval, port, addressingMode, ttl,
-                    protocol31, hostUUID, spoof);
+        LOG.info("Configured Ganglia Metrics reporter host={} interval={} " +
+                 "port={} addrmode={} ttl={} proto31={} uuid={} spoof={}",
+                 groupOrHost, reportInterval, port, addressingMode, ttl,
+                 protocol31, hostUUID, spoof);
     }
 
     /**
@@ -355,10 +352,10 @@ public class MetricsManager {
      * method. Does nothing before the first call to the associated add method.
      */
     public synchronized void removeGangliaReporter() {
-        if (gangliaReporter != null) {
-            gangliaReporter.stop();
+        if (this.gangliaReporter != null) {
+            this.gangliaReporter.stop();
         }
-        gangliaReporter = null;
+        this.gangliaReporter = null;
     }
 
     /**
@@ -394,11 +391,11 @@ public class MetricsManager {
         }
         builder.filter(MetricFilter.ALL);
 
-        graphiteReporter = builder.build(graphite);
-        graphiteReporter.start(reportInterval.toMillis(),
-                               TimeUnit.MILLISECONDS);
-        logger.info("Configured Graphite reporter host={} interval={} " +
-                    "port={} prefix={}", host, reportInterval, port, prefix);
+        this.graphiteReporter = builder.build(graphite);
+        this.graphiteReporter.start(reportInterval.toMillis(),
+                                    TimeUnit.MILLISECONDS);
+        LOG.info("Configured Graphite reporter host={} interval={} " +
+                 "port={} prefix={}", host, reportInterval, port, prefix);
     }
 
     /**
@@ -408,10 +405,10 @@ public class MetricsManager {
      * nothing before the first call to the associated add method.
      */
     public synchronized void removeGraphiteReporter() {
-        if (graphiteReporter != null) {
-            graphiteReporter.stop();
+        if (this.graphiteReporter != null) {
+            this.graphiteReporter.stop();
         }
-        graphiteReporter = null;
+        this.graphiteReporter = null;
     }
 
     /**
@@ -455,5 +452,3 @@ public class MetricsManager {
         return getRegistry().remove(name);
     }
 }
-
-
