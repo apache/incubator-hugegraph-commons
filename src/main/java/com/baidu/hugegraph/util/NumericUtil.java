@@ -27,7 +27,6 @@ import java.util.Date;
  * This file is copied verbatim from Apache Lucene NumericUtils.java Only the
  * double/float to sortable long/int conversions are retained.
  */
-
 public final class NumericUtil {
 
     private NumericUtil() {
