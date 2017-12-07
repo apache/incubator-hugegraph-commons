@@ -19,8 +19,6 @@
 
 package com.baidu.hugegraph.util;
 
-import com.google.common.base.Preconditions;
-
 /**
  * Utility class for encoding longs in strings based on:
  * {@linktourl http://stackoverflow.com/questions/2938482/encode-decode-a-long-to-a-string-using-a-fixed-set-of-letters-in-java}
@@ -28,7 +26,8 @@ import com.google.common.base.Preconditions;
  */
 public final class LongEncoding {
 
-    private static final String BASE_SYMBOLS = "0123456789abcdefghijklmnopqrstuvwxyz";
+    private static final String BASE_SYMBOLS =
+            "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-~";
 
     public static long decode(String s) {
         return decode(s, BASE_SYMBOLS);
@@ -45,14 +44,15 @@ public final class LongEncoding {
             num *= B;
             int pos = symbols.indexOf(ch);
             if (pos < 0)
-                throw new NumberFormatException("Symbol set does not match string");
+                throw new NumberFormatException(
+                          "Symbol set does not match string");
             num += pos;
         }
         return num;
     }
 
     public static String encode(long num, String symbols) {
-        Preconditions.checkArgument(num >= 0, "Expected non-negative number: " + num);
+        E.checkArgument(num >= 0, "Expected non-negative number: %s", num);
         final int B = symbols.length();
         StringBuilder sb = new StringBuilder();
         while (num != 0) {
@@ -61,5 +61,4 @@ public final class LongEncoding {
         }
         return sb.reverse().toString();
     }
-
 }
