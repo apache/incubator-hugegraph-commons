@@ -41,7 +41,8 @@ public final class NumericUtil {
      * precision is not reduced, but the value can easily used as a long. The
      * sort order (including {@link Double#NaN}) is defined by
      * {@link Double#compareTo}; {@code NaN} is greater than positive infinity.
-     *
+     * @param val input double value
+     * @return output sortable long value
      * @see #sortableLongToDouble
      */
     public static long doubleToSortableLong(double val) {
@@ -50,7 +51,8 @@ public final class NumericUtil {
 
     /**
      * Converts a sortable <code>long</code> back to a <code>double</code>.
-     *
+     * @param val input double value
+     * @return output sortable long value
      * @see #doubleToSortableLong
      */
     public static double sortableLongToDouble(long val) {
@@ -65,7 +67,8 @@ public final class NumericUtil {
      * is not reduced, but the value can easily used as an int. The sort order
      * (including {@link Float#NaN}) is defined by {@link Float#compareTo};
      * {@code NaN} is greater than positive infinity.
-     *
+     * @param val input float value
+     * @return output sortable int value
      * @see #sortableIntToFloat
      */
     public static int floatToSortableInt(float val) {
@@ -74,7 +77,8 @@ public final class NumericUtil {
 
     /**
      * Converts a sortable <code>int</code> back to a <code>float</code>.
-     *
+     * @param val input int value
+     * @return output sortable float value
      * @see #floatToSortableInt
      */
     public static float sortableIntToFloat(int val) {
@@ -84,6 +88,8 @@ public final class NumericUtil {
     /**
      * Converts IEEE 754 representation of a double to sortable order (or back
      * to the original)
+     * @param bits The long format of a double value
+     * @return The sortable long value
      */
     public static long sortableDoubleBits(long bits) {
         return bits ^ (bits >> 63) & 0x7fffffffffffffffL;
@@ -92,12 +98,12 @@ public final class NumericUtil {
     /**
      * Converts IEEE 754 representation of a float to sortable order (or back to
      * the original)
+     * @param bits The int format of an float value
+     * @return The sortable int value
      */
     public static int sortableFloatBits(int bits) {
         return bits ^ (bits >> 31) & 0x7fffffff;
     }
-
-    /*************************************************************************/
 
     public static byte[] numberToSortableBytes(Number number) {
         if (number instanceof Long) {
@@ -137,8 +143,6 @@ public final class NumericUtil {
         return null;
     }
 
-    /*************************************************************************/
-
     public static byte[] longToBytes(long value) {
         ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
         buffer.putLong(value);
@@ -161,8 +165,6 @@ public final class NumericUtil {
         return ByteBuffer.wrap(bytes).getInt();
     }
 
-    /*************************************************************************/
-
     public static boolean isNumber(Object value) {
         if (value == null) {
             return false;
@@ -173,8 +175,6 @@ public final class NumericUtil {
     public static boolean isNumber(Class<?> clazz) {
         return Number.class.isAssignableFrom(clazz);
     }
-
-    /*************************************************************************/
 
     public static Object convertToNumber(Object value) {
         if (!isNumber(value) && value != null) {
@@ -193,6 +193,10 @@ public final class NumericUtil {
      * or it can be converted to a BigDecimal
      * @param first     might be number or string
      * @param second    must be number
+     * @return          the value 0 if first is numerically equal to second;
+     *                  a value less than 0 if first is numerically less than
+     *                  second; and a value greater than 0 if first is
+     *                  numerically greater than second.
      */
     @SuppressWarnings("unchecked")
     public static int compareNumber(Object first, Number second) {

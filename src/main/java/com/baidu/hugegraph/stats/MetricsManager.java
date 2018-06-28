@@ -313,9 +313,9 @@ public class MetricsManager {
      *             provided arguments
      */
     public synchronized void addGangliaReporter(
-            String groupOrHost, int port, UDPAddressingMode addressingMode,
-            int ttl, Boolean protocol31, UUID hostUUID, String spoof,
-            Duration reportInterval) throws IOException {
+           String groupOrHost, int port, UDPAddressingMode addressingMode,
+           int ttl, Boolean protocol31, UUID hostUUID, String spoof,
+           Duration reportInterval) throws IOException {
 
         Preconditions.checkNotNull(groupOrHost);
         Preconditions.checkNotNull(addressingMode);
@@ -346,8 +346,7 @@ public class MetricsManager {
 
     /**
      * Stop a {@link GangliaReporter} previously created by a call to
-     * {@link #addGangliaReporter(String, int, UDPAddressingMode, int, Boolean,
-     * UUID, String, Duration)}
+     * {@link #addGangliaReporter}
      * and release it for GC. Idempotent between calls to the associated add
      * method. Does nothing before the first call to the associated add method.
      */
