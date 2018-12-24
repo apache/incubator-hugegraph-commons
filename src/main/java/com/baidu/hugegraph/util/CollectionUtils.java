@@ -22,12 +22,15 @@ package com.baidu.hugegraph.util;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
-public final class CollectionUtil {
+public final class CollectionUtils {
 
     @SuppressWarnings("unchecked")
     public static <T> List<T> toList(Object array) {
@@ -162,5 +165,21 @@ public final class CollectionUtil {
             }
         }
         return false;
+    }
+
+    public static <K, V extends Comparable<? super V>> Map<K, V> sortByValue(
+                  Map<K, V> map, boolean incr) {
+        List<Map.Entry<K, V>> list = new ArrayList<>(map.entrySet());
+        if (incr) {
+            list.sort(Map.Entry.comparingByValue());
+        } else {
+            list.sort(Collections.reverseOrder(Map.Entry.comparingByValue()));
+        }
+
+        Map<K, V> result = new LinkedHashMap<>();
+        for (Map.Entry<K, V> entry : list) {
+            result.put(entry.getKey(), entry.getValue());
+        }
+        return result;
     }
 }

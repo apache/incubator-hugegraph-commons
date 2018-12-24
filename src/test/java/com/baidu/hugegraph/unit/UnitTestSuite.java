@@ -29,8 +29,9 @@ import com.baidu.hugegraph.unit.iterator.FlatMapperFilterIteratorTest;
 import com.baidu.hugegraph.unit.iterator.FlatMapperIteratorTest;
 import com.baidu.hugegraph.unit.iterator.MapperIteratorTest;
 import com.baidu.hugegraph.unit.util.BytesTest;
-import com.baidu.hugegraph.unit.util.CollectionUtilTest;
+import com.baidu.hugegraph.unit.util.CollectionUtilsTest;
 import com.baidu.hugegraph.unit.util.HashUtilTest;
+import com.baidu.hugegraph.unit.util.InsertionOrderUtilTest;
 import com.baidu.hugegraph.unit.util.VersionUtilTest;
 
 @RunWith(Suite.class)
@@ -44,8 +45,9 @@ import com.baidu.hugegraph.unit.util.VersionUtilTest;
     FlatMapperFilterIteratorTest.class,
 
     BytesTest.class,
-    CollectionUtilTest.class,
+    CollectionUtilsTest.class,
     HashUtilTest.class,
+    InsertionOrderUtilTest.class,
     VersionUtilTest.class
 })
 public class UnitTestSuite {
