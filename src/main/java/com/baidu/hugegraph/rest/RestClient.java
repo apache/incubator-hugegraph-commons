@@ -85,7 +85,7 @@ public abstract class RestClient {
         this.target = this.client.target(url);
     }
 
-    private Response request(Callable<Response> method) {
+    protected Response request(Callable<Response> method) {
         try {
             return method.call();
         } catch (Exception e) {
