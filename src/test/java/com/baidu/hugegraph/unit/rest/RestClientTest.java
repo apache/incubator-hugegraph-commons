@@ -19,9 +19,11 @@
 
 package com.baidu.hugegraph.unit.rest;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
@@ -32,101 +34,232 @@ import org.mockito.Mockito;
 import com.baidu.hugegraph.rest.RestClient;
 import com.baidu.hugegraph.rest.RestResult;
 import com.baidu.hugegraph.testutil.Assert;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 public class RestClientTest {
 
-    private static RestClient restClient = new RestClientImpl("/test", 3000);
-
     private static class RestClientImpl extends RestClient {
 
-        public RestClientImpl(String url, int timeout) {
+        private final int status;
+        private final MultivaluedMap<String, Object> headers;
+        private final String content;
+
+        public RestClientImpl(String url, int timeout,
+                              int maxTotal, int maxPerRoute, int status) {
+            super(url, timeout, maxTotal, maxPerRoute);
+            this.status = status;
+            this.headers = ImmutableMultivaluedMap.empty();
+            this.content = "";
+        }
+
+        public RestClientImpl(String url, String user, String password,
+                              int timeout, int status) {
+            super(url, user, password, timeout);
+            this.status = status;
+            this.headers = ImmutableMultivaluedMap.empty();
+            this.content = "";
+        }
+
+        public RestClientImpl(String url, String user, String password,
+                              int timeout, int maxTotal, int maxPerRoute,
+                              int status) {
+            super(url, user, password, timeout, maxTotal, maxPerRoute);
+            this.status = status;
+            this.headers = ImmutableMultivaluedMap.empty();
+            this.content = "";
+        }
+
+        public RestClientImpl(String url, int timeout, int status) {
+            this(url, timeout, status, ImmutableMultivaluedMap.empty(), "");
+        }
+
+        public RestClientImpl(String url, int timeout, int status,
+                              MultivaluedMap<String, Object> headers) {
+            this(url, timeout, status, headers, "");
+        }
+
+        public RestClientImpl(String url, int timeout, int status,
+                              String content) {
+            this(url, timeout, status, ImmutableMultivaluedMap.empty(), content);
+        }
+
+        public RestClientImpl(String url, int timeout, int status,
+                              MultivaluedMap<String, Object> headers,
+                              String content) {
             super(url, timeout);
+            this.status = status;
+            this.headers = headers;
+            this.content = content;
         }
 
         @Override
         protected Response request(Callable<Response> method) {
             Response response = Mockito.mock(Response.class);
-            Mockito.when(response.getStatus()).thenReturn(200);
-            Mockito.when(response.getHeaders())
-                   .thenReturn(ImmutableMultivaluedMap.empty());
+            Mockito.when(response.getStatus()).thenReturn(this.status);
+            Mockito.when(response.getHeaders()).thenReturn(this.headers);
             Mockito.when(response.readEntity(String.class))
-                   .thenReturn("");
+                   .thenReturn(this.content);
             return response;
         }
 
         @Override
         protected void checkStatus(Response response,
                                    Response.Status... statuses) {
-            // pass
+            boolean match = false;
+            for (Response.Status status : statuses) {
+                if (status.getStatusCode() == response.getStatus()) {
+                    match = true;
+                    break;
+                }
+            }
+            if (!match) {
+                throw new RuntimeException(String.format(
+                          "Invalid response '%s'", response));
+            }
         }
     }
 
     @Test
     public void testPost() {
-        RestResult restResult = restClient.post("path", new Object());
+        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestResult restResult = client.post("path", new Object());
+        Assert.assertEquals(200, restResult.status());
+    }
+
+    // How to verify it?
+    @Test
+    public void testPostWithMaxTotalAndPerRoute() {
+        RestClient client = new RestClientImpl("/test", 1000, 200, 10, 5);
+        RestResult restResult = client.post("path", new Object());
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
-    public void testPostWithHeader() {
-        MultivaluedMap<String, Object> header = ImmutableMultivaluedMap.empty();
-        RestResult restResult = restClient.post("path", new Object(), header);
+    public void testPostWithUserAndPassword() {
+        RestClient client = new RestClientImpl("/test", "user", "", 1000, 200);
+        RestResult restResult = client.post("path", new Object());
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
-    public void testPostWithHeaderAndParams() {
-        MultivaluedMap<String, Object> header = ImmutableMultivaluedMap.empty();
+    public void testPostWithAllParams() {
+        RestClient client = new RestClientImpl("/test", "user", "", 1000,
+                                               10, 5, 200);
+        RestResult restResult = client.post("path", new Object());
+        Assert.assertEquals(200, restResult.status());
+    }
+
+    @Test
+    public void testPostWithHeaderAndContent() {
+        MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
+        headers.add("key1", "value1-1");
+        headers.add("key1", "value1-2");
+        headers.add("Content-Encoding", "gzip");
+        String content = "{\"names\": [\"marko\", \"josh\", \"lop\"]}";
+        RestClient client = new RestClientImpl("/test", 1000, 200,
+                                               headers, content);
+        RestResult restResult = client.post("path", new Object());
+        Assert.assertEquals(200, restResult.status());
+        Assert.assertEquals(headers, restResult.headers());
+        Assert.assertEquals(content, restResult.content());
+        Assert.assertEquals(ImmutableList.of("marko", "josh", "lop"),
+                            restResult.readList("names", String.class));
+    }
+
+    @Test
+    public void testPostWithException() {
+        RestClient client = new RestClientImpl("/test", 1000, 400);
+        Assert.assertThrows(RuntimeException.class, () -> {
+            client.post("path", new Object());
+        });
+    }
+
+    @Test
+    public void testPostWithParams() {
+        RestClient client = new RestClientImpl("/test", 1000, 200);
+        MultivaluedMap<String, Object> headers = ImmutableMultivaluedMap.empty();
         Map<String, Object> params = ImmutableMap.of("param1", "value1");
-        RestResult restResult = restClient.post("path", new Object(), header,
-                                                params);
+        RestResult restResult = client.post("path", new Object(), headers,
+                                            params);
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testPut() {
-        RestResult restResult = restClient.put("path", "id1", new Object());
+        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestResult restResult = client.put("path", "id1", new Object());
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testPutWithParams() {
+        RestClient client = new RestClientImpl("/test", 1000, 200);
         Map<String, Object> params = ImmutableMap.of("param1", "value1");
-        RestResult restResult = restClient.put("path", "id1", new Object(),
-                                               params);
+        RestResult restResult = client.put("path", "id1", new Object(), params);
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
+    public void testPutWithException() {
+        RestClient client = new RestClientImpl("/test", 1000, 400);
+        Assert.assertThrows(RuntimeException.class, () -> {
+            client.put("path", "id1", new Object());
+        });
+    }
+
+    @Test
     public void testGet() {
-        RestResult restResult = restClient.get("path");
+        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestResult restResult = client.get("path");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testGetWithId() {
-        RestResult restResult = restClient.get("path", "id1");
+        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestResult restResult = client.get("path", "id1");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testGetWithParams() {
-        Map<String, Object> params = ImmutableMap.of("param1", "value1");
-        RestResult restResult = restClient.get("path", params);
+        RestClient client = new RestClientImpl("/test", 1000, 200);
+        Map<String, Object> params = new HashMap<>();
+        params.put("key1", ImmutableList.of("value1-1", "value1-2"));
+        params.put("key2", "value2");
+        RestResult restResult = client.get("path", params);
         Assert.assertEquals(200, restResult.status());
+    }
+
+    @Test
+    public void testGetWithException() {
+        RestClient client = new RestClientImpl("/test", 1000, 400);
+        Assert.assertThrows(RuntimeException.class, () -> {
+            client.get("path", "id1");
+        });
     }
 
     @Test
     public void testDeleteWithId() {
-        RestResult restResult = restClient.delete("path", "id1");
-        Assert.assertEquals(200, restResult.status());
+        RestClient client = new RestClientImpl("/test", 1000, 204);
+        RestResult restResult = client.delete("path", "id1");
+        Assert.assertEquals(204, restResult.status());
     }
 
     @Test
     public void testDeleteWithParams() {
+        RestClient client = new RestClientImpl("/test", 1000, 204);
         Map<String, Object> params = ImmutableMap.of("param1", "value1");
-        RestResult restResult = restClient.delete("path", params);
-        Assert.assertEquals(200, restResult.status());
+        RestResult restResult = client.delete("path", params);
+        Assert.assertEquals(204, restResult.status());
+    }
+
+    @Test
+    public void testDeleteWithException() {
+        RestClient client = new RestClientImpl("/test", 1000, 400);
+        Assert.assertThrows(RuntimeException.class, () -> {
+            client.delete("path", "id1");
+        });
     }
 }
