@@ -36,6 +36,50 @@ import com.google.common.collect.ImmutableMap;
 
 public class RestResultTest {
 
+    @Test
+    public void testStatus() {
+        RestResult result = newRestResult(200);
+        Assert.assertEquals(200, result.status());
+    }
+
+    @Test
+    public void testHeaders() {
+        MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
+        headers.add("key1", "value1-1");
+        headers.add("key1", "value1-2");
+        headers.add("key2", "value2");
+        RestResult result = newRestResult(200, headers);
+        Assert.assertEquals(200, result.status());
+        Assert.assertEquals(headers, result.headers());
+    }
+
+    @Test
+    public void testContent() {
+        String content = "{\"name\": \"marko\"}";
+        RestResult result = newRestResult(200, content);
+        Assert.assertEquals(200, result.status());
+        Assert.assertEquals(content, result.content());
+        Assert.assertEquals(ImmutableMap.of("name", "marko"),
+                            result.readObject(Map.class));
+    }
+
+    @Test
+    public void testContentWithList() {
+        String content = "{\"names\": [\"marko\", \"josh\", \"lop\"]}";
+        RestResult result = newRestResult(200, content);
+        Assert.assertEquals(200, result.status());
+        Assert.assertEquals(content, result.content());
+        Assert.assertEquals(ImmutableList.of("marko", "josh", "lop"),
+                            result.readList("names", String.class));
+
+        content = "[\"marko\", \"josh\", \"lop\"]";
+        result = newRestResult(200, content);
+        Assert.assertEquals(200, result.status());
+        Assert.assertEquals(content, result.content());
+        Assert.assertEquals(ImmutableList.of("marko", "josh", "lop"),
+                            result.readList(String.class));
+    }
+
     private static RestResult newRestResult(int status) {
         return newRestResult(status, "", ImmutableMultivaluedMap.empty());
     }
@@ -57,49 +101,5 @@ public class RestResultTest {
         Mockito.when(response.readEntity(String.class))
                .thenReturn(content);
         return new RestResult(response);
-    }
-
-    @Test
-    public void testStatus() {
-        RestResult result = newRestResult(200);
-        Assert.assertEquals(200, result.status());
-    }
-
-    @Test
-    public void testPostWithHeader() {
-        MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
-        headers.add("key1", "value1-1");
-        headers.add("key1", "value1-2");
-        headers.add("key2", "value2");
-        RestResult result = newRestResult(200, headers);
-        Assert.assertEquals(200, result.status());
-        Assert.assertEquals(headers, result.headers());
-    }
-
-    @Test
-    public void testPostWithContent() {
-        String content = "{\"name\": \"marko\"}";
-        RestResult result = newRestResult(200, content);
-        Assert.assertEquals(200, result.status());
-        Assert.assertEquals(content, result.content());
-        Assert.assertEquals(ImmutableMap.of("name", "marko"),
-                            result.readObject(Map.class));
-    }
-
-    @Test
-    public void testPostWithContentList() {
-        String content = "{\"names\": [\"marko\", \"josh\", \"lop\"]}";
-        RestResult result = newRestResult(200, content);
-        Assert.assertEquals(200, result.status());
-        Assert.assertEquals(content, result.content());
-        Assert.assertEquals(ImmutableList.of("marko", "josh", "lop"),
-                            result.readList("names", String.class));
-
-        content = "[\"marko\", \"josh\", \"lop\"]";
-        result = newRestResult(200, content);
-        Assert.assertEquals(200, result.status());
-        Assert.assertEquals(content, result.content());
-        Assert.assertEquals(ImmutableList.of("marko", "josh", "lop"),
-                            result.readList(String.class));
     }
 }
