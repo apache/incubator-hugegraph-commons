@@ -30,6 +30,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import com.baidu.hugegraph.rest.RestResult;
+import com.baidu.hugegraph.rest.SerializeException;
 import com.baidu.hugegraph.testutil.Assert;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
@@ -64,7 +65,18 @@ public class RestResultTest {
     }
 
     @Test
-    public void testContentWithList() {
+    public void testContentWithException() {
+        String content = "{illegal key: \"marko\"}";
+        RestResult result = newRestResult(200, content);
+        Assert.assertEquals(200, result.status());
+        Assert.assertEquals(content, result.content());
+        Assert.assertThrows(SerializeException.class, () -> {
+            result.readObject(Map.class);
+        });
+    }
+
+    @Test
+    public void testContentList() {
         String content = "{\"names\": [\"marko\", \"josh\", \"lop\"]}";
         RestResult result = newRestResult(200, content);
         Assert.assertEquals(200, result.status());
@@ -78,6 +90,33 @@ public class RestResultTest {
         Assert.assertEquals(content, result.content());
         Assert.assertEquals(ImmutableList.of("marko", "josh", "lop"),
                             result.readList(String.class));
+    }
+
+    @Test
+    public void testContentListWithException() {
+        String content = "{\"names\": [\"marko\", \"josh\", \"lop\"]}";
+        RestResult result = newRestResult(200, content);
+        Assert.assertEquals(200, result.status());
+        Assert.assertEquals(content, result.content());
+        Assert.assertThrows(SerializeException.class, () -> {
+            result.readList("unexitsed key", String.class);
+        });
+
+        content = "{\"names\": [marko, josh, \"lop\"]}";
+        RestResult result2 = newRestResult(200, content);
+        Assert.assertEquals(200, result2.status());
+        Assert.assertEquals(content, result2.content());
+        Assert.assertThrows(SerializeException.class, () -> {
+            result2.readList("names", String.class);
+        });
+
+        content = "[marko, josh, \"lop\"]";
+        RestResult result3 = newRestResult(200, content);
+        Assert.assertEquals(200, result3.status());
+        Assert.assertEquals(content, result3.content());
+        Assert.assertThrows(SerializeException.class, () -> {
+            result3.readList(String.class);
+        });
     }
 
     private static RestResult newRestResult(int status) {
