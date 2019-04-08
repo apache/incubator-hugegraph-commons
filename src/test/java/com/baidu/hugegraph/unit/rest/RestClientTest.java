@@ -31,6 +31,7 @@ import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.baidu.hugegraph.rest.ClientException;
 import com.baidu.hugegraph.rest.RestClient;
 import com.baidu.hugegraph.rest.RestResult;
 import com.baidu.hugegraph.testutil.Assert;
@@ -114,8 +115,7 @@ public class RestClientTest {
                 }
             }
             if (!match) {
-                throw new RuntimeException(String.format(
-                          "Invalid response '%s'", response));
+                throw new ClientException("Invalid response '%s'", response);
             }
         }
     }
@@ -170,7 +170,7 @@ public class RestClientTest {
     @Test
     public void testPostWithException() {
         RestClient client = new RestClientImpl("/test", 1000, 400);
-        Assert.assertThrows(RuntimeException.class, () -> {
+        Assert.assertThrows(ClientException.class, () -> {
             client.post("path", "body");
         });
     }
@@ -203,7 +203,7 @@ public class RestClientTest {
     @Test
     public void testPutWithException() {
         RestClient client = new RestClientImpl("/test", 1000, 400);
-        Assert.assertThrows(RuntimeException.class, () -> {
+        Assert.assertThrows(ClientException.class, () -> {
             client.put("path", "id1", "body");
         });
     }
@@ -235,7 +235,7 @@ public class RestClientTest {
     @Test
     public void testGetWithException() {
         RestClient client = new RestClientImpl("/test", 1000, 400);
-        Assert.assertThrows(RuntimeException.class, () -> {
+        Assert.assertThrows(ClientException.class, () -> {
             client.get("path", "id1");
         });
     }
@@ -258,7 +258,7 @@ public class RestClientTest {
     @Test
     public void testDeleteWithException() {
         RestClient client = new RestClientImpl("/test", 1000, 400);
-        Assert.assertThrows(RuntimeException.class, () -> {
+        Assert.assertThrows(ClientException.class, () -> {
             client.delete("path", "id1");
         });
     }
