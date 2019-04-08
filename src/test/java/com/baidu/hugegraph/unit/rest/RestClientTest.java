@@ -123,22 +123,22 @@ public class RestClientTest {
     @Test
     public void testPost() {
         RestClient client = new RestClientImpl("/test", 1000, 200);
-        RestResult restResult = client.post("path", new Object());
+        RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
-    // How to verify it?
     @Test
+    // TODO: How to verify it?
     public void testPostWithMaxTotalAndPerRoute() {
-        RestClient client = new RestClientImpl("/test", 1000, 200, 10, 5);
-        RestResult restResult = client.post("path", new Object());
+        RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
+        RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testPostWithUserAndPassword() {
         RestClient client = new RestClientImpl("/test", "user", "", 1000, 200);
-        RestResult restResult = client.post("path", new Object());
+        RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
@@ -146,7 +146,7 @@ public class RestClientTest {
     public void testPostWithAllParams() {
         RestClient client = new RestClientImpl("/test", "user", "", 1000,
                                                10, 5, 200);
-        RestResult restResult = client.post("path", new Object());
+        RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
@@ -159,7 +159,7 @@ public class RestClientTest {
         String content = "{\"names\": [\"marko\", \"josh\", \"lop\"]}";
         RestClient client = new RestClientImpl("/test", 1000, 200,
                                                headers, content);
-        RestResult restResult = client.post("path", new Object());
+        RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
         Assert.assertEquals(headers, restResult.headers());
         Assert.assertEquals(content, restResult.content());
@@ -171,7 +171,7 @@ public class RestClientTest {
     public void testPostWithException() {
         RestClient client = new RestClientImpl("/test", 1000, 400);
         Assert.assertThrows(RuntimeException.class, () -> {
-            client.post("path", new Object());
+            client.post("path", "body");
         });
     }
 
@@ -180,7 +180,7 @@ public class RestClientTest {
         RestClient client = new RestClientImpl("/test", 1000, 200);
         MultivaluedMap<String, Object> headers = ImmutableMultivaluedMap.empty();
         Map<String, Object> params = ImmutableMap.of("param1", "value1");
-        RestResult restResult = client.post("path", new Object(), headers,
+        RestResult restResult = client.post("path", "body", headers,
                                             params);
         Assert.assertEquals(200, restResult.status());
     }
@@ -188,7 +188,7 @@ public class RestClientTest {
     @Test
     public void testPut() {
         RestClient client = new RestClientImpl("/test", 1000, 200);
-        RestResult restResult = client.put("path", "id1", new Object());
+        RestResult restResult = client.put("path", "id1", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
@@ -196,7 +196,7 @@ public class RestClientTest {
     public void testPutWithParams() {
         RestClient client = new RestClientImpl("/test", 1000, 200);
         Map<String, Object> params = ImmutableMap.of("param1", "value1");
-        RestResult restResult = client.put("path", "id1", new Object(), params);
+        RestResult restResult = client.put("path", "id1", "body", params);
         Assert.assertEquals(200, restResult.status());
     }
 
@@ -204,7 +204,7 @@ public class RestClientTest {
     public void testPutWithException() {
         RestClient client = new RestClientImpl("/test", 1000, 400);
         Assert.assertThrows(RuntimeException.class, () -> {
-            client.put("path", "id1", new Object());
+            client.put("path", "id1", "body");
         });
     }
 
