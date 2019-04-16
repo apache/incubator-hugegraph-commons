@@ -19,6 +19,8 @@
 
 package com.baidu.hugegraph.unit.util;
 
+import java.util.Map;
+
 import org.junit.Test;
 
 import com.baidu.hugegraph.testutil.Assert;
@@ -35,6 +37,20 @@ public class OrderLimitMapTest {
         map.put(3, 0.3);
         map.put(4, 0.4);
         map.put(5, 0.5);
+
+        Assert.assertEquals(5, map.size());
+        Assert.assertEquals(ImmutableList.of(5, 4, 3, 2, 1),
+                            ImmutableList.copyOf(map.keySet()));
+    }
+
+    @Test
+    public void testOrderWithIncrOrder() {
+        OrderLimitMap<Integer, Double> map = new OrderLimitMap<>(5, true);
+        map.put(1, 0.5);
+        map.put(2, 0.4);
+        map.put(3, 0.3);
+        map.put(4, 0.2);
+        map.put(5, 0.1);
 
         Assert.assertEquals(5, map.size());
         Assert.assertEquals(ImmutableList.of(5, 4, 3, 2, 1),
@@ -131,5 +147,31 @@ public class OrderLimitMapTest {
         Assert.assertEquals(5, map.size());
         Assert.assertEquals(ImmutableList.of(0, 5, 8, 4, 3),
                             ImmutableList.copyOf(map.keySet()));
+    }
+
+    @Test
+    public void testTopN() {
+        OrderLimitMap<Integer, Double> map = new OrderLimitMap<>(5);
+        map.put(1, 0.1);
+        map.put(2, 0.2);
+        map.put(3, 0.3);
+        map.put(4, 0.4);
+        map.put(5, 0.5);
+
+        Map<Integer, Double> top = map.topN(1);
+        Assert.assertEquals(ImmutableList.of(5),
+                            ImmutableList.copyOf(top.keySet()));
+
+        top = map.topN(3);
+        Assert.assertEquals(ImmutableList.of(5, 4, 3),
+                            ImmutableList.copyOf(top.keySet()));
+
+        top = map.topN(5);
+        Assert.assertEquals(ImmutableList.of(5, 4, 3, 2, 1),
+                            ImmutableList.copyOf(top.keySet()));
+
+        top = map.topN(6);
+        Assert.assertEquals(ImmutableList.of(5, 4, 3, 2, 1),
+                            ImmutableList.copyOf(top.keySet()));
     }
 }

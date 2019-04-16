@@ -35,16 +35,20 @@ public class OrderLimitMap<K extends Comparable<K>, V extends Comparable<V>>
     private final int capacity;
     private final Map<K, V> valueMap;
 
-    public static <V extends Comparable<V>> Ordering<? super V> incr() {
+    private static <V extends Comparable<V>> Ordering<? super V> incr() {
         return Ordering.from((V o1, V o2) -> o1.compareTo(o2));
     }
 
-    public static <V extends Comparable<V>> Ordering<? super V> decr() {
+    private static <V extends Comparable<V>> Ordering<? super V> decr() {
         return Ordering.from((V o1, V o2) -> -o1.compareTo(o2));
     }
 
     public OrderLimitMap(int capacity) {
-        this(capacity, decr(), new HashMap<>());
+        this(capacity, false);
+    }
+
+    public OrderLimitMap(int capacity, boolean incr) {
+        this(capacity, incr ? incr() : decr(), new HashMap<>());
     }
 
     private OrderLimitMap(int capacity, Ordering<? super V> ordering,
