@@ -77,6 +77,11 @@ public class OrderLimitMap<K extends Comparable<K>, V extends Comparable<V>>
     }
 
     @Override
+    public V get(Object key) {
+        return this.valueMap.get(key);
+    }
+
+    @Override
     public V getOrDefault(Object key, V defaultValue) {
         return this.valueMap.getOrDefault(key, defaultValue);
     }
@@ -88,14 +93,14 @@ public class OrderLimitMap<K extends Comparable<K>, V extends Comparable<V>>
 
     public Map<K, V> topN(int n) {
         E.checkArgument(n > 0, "'N' Must be positive, but got '%s'", n);
-        Map<K, V> subMap = InsertionOrderUtil.newMap();
+        Map<K, V> top = InsertionOrderUtil.newMap();
         int i = 0;
         for (Map.Entry<K, V> entry : this.entrySet()) {
-            subMap.put(entry.getKey(), entry.getValue());
+            top.put(entry.getKey(), entry.getValue());
             if (++i >= n) {
                 break;
             }
         }
-        return subMap;
+        return top;
     }
 }

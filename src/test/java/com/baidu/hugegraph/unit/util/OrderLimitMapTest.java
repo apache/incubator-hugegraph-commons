@@ -20,6 +20,7 @@
 package com.baidu.hugegraph.unit.util;
 
 import java.util.Map;
+import java.util.TreeMap;
 
 import org.junit.Test;
 
@@ -28,6 +29,30 @@ import com.baidu.hugegraph.util.OrderLimitMap;
 import com.google.common.collect.ImmutableList;
 
 public class OrderLimitMapTest {
+
+    @Test
+    public void testMap() {
+        OrderLimitMap<Integer, Double> map = new OrderLimitMap<>(5);
+        map.put(4, 0.4);
+        map.put(2, 0.2);
+        map.put(5, 0.5);
+        map.put(1, 0.2);
+        map.put(3, 0.3);
+
+        Assert.assertEquals(5, map.size());
+
+        Assert.assertEquals(0.2, map.get(2), 1E-9);
+        Assert.assertEquals(0.4, map.get(4), 1E-9);
+
+        Assert.assertTrue(map.containsKey(1));
+        Assert.assertTrue(map.containsKey(3));
+        Assert.assertFalse(map.containsKey(6));
+
+        Assert.assertNull(map.get(6));
+
+        Assert.assertEquals(0.5, map.getOrDefault(5, 0.0), 1E-9);
+        Assert.assertEquals(0.0, map.getOrDefault(7, 0.0), 1E-9);
+    }
 
     @Test
     public void testOrder() {
