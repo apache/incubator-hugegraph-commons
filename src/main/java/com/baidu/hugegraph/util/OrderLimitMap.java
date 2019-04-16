@@ -30,7 +30,7 @@ import com.google.common.collect.Ordering;
  * Reference: https://stackoverflow.com/questions/109383/sort-a-mapkey-value-by-values
  */
 public class OrderLimitMap<K extends Comparable<K>, V extends Comparable<V>>
-        extends TreeMap<K, V> {
+       extends TreeMap<K, V> {
 
     private final int capacity;
     private final Map<K, V> valueMap;
