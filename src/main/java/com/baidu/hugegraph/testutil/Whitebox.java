@@ -45,8 +45,8 @@ public class Whitebox {
             f.set(target, value);
         } catch (Exception e) {
             throw new RuntimeException(String.format(
-                      "Can't set value of '%s' against target '%s': %s",
-                      fieldName, target, e));
+                      "Can't set value of '%s' against object '%s'",
+                      fieldName, target), e);
         }
     }
 
@@ -68,8 +68,8 @@ public class Whitebox {
             return result;
         } catch (Exception e) {
             throw new RuntimeException(String.format(
-                      "Unable to get internal state on field '%s' of %s: %s",
-                      fieldName, target, e));
+                      "Unable to get internal state on field '%s' of %s",
+                      fieldName, target), e);
         }
     }
 
@@ -81,8 +81,7 @@ public class Whitebox {
         }
         if (f == null) {
             throw new RuntimeException(String.format(
-                      "You want to set value to field '%s' on class '%s' " +
-                      "but this field is not declared in the class!",
+                      "Not declared field '%s' in class '%s'",
                       field, clazz.getSimpleName()));
         }
         return f;
