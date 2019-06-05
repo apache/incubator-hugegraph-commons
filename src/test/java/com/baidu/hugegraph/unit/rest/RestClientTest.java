@@ -22,11 +22,19 @@ package com.baidu.hugegraph.unit.rest;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
+import org.apache.http.HttpClientConnection;
+import org.apache.http.HttpHost;
+import org.apache.http.conn.routing.HttpRoute;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.pool.PoolStats;
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -35,6 +43,7 @@ import com.baidu.hugegraph.rest.ClientException;
 import com.baidu.hugegraph.rest.RestClient;
 import com.baidu.hugegraph.rest.RestResult;
 import com.baidu.hugegraph.testutil.Assert;
+import com.baidu.hugegraph.testutil.Whitebox;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
@@ -135,6 +144,31 @@ public class RestClientTest {
         RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
+    }
+
+    @Test
+    public void testCleanExecutor() throws Exception {
+        RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
+
+        PoolingHttpClientConnectionManager pool;
+        pool = Whitebox.getInternalState(client, "pool");
+        HttpRoute route = new HttpRoute(HttpHost.create("http://127.0.0.1:8080"));
+        // Create a connection manually, the conn will be put into leased list
+        HttpClientConnection conn = pool.requestConnection(route, null)
+                                        .get(1L, TimeUnit.SECONDS);
+        PoolStats stats = pool.getTotalStats();
+        int usingConns = stats.getLeased() + stats.getPending();
+        Assert.assertTrue(usingConns >= 1);
+        // The connection will be put into available list
+        pool.releaseConnection(conn, null, 0, TimeUnit.SECONDS);
+
+        long rawCheckPeriod = Whitebox.getInternalState(client, "CHECK_PERIOD");
+        // sleep more than two check periods, ensure connection has been closed
+        Thread.sleep(rawCheckPeriod * 2 + 1000);
+
+        stats = pool.getTotalStats();
+        usingConns = stats.getLeased() + stats.getPending();
+        Assert.assertEquals(0, usingConns);
     }
 
     @Test
@@ -263,5 +297,28 @@ public class RestClientTest {
         Assert.assertThrows(ClientException.class, () -> {
             client.delete("path", "id1");
         });
+    }
+
+    @Test
+    public void testClose() {
+        RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
+        RestResult restResult = client.post("path", "body");
+        Assert.assertEquals(200, restResult.status());
+
+        client.close();
+        Assert.assertThrows(IllegalStateException.class, () -> {
+            client.post("path", "body");
+        });
+
+        PoolingHttpClientConnectionManager pool;
+        pool = Whitebox.getInternalState(client, "pool");
+        Assert.assertNotNull(pool);
+        AtomicBoolean isShutDown = Whitebox.getInternalState(pool, "isShutDown");
+        Assert.assertTrue(isShutDown.get());
+
+        ScheduledExecutorService cleanExecutor;
+        cleanExecutor = Whitebox.getInternalState(client, "cleanExecutor");
+        Assert.assertNotNull(cleanExecutor);
+        Assert.assertTrue(cleanExecutor.isShutdown());
     }
 }

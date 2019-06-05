@@ -24,6 +24,9 @@ import static org.glassfish.jersey.apache.connector.ApacheClientProperties.CONNE
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
@@ -35,8 +38,8 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
-import org.apache.http.config.SocketConfig;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.pool.PoolStats;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
@@ -50,18 +53,21 @@ import com.google.common.collect.ImmutableMap;
 
 public abstract class RestClient {
 
-    private final ClientConfig config;
+    // Time unit: hours
+    private static final long TTL = 24L;
+    // Time unit: seconds
+    private static final long IDLE_TIME = 40L;
+    // Time unit: seconds
+    private static final long CHECK_PERIOD = IDLE_TIME / 2;
+
     private final Client client;
     private final WebTarget target;
 
+    private PoolingHttpClientConnectionManager pool;
+    private ScheduledExecutorService cleanExecutor;
+
     public RestClient(String url, int timeout) {
         this(url, new ConfigBuilder().config(timeout).build());
-    }
-
-    public RestClient(String url, int timeout, int maxTotal, int maxPerRoute) {
-        this(url, new ConfigBuilder().config(timeout)
-                                     .config(timeout, maxTotal, maxPerRoute)
-                                     .build());
     }
 
     public RestClient(String url, String user, String password, int timeout) {
@@ -70,19 +76,47 @@ public abstract class RestClient {
                                      .build());
     }
 
+    public RestClient(String url, int timeout, int maxTotal, int maxPerRoute) {
+        this(url, new ConfigBuilder().config(timeout)
+                                     .config(maxTotal, maxPerRoute)
+                                     .build());
+    }
+
     public RestClient(String url, String user, String password, int timeout,
                       int maxTotal, int maxPerRoute) {
         this(url, new ConfigBuilder().config(timeout)
                                      .config(user, password)
-                                     .config(timeout, maxTotal, maxPerRoute)
+                                     .config(maxTotal, maxPerRoute)
                                      .build());
     }
     
     public RestClient(String url, ClientConfig config) {
-        this.config = config;
-        this.client = ClientBuilder.newClient(this.config);
+        this.client = ClientBuilder.newClient(config);
         this.client.register(GZipEncoder.class);
         this.target = this.client.target(url);
+        this.pool = (PoolingHttpClientConnectionManager)
+                    config.getProperty(CONNECTION_MANAGER);
+        if (this.pool != null) {
+            this.cleanExecutor = Executors.newScheduledThreadPool(1);
+            this.cleanExecutor.scheduleWithFixedDelay(() -> {
+                PoolStats stats = this.pool.getTotalStats();
+                int using = stats.getLeased() + stats.getPending();
+                if (using > 0) {
+                    // Do clean only when all connections are idle
+                    return;
+                }
+                this.pool.closeIdleConnections(IDLE_TIME, TimeUnit.SECONDS);
+                this.pool.closeExpiredConnections();
+            }, CHECK_PERIOD, CHECK_PERIOD, TimeUnit.SECONDS);
+        }
+    }
+
+    public void close() {
+        if (this.pool != null) {
+            this.pool.close();
+            this.cleanExecutor.shutdownNow();
+        }
+        this.client.close();
     }
 
     protected Response request(Callable<Response> method) {
@@ -223,10 +257,6 @@ public abstract class RestClient {
         return new RestResult(response);
     }
 
-    public void close() {
-        this.client.close();
-    }
-
     private static String encode(String raw) {
         return UriComponent.encode(raw, UriComponent.Type.PATH_SEGMENT);
     }
@@ -263,8 +293,7 @@ public abstract class RestClient {
             return this;
         }
 
-        public ConfigBuilder config(int timeout, int maxTotal,
-                                    int maxPerRoute) {
+        public ConfigBuilder config(int maxTotal, int maxPerRoute) {
             /*
              * Using httpclient with connection pooling, and configuring the
              * jersey connector, reference:
@@ -275,14 +304,11 @@ public abstract class RestClient {
              * repository seems to have a bug.
              * https://github.com/jersey/jersey/pull/3752
              */
-            PoolingHttpClientConnectionManager pcm =
-                    new PoolingHttpClientConnectionManager();
-            pcm.setDefaultSocketConfig(SocketConfig.custom()
-                                                   .setSoTimeout(timeout)
-                                                   .build());
-            pcm.setMaxTotal(maxTotal);
-            pcm.setDefaultMaxPerRoute(maxPerRoute);
-            this.config.property(CONNECTION_MANAGER, pcm);
+            PoolingHttpClientConnectionManager pool;
+            pool = new PoolingHttpClientConnectionManager(TTL, TimeUnit.HOURS);
+            pool.setMaxTotal(maxTotal);
+            pool.setDefaultMaxPerRoute(maxPerRoute);
+            this.config.property(CONNECTION_MANAGER, pool);
             this.config.connectorProvider(new ApacheConnectorProvider());
             return this;
         }
