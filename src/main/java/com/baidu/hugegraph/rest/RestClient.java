@@ -31,13 +31,14 @@ import java.util.concurrent.TimeUnit;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
@@ -54,11 +55,11 @@ import com.google.common.collect.ImmutableMap;
 public abstract class RestClient {
 
     // Time unit: hours
-    private static final long TTL = 24L;
+    private static long TTL = 24L;
     // Time unit: seconds
-    private static final long IDLE_TIME = 40L;
+    private static long IDLE_TIME = 40L;
     // Time unit: seconds
-    private static final long CHECK_PERIOD = IDLE_TIME / 2;
+    private static long CHECK_PERIOD = IDLE_TIME / 2;
 
     private final Client client;
     private final WebTarget target;
@@ -128,7 +129,7 @@ public abstract class RestClient {
     }
 
     public RestResult post(String path, Object object) {
-        return this.post(path, object, null);
+        return this.post(path, object, null, null);
     }
 
     public RestResult post(String path, Object object,
@@ -137,40 +138,18 @@ public abstract class RestClient {
     }
 
     public RestResult post(String path, Object object,
+                           Map<String, Object> params) {
+        return this.post(path, object, null, params);
+    }
+
+    public RestResult post(String path, Object object,
                            MultivaluedMap<String, Object> headers,
                            Map<String, Object> params) {
-        WebTarget target = this.target;
-        if (params != null && !params.isEmpty()) {
-            for (Map.Entry<String, Object> param : params.entrySet()) {
-                target = target.queryParam(param.getKey(), param.getValue());
-            }
-        }
-
-        Ref<Invocation.Builder> builder = Refs.of(target.path(path).request());
-
-        String encoding = null;
-        if (headers != null && !headers.isEmpty()) {
-            // Add headers
-            builder.set(builder.get().headers(headers));
-            encoding = (String) headers.getFirst("Content-Encoding");
-        }
-
-        /*
-         * We should specify the encoding of the entity object manually,
-         * because Entity.json() method will reset "content encoding =
-         * null" that has been set up by headers before.
-         */
-        Ref<Entity<?>> entity = Refs.of(null);
-        if (encoding == null) {
-            entity.set(Entity.json(object));
-        } else {
-            Variant variant = new Variant(MediaType.APPLICATION_JSON_TYPE,
-                                          (String) null, encoding);
-            entity.set(Entity.entity(object, variant));
-        }
-
+        Pair<Builder, Entity<?>> pair = this.buildRequest(path, null, object,
+                                                          headers, params);
         Response response = this.request(() -> {
-            return builder.get().post(entity.get());
+            // Left is builder, right is entity
+            return pair.getLeft().post(pair.getRight());
         });
         // If check status failed, throw client exception.
         checkStatus(response, Response.Status.CREATED,
@@ -183,17 +162,23 @@ public abstract class RestClient {
     }
 
     public RestResult put(String path, String id, Object object,
-                          Map<String, Object> params) {
-        Ref<WebTarget> target = Refs.of(this.target);
-        if (params != null && !params.isEmpty()) {
-            for (String key : params.keySet()) {
-                target.set(target.get().queryParam(key, params.get(key)));
-            }
-        }
+                          MultivaluedMap<String, Object> headers) {
+        return this.put(path, id, object, headers, null);
+    }
 
+    public RestResult put(String path, String id, Object object,
+                          Map<String, Object> params) {
+        return this.put(path, id, object, null, params);
+    }
+
+    public RestResult put(String path, String id, Object object,
+                          MultivaluedMap<String, Object> headers,
+                          Map<String, Object> params) {
+        Pair<Builder, Entity<?>> pair = this.buildRequest(path, id, object,
+                                                          headers, params);
         Response response = this.request(() -> {
-            return target.get().path(path).path(encode(id)).request()
-                         .put(Entity.json(object));
+            // Left is builder, right is entity
+            return pair.getLeft().put(pair.getRight());
         });
         // If check status failed, throw client exception.
         checkStatus(response, Response.Status.OK, Response.Status.ACCEPTED);
@@ -255,6 +240,43 @@ public abstract class RestClient {
         checkStatus(response, Response.Status.NO_CONTENT,
                     Response.Status.ACCEPTED);
         return new RestResult(response);
+    }
+
+    private Pair<Builder, Entity<?>> buildRequest(
+                                     String path, String id, Object object,
+                                     MultivaluedMap<String, Object> headers,
+                                     Map<String, Object> params) {
+        WebTarget target = this.target;
+        if (params != null && !params.isEmpty()) {
+            for (Map.Entry<String, Object> param : params.entrySet()) {
+                target = target.queryParam(param.getKey(), param.getValue());
+            }
+        }
+
+        Builder builder = id == null ? target.path(path).request() :
+                          target.path(path).path(encode(id)).request();
+
+        String encoding = null;
+        if (headers != null && !headers.isEmpty()) {
+            // Add headers
+            builder = builder.headers(headers);
+            encoding = (String) headers.getFirst("Content-Encoding");
+        }
+
+        /*
+         * We should specify the encoding of the entity object manually,
+         * because Entity.json() method will reset "content encoding =
+         * null" that has been set up by headers before.
+         */
+        Entity<?> entity;
+        if (encoding == null) {
+            entity = Entity.json(object);
+        } else {
+            Variant variant = new Variant(MediaType.APPLICATION_JSON_TYPE,
+                                          (String) null, encoding);
+            entity = Entity.entity(object, variant);
+        }
+        return Pair.of(builder, entity);
     }
 
     private static String encode(String raw) {

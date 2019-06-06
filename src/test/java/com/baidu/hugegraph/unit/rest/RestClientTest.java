@@ -148,27 +148,62 @@ public class RestClientTest {
 
     @Test
     public void testCleanExecutor() throws Exception {
-        RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
+        long oldIdleTime = Whitebox.getInternalState(RestClient.class,
+                                                     "IDLE_TIME");
+        long oldCheckPeriod = Whitebox.getInternalState(RestClient.class,
+                                                        "CHECK_PERIOD");
+        long newCheckPeriod = 1L;
+        long newIdleTime = 2 * newCheckPeriod;
+        // Modify IDLE_TIME and CHECK_PERIOD to speed test
+        Whitebox.setInternalState(RestClient.class, "IDLE_TIME", newIdleTime);
+        Whitebox.setInternalState(RestClient.class, "CHECK_PERIOD",
+                                  newCheckPeriod);
 
-        PoolingHttpClientConnectionManager pool;
-        pool = Whitebox.getInternalState(client, "pool");
-        HttpRoute route = new HttpRoute(HttpHost.create("http://127.0.0.1:8080"));
-        // Create a connection manually, the conn will be put into leased list
-        HttpClientConnection conn = pool.requestConnection(route, null)
-                                        .get(1L, TimeUnit.SECONDS);
-        PoolStats stats = pool.getTotalStats();
-        int usingConns = stats.getLeased() + stats.getPending();
-        Assert.assertTrue(usingConns >= 1);
-        // The connection will be put into available list
-        pool.releaseConnection(conn, null, 0, TimeUnit.SECONDS);
+        try {
+            RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
 
-        long rawCheckPeriod = Whitebox.getInternalState(client, "CHECK_PERIOD");
-        // sleep more than two check periods, ensure connection has been closed
-        Thread.sleep(rawCheckPeriod * 2 + 1000);
+            PoolingHttpClientConnectionManager pool;
+            pool = Whitebox.getInternalState(client, "pool");
+            pool = Mockito.spy(pool);
+            Whitebox.setInternalState(client, "pool", pool);
+            HttpRoute route = new HttpRoute(HttpHost.create(
+                                            "http://127.0.0.1:8080"));
+            // Create a connection manually, it will be put into leased list
+            HttpClientConnection conn = pool.requestConnection(route, null)
+                                            .get(1L, TimeUnit.SECONDS);
+            PoolStats stats = pool.getTotalStats();
+            int usingConns = stats.getLeased() + stats.getPending();
+            Assert.assertTrue(usingConns >= 1);
 
-        stats = pool.getTotalStats();
-        usingConns = stats.getLeased() + stats.getPending();
-        Assert.assertEquals(0, usingConns);
+            // Sleep more than two check periods for busy connection
+            Thread.sleep(newCheckPeriod * 1000 * 2);
+            Mockito.verify(pool, Mockito.never())
+                   .closeExpiredConnections();
+            stats = pool.getTotalStats();
+            usingConns = stats.getLeased() + stats.getPending();
+            Assert.assertTrue(usingConns >= 1);
+
+            // The connection will be put into available list
+            pool.releaseConnection(conn, null, 0, TimeUnit.SECONDS);
+
+            stats = pool.getTotalStats();
+            usingConns = stats.getLeased() + stats.getPending();
+            Assert.assertEquals(0, usingConns);
+            /*
+             * Sleep more than two check periods for free connection,
+             * ensure connection has been closed
+             */
+            Thread.sleep(newCheckPeriod * 1000 * 2 + 1000);
+            Mockito.verify(pool, Mockito.atLeastOnce())
+                   .closeExpiredConnections();
+            Mockito.verify(pool, Mockito.atLeastOnce())
+                   .closeIdleConnections(newIdleTime, TimeUnit.SECONDS);
+        } finally {
+            Whitebox.setInternalState(RestClient.class, "IDLE_TIME",
+                                      oldIdleTime);
+            Whitebox.setInternalState(RestClient.class, "CHECK_PERIOD",
+                                      oldCheckPeriod);
+        }
     }
 
     @Test
@@ -225,6 +260,17 @@ public class RestClientTest {
     public void testPut() {
         RestClient client = new RestClientImpl("/test", 1000, 200);
         RestResult restResult = client.put("path", "id1", "body");
+        Assert.assertEquals(200, restResult.status());
+    }
+
+    @Test
+    public void testPutWithHeaders() {
+        RestClient client = new RestClientImpl("/test", 1000, 200);
+        MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
+        headers.add("key1", "value1-1");
+        headers.add("key1", "value1-2");
+        headers.add("Content-Encoding", "gzip");
+        RestResult restResult = client.put("path", "id1", "body", headers);
         Assert.assertEquals(200, restResult.status());
     }
 
