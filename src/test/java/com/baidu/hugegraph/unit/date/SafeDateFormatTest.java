@@ -29,16 +29,32 @@ import org.junit.Test;
 
 import com.baidu.hugegraph.date.SafeDateFormat;
 import com.baidu.hugegraph.testutil.Assert;
+import com.google.common.collect.ImmutableList;
 
 public class SafeDateFormatTest {
 
     @Test
     public void testSafeDateFormatInConcurrency() throws Exception {
         DateFormat format = new SafeDateFormat("yyyy-MM-dd");
-        final CountDownLatch latch = new CountDownLatch(1);
-        Date date = format.parse("2019-01-01");
-        List<Exception> exceptions = new ArrayList<>();
+        List<String> sources = ImmutableList.of(
+                "2010-01-01",
+                "2011-01-01",
+                "2012-01-01",
+                "2013-01-01",
+                "2014-01-01",
+                "2015-01-01",
+                "2016-01-01",
+                "2017-01-01",
+                "2018-01-01",
+                "2019-01-01"
+        );
+        List<Date> dates = new ArrayList<>(sources.size());
+        for (String source : sources) {
+            dates.add(format.parse(source));
+        }
 
+        List<Exception> exceptions = new ArrayList<>();
+        final CountDownLatch latch = new CountDownLatch(1);
         int threadCount = 10;
         List<Thread> threads = new ArrayList<>(threadCount);
         for (int t = 0; t < threadCount; t++) {
@@ -51,7 +67,10 @@ public class SafeDateFormatTest {
 
                 for (int i = 0; i < 10; i++){
                     try {
-                        Assert.assertEquals(date, format.parse("2019-01-01"));
+                        Assert.assertEquals(dates.get(i),
+                                            format.parse(sources.get(i)));
+                        Assert.assertEquals(sources.get(i),
+                                            format.format(dates.get(i)));
                         Thread.sleep(100);
                     } catch (Exception e) {
                         exceptions.add(e);

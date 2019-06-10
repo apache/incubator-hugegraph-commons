@@ -193,7 +193,7 @@ public class RestClientTest {
              * Sleep more than two check periods for free connection,
              * ensure connection has been closed
              */
-            Thread.sleep(newCheckPeriod * 1000 * 2 + 1000);
+            Thread.sleep(newCheckPeriod * 1000 * 2);
             Mockito.verify(pool, Mockito.atLeastOnce())
                    .closeExpiredConnections();
             Mockito.verify(pool, Mockito.atLeastOnce())
