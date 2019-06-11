@@ -148,7 +148,7 @@ public abstract class RestClient {
         Pair<Builder, Entity<?>> pair = this.buildRequest(path, null, object,
                                                           headers, params);
         Response response = this.request(() -> {
-            // Left is builder, right is entity
+            // pair.getLeft() is builder, pair.getRight() is entity (http body)
             return pair.getLeft().post(pair.getRight());
         });
         // If check status failed, throw client exception.
@@ -177,7 +177,7 @@ public abstract class RestClient {
         Pair<Builder, Entity<?>> pair = this.buildRequest(path, id, object,
                                                           headers, params);
         Response response = this.request(() -> {
-            // Left is builder, right is entity
+            // pair.getLeft() is builder, pair.getRight() is entity (http body)
             return pair.getLeft().put(pair.getRight());
         });
         // If check status failed, throw client exception.

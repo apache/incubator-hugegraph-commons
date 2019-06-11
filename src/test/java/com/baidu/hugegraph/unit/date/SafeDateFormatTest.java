@@ -33,24 +33,30 @@ import com.google.common.collect.ImmutableList;
 
 public class SafeDateFormatTest {
 
+    @SuppressWarnings("deprecation")
     @Test
     public void testSafeDateFormatInConcurrency() throws Exception {
         DateFormat format = new SafeDateFormat("yyyy-MM-dd");
         List<String> sources = ImmutableList.of(
                 "2010-01-01",
-                "2011-01-01",
-                "2012-01-01",
-                "2013-01-01",
-                "2014-01-01",
-                "2015-01-01",
-                "2016-01-01",
-                "2017-01-01",
-                "2018-01-01",
-                "2019-01-01"
+                "2011-02-02",
+                "2012-03-03",
+                "2013-04-04",
+                "2014-05-05",
+                "2015-06-06",
+                "2016-07-07",
+                "2017-08-08",
+                "2018-09-09",
+                "2019-10-10"
         );
         List<Date> dates = new ArrayList<>(sources.size());
-        for (String source : sources) {
-            dates.add(format.parse(source));
+
+        for (int i = 0; i < sources.size(); i++) {
+            Date date = format.parse(sources.get(i));
+            Assert.assertEquals(2010 + i, 1900 + date.getYear());
+            Assert.assertEquals(i, date.getMonth());
+            Assert.assertEquals(1 + i, date.getDate());
+            dates.add(date);
         }
 
         List<Exception> exceptions = new ArrayList<>();
@@ -65,13 +71,12 @@ public class SafeDateFormatTest {
                     throw new RuntimeException(e);
                 }
 
-                for (int i = 0; i < 10; i++){
+                for (int i = 0; i < sources.size(); i++) {
                     try {
                         Assert.assertEquals(dates.get(i),
                                             format.parse(sources.get(i)));
                         Assert.assertEquals(sources.get(i),
                                             format.format(dates.get(i)));
-                        Thread.sleep(100);
                     } catch (Exception e) {
                         exceptions.add(e);
                     }
