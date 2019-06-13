@@ -254,7 +254,6 @@ public class HugeConfigTest extends BaseUnitTest {
         public static final ConfigListOption<String> list =
                 new ConfigListOption<>(
                         "group1.list",
-                        false,
                         "description of group1.list",
                         disallowEmpty(),
                         String.class,
@@ -264,7 +263,6 @@ public class HugeConfigTest extends BaseUnitTest {
         public static final ConfigListOption<String> map =
                 new ConfigListOption<>(
                         "group1.map",
-                        false,
                         "description of group1.map",
                         disallowEmpty(),
                         String.class,
