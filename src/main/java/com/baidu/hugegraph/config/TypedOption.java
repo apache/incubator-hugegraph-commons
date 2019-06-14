@@ -63,15 +63,6 @@ public class TypedOption<T, R> {
     private final T defaultValue;
     private final Predicate<T> checkFunc;
 
-    public TypedOption(String name, String desc, T value) {
-        this(name, desc, null, value);
-    }
-
-    @SuppressWarnings("unchecked")
-    public TypedOption(String name, String desc, Predicate<T> pred, T value) {
-        this(name, false, desc, pred, (Class<T>) value.getClass(), value);
-    }
-
     @SuppressWarnings("unchecked")
     public TypedOption(String name, boolean required, String desc,
                        Predicate<T> pred, Class<T> type, T value) {
