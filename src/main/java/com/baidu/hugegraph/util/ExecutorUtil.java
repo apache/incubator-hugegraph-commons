@@ -28,7 +28,7 @@ import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
 public final class ExecutorUtil {
 
-    public static ExecutorService newSingleFixedThreadPool(String name) {
+    public static ExecutorService newFixedThreadPool(String name) {
         return newFixedThreadPool(1, name);
     }
 
@@ -39,8 +39,7 @@ public final class ExecutorUtil {
         return Executors.newFixedThreadPool(size, factory);
     }
 
-    public static ScheduledExecutorService newSingleScheduledThreadPool(
-                                           String name) {
+    public static ScheduledExecutorService newScheduledThreadPool(String name) {
         return newScheduledThreadPool(1, name);
     }
 

@@ -24,7 +24,6 @@ import static org.glassfish.jersey.apache.connector.ApacheClientProperties.CONNE
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -99,7 +98,7 @@ public abstract class RestClient {
         this.pool = (PoolingHttpClientConnectionManager)
                     config.getProperty(CONNECTION_MANAGER);
         if (this.pool != null) {
-            this.cleanExecutor = ExecutorUtil.newSingleScheduledThreadPool(
+            this.cleanExecutor = ExecutorUtil.newScheduledThreadPool(
                                               "conn-clean-worker-%d");
             this.cleanExecutor.scheduleWithFixedDelay(() -> {
                 PoolStats stats = this.pool.getTotalStats();
