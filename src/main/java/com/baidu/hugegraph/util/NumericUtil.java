@@ -215,20 +215,14 @@ public final class NumericUtil {
     public static Number maxValueOf(Class<?> clazz) {
         E.checkArgumentNotNull(clazz, "The clazz can't be null");
 
-        if (Long.class.isAssignableFrom(clazz)) {
+        if (Long.class.isAssignableFrom(clazz) ||
+            Double.class.isAssignableFrom(clazz) ) {
             return Long.MAX_VALUE;
         }
-        if (Double.class.isAssignableFrom(clazz)) {
-            return Double.MAX_VALUE;
-        }
-        if (Integer.class.isAssignableFrom(clazz)) {
+        if (Integer.class.isAssignableFrom(clazz) ||
+            Float.class.isAssignableFrom(clazz) ||
+            Short.class.isAssignableFrom(clazz)) {
             return Integer.MAX_VALUE;
-        }
-        if (Float.class.isAssignableFrom(clazz)) {
-            return Float.MAX_VALUE;
-        }
-        if (Short.class.isAssignableFrom(clazz)) {
-            return Short.MAX_VALUE;
         }
         if (Byte.class.isAssignableFrom(clazz)) {
             return Byte.MAX_VALUE;
