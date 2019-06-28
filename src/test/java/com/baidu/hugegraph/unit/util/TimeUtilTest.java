@@ -70,10 +70,14 @@ public class TimeUtilTest extends BaseUnitTest {
         Assert.assertEquals("15s", TimeUtil.readableTime(15 * 1000));
         Assert.assertEquals("59.99s", TimeUtil.readableTime(59990));
         Assert.assertEquals("1m", TimeUtil.readableTime(60000));
-        Assert.assertEquals("1m 0.1s", TimeUtil.readableTime(60000 + 100));
+        // Ignore milliseconds part
+        Assert.assertEquals("1m", TimeUtil.readableTime(60000 + 100));
         Assert.assertEquals("1m 1s", TimeUtil.readableTime(60000 + 1000));
+        Assert.assertEquals("1m 1s", TimeUtil.readableTime(60000 + 1200));
         Assert.assertEquals("59m", TimeUtil.readableTime(59 * 60 * 1000));
         Assert.assertEquals("1h", TimeUtil.readableTime(60 * 60 * 1000));
+        Assert.assertEquals("1h 1m", TimeUtil.readableTime(60 * 60 * 1000 +
+                                                           60 * 1000));
         Assert.assertEquals("23h 59m 59s", TimeUtil.readableTime(
                                                     23 * 60 * 60 * 1000 +
                                                     59 * 60 * 1000 +
@@ -82,6 +86,6 @@ public class TimeUtilTest extends BaseUnitTest {
         Assert.assertEquals("25h 1m 1s", TimeUtil.readableTime(
                                                     25 * 60 * 60 * 1000 +
                                                     1 * 60 * 1000 +
-                                                    1 * 1000));
+                                                    1 * 1200));
     }
 }

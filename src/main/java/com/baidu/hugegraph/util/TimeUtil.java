@@ -48,6 +48,10 @@ public final class TimeUtil {
     }
 
     public static String readableTime(long time) {
+        if (time > 60 * 1000) {
+            // Remove the milliseconds part
+            time = time / 1000 * 1000;
+        }
         Duration duration = Duration.ofMillis(time);
         return duration.toString()
                        .substring(2)

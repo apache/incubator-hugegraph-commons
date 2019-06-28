@@ -33,23 +33,23 @@ public class StringUtilTest {
     @Test
     public void testSplit() {
         Assert.assertEquals(guavaSplit("123", " "),
-                            toList(StringUtil.split("123", " ")));
+                            toStringList(StringUtil.split("123", " ")));
         Assert.assertEquals(guavaSplit("1 2 3", " "),
-                            toList(StringUtil.split("1 2 3", " ")));
+                            toStringList(StringUtil.split("1 2 3", " ")));
         Assert.assertEquals(guavaSplit("1:2:3", ":"),
-                            toList(StringUtil.split("1:2:3", ":")));
+                            toStringList(StringUtil.split("1:2:3", ":")));
         Assert.assertEquals(guavaSplit("1::2:3", ":"),
-                            toList(StringUtil.split("1::2:3", ":")));
+                            toStringList(StringUtil.split("1::2:3", ":")));
         Assert.assertEquals(guavaSplit("1::2::3", ":"),
-                            toList(StringUtil.split("1::2::3", ":")));
+                            toStringList(StringUtil.split("1::2::3", ":")));
         Assert.assertEquals(guavaSplit("1::2::3", "::"),
-                            toList(StringUtil.split("1::2::3", "::")));
+                            toStringList(StringUtil.split("1::2::3", "::")));
         Assert.assertEquals(guavaSplit("1:|2|:3", "|"),
-                            toList(StringUtil.split("1:|2|:3", "|")));
+                            toStringList(StringUtil.split("1:|2|:3", "|")));
         Assert.assertEquals(guavaSplit("1\t2\t3", "\t"),
-                            toList(StringUtil.split("1\t2\t3", "\t")));
+                            toStringList(StringUtil.split("1\t2\t3", "\t")));
         Assert.assertEquals(guavaSplit("111", "1"),
-                            toList(StringUtil.split("111", "1")));
+                            toStringList(StringUtil.split("111", "1")));
 
         Assert.assertThrows(IllegalArgumentException.class, () -> {
             StringUtil.split("123", "");
@@ -60,7 +60,7 @@ public class StringUtilTest {
         return Splitter.on(delimiter).splitToList(line);
     }
 
-    private static List<String> toList(List<CharSequence> chars) {
+    private static List<String> toStringList(List<CharSequence> chars) {
         List<String> results = new ArrayList<>(chars.size());
         for (CharSequence seq : chars) {
             results.add(seq.toString());
