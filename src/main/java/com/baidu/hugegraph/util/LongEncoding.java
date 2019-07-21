@@ -70,11 +70,15 @@ public final class LongEncoding {
         E.checkArgument(str.length() >= 2,
                         "Length of sortable encoded string must be >=2");
         boolean negative = str.charAt(0) == NEG;
-        int prefix = 1;
+        int lengthPos = 0;
         if (negative) {
-            prefix = 2;
+            lengthPos = 1;
         }
-        String encoded = str.substring(prefix);
+        int length = BASE_SYMBOLS.indexOf(str.charAt(lengthPos));
+        E.checkArgument(length == str.length() - lengthPos - 1,
+                        "Can't decode illegal string '%s' with wrong length",
+                        str);
+        String encoded = str.substring(lengthPos + 1);
         long value = decode(encoded);
         if (negative) {
             value -= FULL_LONG;
@@ -117,5 +121,9 @@ public final class LongEncoding {
         } while (num != 0);
 
         return sb.reverse().toString();
+    }
+
+    public static boolean validChar(char c) {
+        return BASE_SYMBOLS.indexOf(c) != -1;
     }
 }
