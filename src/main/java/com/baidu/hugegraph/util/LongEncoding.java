@@ -86,6 +86,10 @@ public final class LongEncoding {
         return value;
     }
 
+    public static boolean validSortableChar(char c) {
+        return BASE_SYMBOLS.indexOf(c) != -1;
+    }
+
     public static String encode(long num) {
         return encode(num, BASE_SYMBOLS);
     }
@@ -121,9 +125,5 @@ public final class LongEncoding {
         } while (num != 0);
 
         return sb.reverse().toString();
-    }
-
-    public static boolean validChar(char c) {
-        return BASE_SYMBOLS.indexOf(c) != -1;
     }
 }
