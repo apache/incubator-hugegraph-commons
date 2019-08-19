@@ -175,6 +175,12 @@
             <artifactId>jersey-hk2</artifactId>
             <version>${jersey.hk2.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>de.schlichtherle.truelicense</groupId>
+            <artifactId>truelicense-core</artifactId>
+            <version>1.33</version>
+        </dependency>
     </dependencies>
 
     <build>
