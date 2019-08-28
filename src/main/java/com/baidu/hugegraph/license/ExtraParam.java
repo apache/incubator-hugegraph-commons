@@ -1,5 +1,20 @@
 /*
- * Copyright (C) 2019 Baidu, Inc. All Rights Reserved.
+ * Copyright 2017 HugeGraph Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 package com.baidu.hugegraph.license;
@@ -14,6 +29,9 @@ public class ExtraParam {
     @JsonProperty("version")
     private String version;
 
+    @JsonProperty("graphs")
+    private int graphs;
+
     @JsonProperty("ip")
     private String ip;
 
@@ -21,7 +39,7 @@ public class ExtraParam {
     private String mac;
 
     @JsonProperty("cpus")
-    private int cpu;
+    private int cpus;
 
     @JsonProperty("ram")
     private int ram;
@@ -32,6 +50,45 @@ public class ExtraParam {
     @JsonProperty("memory")
     private int memory;
 
+    public String id() {
+        return this.id;
+    }
+
+    public String version() {
+        return this.version;
+    }
+
+    public int graphs() {
+        return this.graphs;
+    }
+
+    public String ip() {
+        return this.ip;
+    }
+
+    public String mac() {
+        return this.mac;
+    }
+
+    public int cpus() {
+        return this.cpus;
+    }
+
+    public int ram() {
+        return this.ram;
+    }
+
+    public int threads() {
+        return this.threads;
+    }
+
+    public int memory() {
+        return this.memory;
+    }
+
+    /**
+     * Must add get and set method, XMLEncoder need use them
+     */
     public String getId() {
         return id;
     }
@@ -41,11 +98,19 @@ public class ExtraParam {
     }
 
     public String getVersion() {
-        return this.version;
+        return version;
     }
 
     public void setVersion(String version) {
         this.version = version;
+    }
+
+    public int getGraphs() {
+        return graphs;
+    }
+
+    public void setGraphs(int graphs) {
+        this.graphs = graphs;
     }
 
     public String getIp() {
@@ -64,12 +129,12 @@ public class ExtraParam {
         this.mac = mac;
     }
 
-    public int getCpu() {
-        return cpu;
+    public int getCpus() {
+        return cpus;
     }
 
-    public void setCpu(int cpu) {
-        this.cpu = cpu;
+    public void setCpus(int cpus) {
+        this.cpus = cpus;
     }
 
     public int getRam() {

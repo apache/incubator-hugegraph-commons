@@ -1,9 +1,25 @@
 /*
- * Copyright (C) 2019 Baidu, Inc. All Rights Reserved.
+ * Copyright 2017 HugeGraph Authors
+ *
+ * Licensed to the Apache Software Foundation (ASF) under one or more
+ * contributor license agreements. See the NOTICE file distributed with this
+ * work for additional information regarding copyright ownership. The ASF
+ * licenses this file to You under the Apache License, Version 2.0 (the
+ * "License"); you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
+ * License for the specific language governing permissions and limitations
+ * under the License.
  */
 
 package com.baidu.hugegraph.license;
 
+import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -12,7 +28,9 @@ import org.apache.commons.lang3.time.DateUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class LicenseCreateParam {
+public class LicenseCreateParam implements Serializable {
+
+    private static final long serialVersionUID = -7793154252684580872L;
 
     @JsonProperty("subject")
     private String subject;
@@ -56,107 +74,60 @@ public class LicenseCreateParam {
     @JsonProperty("extra_params")
     private List<ExtraParam> extraParams;
 
-    public String getSubject() {
-        return subject;
+    public String subject() {
+        return this.subject;
     }
 
-    public void setSubject(String subject) {
-        this.subject = subject;
+    public String privateAlias() {
+        return this.privateAlias;
     }
 
-    public String getPrivateAlias() {
-        return privateAlias;
+    public String keyPassword() {
+        return this.keyPassword;
     }
 
-    public void setPrivateAlias(String privateAlias) {
-        this.privateAlias = privateAlias;
+    public String storePassword() {
+        return this.storePassword;
     }
 
-    public String getKeyPassword() {
-        return keyPassword;
+    public String privateKeyPath() {
+        return this.privateKeyPath;
     }
 
-    public void setKeyPassword(String keyPassword) {
-        this.keyPassword = keyPassword;
+    public String licensePath() {
+        return this.licensePath;
     }
 
-    public String getStorePassword() {
-        return storePassword;
+    public Date issuedTime() {
+        return this.issuedTime;
     }
 
-    public void setStorePassword(String storePassword) {
-        this.storePassword = storePassword;
+    public Date notBefore() {
+        return this.notBefore;
     }
 
-    public String getPrivateKeyPath() {
-        return privateKeyPath;
+    public Date notAfter() {
+        return this.notAfter;
     }
 
-    public void setPrivateKeyPath(String privateKeyPath) {
-        this.privateKeyPath = privateKeyPath;
+    public String consumerType() {
+        return this.consumerType;
     }
 
-    public String getLicensePath() {
-        return licensePath;
+    public Integer consumerAmount() {
+        return this.consumerAmount;
     }
 
-    public void setLicensePath(String licensePath) {
-        this.licensePath = licensePath;
+    public String description() {
+        return this.description;
     }
 
-    public Date getIssuedTime() {
-        return issuedTime;
+    public List<ExtraParam> extraParams() {
+        return this.extraParams;
     }
 
-    public void setIssuedTime(Date issuedTime) {
-        this.issuedTime = issuedTime;
-    }
-
-    public Date getNotBefore() {
-        return notBefore;
-    }
-
-    public void setNotBefore(Date notBefore) {
-        this.notBefore = notBefore;
-    }
-
-    public Date getNotAfter() {
-        return notAfter;
-    }
-
-    public void setNotAfter(Date notAfter) {
-        this.notAfter = notAfter;
-    }
-
-    public String getConsumerType() {
-        return consumerType;
-    }
-
-    public void setConsumerType(String consumerType) {
-        this.consumerType = consumerType;
-    }
-
-    public Integer getConsumerAmount() {
-        return consumerAmount;
-    }
-
-    public void setConsumerAmount(Integer consumerAmount) {
-        this.consumerAmount = consumerAmount;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public List<ExtraParam> getExtraParams() {
-        return extraParams;
-    }
-
-    public void setExtraParams(List<ExtraParam> extraParams) {
+    public void setExtraParams(
+            List<ExtraParam> extraParams) {
         this.extraParams = extraParams;
     }
 }
