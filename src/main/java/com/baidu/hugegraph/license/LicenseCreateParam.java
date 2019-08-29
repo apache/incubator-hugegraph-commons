@@ -19,7 +19,6 @@
 
 package com.baidu.hugegraph.license;
 
-import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
 
@@ -28,9 +27,7 @@ import org.apache.commons.lang3.time.DateUtils;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-public class LicenseCreateParam implements Serializable {
-
-    private static final long serialVersionUID = -7793154252684580872L;
+public class LicenseCreateParam {
 
     @JsonProperty("subject")
     private String subject;
@@ -51,15 +48,15 @@ public class LicenseCreateParam implements Serializable {
     private String licensePath;
 
     @JsonProperty("issued_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date issuedTime = new Date();
 
     @JsonProperty("not_before")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date notBefore = this.issuedTime;
 
     @JsonProperty("not_after")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date notAfter = DateUtils.addDays(this.notBefore, 30);
 
     @JsonProperty("consumer_type")
@@ -124,10 +121,5 @@ public class LicenseCreateParam implements Serializable {
 
     public List<ExtraParam> extraParams() {
         return this.extraParams;
-    }
-
-    public void setExtraParams(
-            List<ExtraParam> extraParams) {
-        this.extraParams = extraParams;
     }
 }
