@@ -255,11 +255,11 @@ public class LicenseManagerTest {
             super.validate(content);
 
             // Verify the customized license parameters
+            String extra = (String) content.getExtra();
             List<ExtraParam> extraParams;
             try {
                 TypeReference type = new TypeReference<List<ExtraParam>>() {};
-                extraParams = MAPPER.readValue((String) content.getExtra(),
-                                               type);
+                extraParams = MAPPER.readValue(extra, type);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to read extra params", e);
             }

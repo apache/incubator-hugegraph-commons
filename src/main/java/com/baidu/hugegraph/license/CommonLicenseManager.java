@@ -78,8 +78,8 @@ public class CommonLicenseManager extends LicenseManager {
         // Load license key from preferences
         byte[] key = super.getLicenseKey();
         if (key == null) {
-            throw new NoLicenseInstalledException(super.getLicenseParam()
-                                                       .getSubject());
+            String subject = super.getLicenseParam().getSubject();
+            throw new NoLicenseInstalledException(subject);
         }
 
         GenericCertificate certificate = super.getPrivacyGuard().key2cert(key);
@@ -116,15 +116,15 @@ public class CommonLicenseManager extends LicenseManager {
             throw new LicenseContentException(String.format(
                       "Unsupported charset: %s", CHARSET));
         } finally {
+            if (decoder != null) {
+                decoder.close();
+            }
             try {
-                if (decoder != null) {
-                    decoder.close();
-                }
                 if (stream != null) {
                     stream.close();
                 }
             } catch (Exception e) {
-                LOG.warn("Failed to close decoder or stream", e);
+                LOG.warn("Failed to close stream", e);
             }
         }
     }
