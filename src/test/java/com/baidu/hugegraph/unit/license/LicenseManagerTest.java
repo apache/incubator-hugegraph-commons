@@ -36,6 +36,9 @@ import com.baidu.hugegraph.license.ExtraParam;
 import com.baidu.hugegraph.license.FileKeyStoreParam;
 import com.baidu.hugegraph.license.LicenseCreateParam;
 import com.baidu.hugegraph.license.LicenseVerifyParam;
+import com.baidu.hugegraph.testutil.Assert;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import de.schlichtherle.license.CipherParam;
@@ -46,11 +49,12 @@ import de.schlichtherle.license.LicenseContent;
 import de.schlichtherle.license.LicenseContentException;
 import de.schlichtherle.license.LicenseManager;
 import de.schlichtherle.license.LicenseParam;
+import de.schlichtherle.license.NoLicenseInstalledException;
 
 public class LicenseManagerTest {
 
     private static final Charset CHARSET = Charsets.UTF_8;
-    private static final ObjectMapper mapper = new ObjectMapper();
+    private static final ObjectMapper MAPPER = new ObjectMapper();
 
     @Test
     public void testCreateInstallVerifyLicense() throws IOException {
@@ -62,6 +66,23 @@ public class LicenseManagerTest {
         LicenseVerifier verifier = LicenseVerifier.build(verifyConfigPath);
         verifier.install();
         verifier.verify();
+    }
+
+    @Test
+    public void testCreateVerifyLicenseWithoutInstall() throws IOException {
+        String createConfigPath = "src/test/resources/create-license.json";
+        LicenseCreator creator = LicenseCreator.build(createConfigPath);
+        creator.create();
+
+        String verifyConfigPath = "src/test/resources/verify-license.json";
+        LicenseVerifier verifier = LicenseVerifier.build(verifyConfigPath);
+        verifier.uninstall();
+        Assert.assertThrows(RuntimeException.class, () -> {
+            verifier.verify();
+        }, e -> {
+            Assert.assertEquals(NoLicenseInstalledException.class,
+                                e.getCause().getClass());
+        });
     }
 
     private static class LicenseCreator {
@@ -84,7 +105,7 @@ public class LicenseManagerTest {
                 throw new RuntimeException(String.format(
                           "Failed to read file '%s'", path));
             }
-            LicenseCreateParam param = mapper.readValue(
+            LicenseCreateParam param = MAPPER.readValue(
                                        json, LicenseCreateParam.class);
             return new LicenseCreator(param);
         }
@@ -128,7 +149,13 @@ public class LicenseManagerTest {
             content.setConsumerAmount(this.param.consumerAmount());
             content.setInfo(this.param.description());
             // Customized verification params
-            content.setExtra(this.param.extraParams());
+            String json;
+            try {
+                json = MAPPER.writeValueAsString(this.param.extraParams());
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Failed to write extra params", e);
+            }
+            content.setExtra(json);
             return content;
         }
     }
@@ -142,7 +169,7 @@ public class LicenseManagerTest {
         @Override
         protected synchronized void validateCreate(LicenseContent content)
                   throws LicenseContentException {
-            super.validate(content);
+            super.validateCreate(content);
         }
     }
 
@@ -166,7 +193,7 @@ public class LicenseManagerTest {
                 throw new RuntimeException(String.format(
                           "Failed to read file '%s'", path));
             }
-            LicenseVerifyParam param = mapper.readValue(
+            LicenseVerifyParam param = MAPPER.readValue(
                                        json, LicenseVerifyParam.class);
             return new LicenseVerifier(param);
         }
@@ -178,6 +205,14 @@ public class LicenseManagerTest {
                 this.manager.install(licenseFile);
             } catch (Exception e) {
                 throw new RuntimeException("Failed to install license", e);
+            }
+        }
+
+        public synchronized void uninstall() {
+            try {
+                this.manager.uninstall();
+            } catch (Exception e) {
+                throw new RuntimeException("Failed to uninstall license", e);
             }
         }
 
@@ -220,8 +255,14 @@ public class LicenseManagerTest {
             super.validate(content);
 
             // Verify the customized license parameters
-            @SuppressWarnings("unchecked")
-            List<ExtraParam> extraParams = (List<ExtraParam>) content.getExtra();
+            List<ExtraParam> extraParams;
+            try {
+                TypeReference type = new TypeReference<List<ExtraParam>>() {};
+                extraParams = MAPPER.readValue((String) content.getExtra(),
+                                               type);
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to read extra params", e);
+            }
             ExtraParam param = this.matchParam(this.serverId, extraParams);
             if (param == null) {
                 throw newLicenseException("The current server's id '%s' " +

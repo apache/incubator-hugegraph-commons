@@ -20,6 +20,7 @@
 package com.baidu.hugegraph.unit.license;
 
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -51,6 +52,7 @@ public class MachineInfoTest {
             Assert.assertTrue(IPV4_PATTERN.matcher(ip).matches() ||
                               IPV6_PATTERN.matcher(ip).matches());
         }
+        Assert.assertEquals(ipAddressList, machineInfo.getIpAddress());
     }
 
     @Test
@@ -59,6 +61,7 @@ public class MachineInfoTest {
         for (String mac : macAddressList) {
             Assert.assertTrue(MAC_PATTERN.matcher(mac).matches());
         }
+        Assert.assertEquals(macAddressList, machineInfo.getMacAddress());
     }
 
     @Test
@@ -72,11 +75,15 @@ public class MachineInfoTest {
     }
 
     @Test
-    public void test() {
+    public void testGetMacByInetAddress() throws UnknownHostException {
         List<InetAddress> addressList = machineInfo.getLocalAllInetAddress();
         for (InetAddress address : addressList) {
             String mac = machineInfo.getMacByInetAddress(address);
             Assert.assertTrue(MAC_PATTERN.matcher(mac).matches());
         }
+        InetAddress address = InetAddress.getByAddress(new byte[]{0, 0, 0, 0});
+        Assert.assertThrows(RuntimeException.class, () -> {
+            machineInfo.getMacByInetAddress(address);
+        });
     }
 }

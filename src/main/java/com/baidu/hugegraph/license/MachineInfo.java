@@ -105,8 +105,10 @@ public class MachineInfo {
         try {
             mac = NetworkInterface.getByInetAddress(inetAddr)
                                   .getHardwareAddress();
-        } catch (SocketException e) {
-            throw new RuntimeException("Failed to get hardware addresses");
+        } catch (Exception e) {
+            throw new RuntimeException(String.format(
+                      "Failed to get mac address for inet address '%s'",
+                      inetAddr));
         }
 
         StringBuilder sb = new StringBuilder();
