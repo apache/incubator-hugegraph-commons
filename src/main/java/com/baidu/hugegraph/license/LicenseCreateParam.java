@@ -48,15 +48,15 @@ public class LicenseCreateParam {
     private String licensePath;
 
     @JsonProperty("issued_time")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date issuedTime = new Date();
 
     @JsonProperty("not_before")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date notBefore = this.issuedTime;
 
     @JsonProperty("not_after")
-    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date notAfter = DateUtils.addDays(this.notBefore, 30);
 
     @JsonProperty("consumer_type")

@@ -20,11 +20,13 @@
 package com.baidu.hugegraph.unit.license;
 
 import java.io.IOException;
+import java.text.DateFormat;
 import java.text.ParseException;
+import java.util.TimeZone;
 
-import org.apache.commons.lang3.time.DateUtils;
 import org.junit.Test;
 
+import com.baidu.hugegraph.date.SafeDateFormat;
 import com.baidu.hugegraph.license.LicenseCreateParam;
 import com.baidu.hugegraph.testutil.Assert;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -82,14 +84,14 @@ public class LicenseCreateParamTest {
         Assert.assertEquals("./privateKeys.store", param.privateKeyPath());
         Assert.assertEquals("./hugegraph-evaluation.license",
                             param.licensePath());
-        Assert.assertEquals(DateUtils.parseDate("2019-08-10 00:00:00",
-                                                "yyyy-MM-dd HH:mm:ss"),
+
+        DateFormat df = new SafeDateFormat("yyyy-MM-dd HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("GMT+08:00"));
+        Assert.assertEquals(df.parse("2019-08-10 00:00:00"),
                             param.issuedTime());
-        Assert.assertEquals(DateUtils.parseDate("2019-08-10 00:00:00",
-                                                "yyyy-MM-dd HH:mm:ss"),
+        Assert.assertEquals(df.parse("2019-08-10 00:00:00"),
                             param.notBefore());
-        Assert.assertEquals(DateUtils.parseDate("2020-08-10 00:00:00",
-                                                "yyyy-MM-dd HH:mm:ss"),
+        Assert.assertEquals(df.parse("2020-08-10 00:00:00"),
                             param.notAfter());
         Assert.assertEquals("user", param.consumerType());
         Assert.assertEquals(1, param.consumerAmount());

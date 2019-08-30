@@ -105,12 +105,11 @@ public class CommonLicenseManager extends LicenseManager {
     }
 
     private Object load(String text) throws Exception {
-        BufferedInputStream stream = null;
+        InputStream bis = null;
         XMLDecoder decoder = null;
         try {
-            InputStream bis = new ByteArrayInputStream(text.getBytes(CHARSET));
-            stream = new BufferedInputStream(bis);
-            decoder = new XMLDecoder(new BufferedInputStream(stream, BUF_SIZE));
+            bis = new ByteArrayInputStream(text.getBytes(CHARSET));
+            decoder = new XMLDecoder(new BufferedInputStream(bis, BUF_SIZE));
             return decoder.readObject();
         } catch (UnsupportedEncodingException e) {
             throw new LicenseContentException(String.format(
@@ -120,8 +119,8 @@ public class CommonLicenseManager extends LicenseManager {
                 decoder.close();
             }
             try {
-                if (stream != null) {
-                    stream.close();
+                if (bis != null) {
+                    bis.close();
                 }
             } catch (Exception e) {
                 LOG.warn("Failed to close stream", e);
