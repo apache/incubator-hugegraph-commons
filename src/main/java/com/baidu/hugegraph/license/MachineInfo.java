@@ -45,7 +45,7 @@ public class MachineInfo {
         }
         this.ipAddressList = new ArrayList<>();
         List<InetAddress> inetAddresses = this.getLocalAllInetAddress();
-        if (inetAddresses != null && inetAddresses.size() > 0) {
+        if (inetAddresses != null && !inetAddresses.isEmpty()) {
             this.ipAddressList = inetAddresses.stream()
                                               .map(InetAddress::getHostAddress)
                                               .distinct()
@@ -61,7 +61,7 @@ public class MachineInfo {
         }
         this.macAddressList = new ArrayList<>();
         List<InetAddress> inetAddresses = this.getLocalAllInetAddress();
-        if (inetAddresses != null && inetAddresses.size() > 0) {
+        if (inetAddresses != null && !inetAddresses.isEmpty()) {
             // Get the Mac address of all network interfaces
             List<String> list = new ArrayList<>();
             Set<String> uniqueValues = new HashSet<>();

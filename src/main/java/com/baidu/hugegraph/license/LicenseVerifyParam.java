@@ -58,4 +58,3 @@ public class LicenseVerifyParam {
         return this.publicKeyPath;
     }
 }
-
