@@ -42,15 +42,15 @@ public class LockGroupTest {
         Lock lock = this.group.lock("lock");
         Assert.assertTrue(lock instanceof ReentrantLock);
         Lock lock1 = this.group.lock("lock");
-        Assert.assertTrue(lock == lock1);
+        Assert.assertSame(lock, lock1);
     }
 
     @Test
     public void testAtomicLock() {
         AtomicLock lock = this.group.atomicLock("lock");
-        Assert.assertTrue(lock instanceof AtomicLock);
+        Assert.assertNotNull(lock);
         AtomicLock lock1 = this.group.atomicLock("lock");
-        Assert.assertTrue(lock == lock1);
+        Assert.assertSame(lock, lock1);
     }
 
     @Test
@@ -58,14 +58,14 @@ public class LockGroupTest {
         ReadWriteLock lock = this.group.readWriteLock("lock");
         Assert.assertTrue(lock instanceof ReentrantReadWriteLock);
         ReadWriteLock lock1 = this.group.readWriteLock("lock");
-        Assert.assertTrue(lock == lock1);
+        Assert.assertSame(lock, lock1);
     }
 
     @Test
     public void testKeyLock() {
         KeyLock lock = this.group.keyLock("lock");
-        Assert.assertTrue(lock instanceof KeyLock);
+        Assert.assertNotNull(lock);
         KeyLock lock1 = this.group.keyLock("lock");
-        Assert.assertTrue(lock == lock1);
+        Assert.assertSame(lock, lock1);
     }
 }
