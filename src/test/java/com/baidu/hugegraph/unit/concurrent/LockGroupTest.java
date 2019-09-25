@@ -68,4 +68,9 @@ public class LockGroupTest {
         KeyLock lock1 = this.group.keyLock("lock");
         Assert.assertSame(lock, lock1);
     }
+
+    @Test
+    public void testName() {
+        Assert.assertEquals(GROUP, this.group.name());
+    }
 }
