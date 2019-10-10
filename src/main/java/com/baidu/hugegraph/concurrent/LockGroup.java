@@ -64,6 +64,20 @@ public class LockGroup {
         return (KeyLock) this.locksMap.get(lockName);
     }
 
+    public KeyLock keyLock(String lockName, int size) {
+        if (!this.locksMap.containsKey(lockName)) {
+            this.locksMap.putIfAbsent(lockName, new KeyLock(size));
+        }
+        return (KeyLock) this.locksMap.get(lockName);
+    }
+
+    public KeyLock2 keyLock2(String lockName) {
+        if (!this.locksMap.containsKey(lockName)) {
+            this.locksMap.putIfAbsent(lockName, new KeyLock2());
+        }
+        return (KeyLock2) this.locksMap.get(lockName);
+    }
+
     public String name() {
         return this.name;
     }
