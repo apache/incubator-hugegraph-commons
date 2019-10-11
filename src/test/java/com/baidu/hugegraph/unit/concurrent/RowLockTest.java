@@ -28,23 +28,25 @@ import java.util.Set;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.baidu.hugegraph.concurrent.KeyLock2;
+import com.baidu.hugegraph.concurrent.RowLock;
 import com.baidu.hugegraph.unit.BaseUnitTest;
+import com.google.common.collect.ImmutableSet;
 
-public class KeyLock2Test extends BaseUnitTest {
+public class RowLockTest extends BaseUnitTest {
 
     private static final int THREADS_NUM = 8;
 
     @Test
-    public void testKeyLock2() {
-        KeyLock2<Integer> lock = new KeyLock2<>();
-        lock.lockAll(1, 2, 3);
-        lock.unlockAll(1, 2, 3);
+    public void testRowLock() {
+        RowLock<Integer> lock = new RowLock<>();
+        lock.lockAll(ImmutableSet.of(1, 2, 3));
+        lock.unlockAll(ImmutableSet.of(1, 2, 3));
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testKeyLock2WithMultiThreads() {
-        KeyLock2 lock = new KeyLock2();
+    public void testRowLockWithMultiThreads() {
+        RowLock lock = new RowLock();
         Set<String> names = new HashSet<>(THREADS_NUM);
         List<Integer> keys = new ArrayList<>(5);
         Random random = new Random();
@@ -55,17 +57,18 @@ public class KeyLock2Test extends BaseUnitTest {
         Assert.assertEquals(0, names.size());
 
         runWithThreads(THREADS_NUM, () -> {
-            lock.lockAll(keys.toArray());
+            lock.lockAll(new HashSet<>(keys));
             names.add(Thread.currentThread().getName());
-            lock.unlockAll(keys.toArray());
+            lock.unlockAll(new HashSet<>(keys));
         });
 
         Assert.assertEquals(THREADS_NUM, names.size());
     }
 
+    @SuppressWarnings("unchecked")
     @Test
-    public void testKeyLock2WithMultiThreadsWithRandomKey() {
-        KeyLock2 lock = new KeyLock2();
+    public void testRowLockWithMultiThreadsWithRandomKey() {
+        RowLock lock = new RowLock();
         Set<String> names = new HashSet<>(THREADS_NUM);
 
         Assert.assertEquals(0, names.size());
@@ -76,9 +79,9 @@ public class KeyLock2Test extends BaseUnitTest {
             for (int i = 0; i < 5; i++) {
                 keys.add(random.nextInt(THREADS_NUM));
             }
-            lock.lockAll(keys.toArray());
+            lock.lockAll(new HashSet<>(keys));
             names.add(Thread.currentThread().getName());
-            lock.unlockAll(keys.toArray());
+            lock.unlockAll(new HashSet<>(keys));
         });
 
         Assert.assertEquals(THREADS_NUM, names.size());

@@ -71,11 +71,11 @@ public class LockGroup {
         return (KeyLock) this.locksMap.get(lockName);
     }
 
-    public KeyLock2 keyLock2(String lockName) {
+    public RowLock rowLock(String lockName) {
         if (!this.locksMap.containsKey(lockName)) {
-            this.locksMap.putIfAbsent(lockName, new KeyLock2());
+            this.locksMap.putIfAbsent(lockName, new RowLock());
         }
-        return (KeyLock2) this.locksMap.get(lockName);
+        return (RowLock) this.locksMap.get(lockName);
     }
 
     public String name() {

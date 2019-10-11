@@ -19,36 +19,39 @@
 
 package com.baidu.hugegraph.concurrent;
 
-import java.util.Arrays;
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
-import java.util.concurrent.Semaphore;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
 
-public class KeyLock2<K> {
+import com.baidu.hugegraph.util.E;
 
-    private final ConcurrentMap<K, Semaphore> map = new ConcurrentHashMap<>();
-    private final ThreadLocal<Map<K, LockInfo>> local =
+public class RowLock<K extends Comparable<K>> {
+
+    private final Map<K, Lock> locks = new ConcurrentHashMap<>();
+    private final ThreadLocal<Map<K, LocalLock>> localLocks =
                   ThreadLocal.withInitial(HashMap::new);
 
     public void lock(K key) {
         if (key == null) {
             return;
         }
-        LockInfo info = this.local.get().get(key);
-        if (info == null) {
-            Semaphore current = new Semaphore(1);
-            current.acquireUninterruptibly();
-            Semaphore previous = this.map.put(key, current);
-            if (previous != null) {
-                previous.acquireUninterruptibly();
-            }
-            this.local.get().put(key, new LockInfo(current));
+        LocalLock localLock = this.localLocks.get().get(key);
+        if (localLock != null) {
+            localLock.lockCount++;
         } else {
-            info.lockCount++;
+            Lock current = new ReentrantLock();
+            Lock previous = this.locks.putIfAbsent(key, current);
+            if (previous != null) {
+                current = previous;
+            }
+            current.lock();
+            this.localLocks.get().put(key, new LocalLock(current));
         }
     }
 
@@ -56,26 +59,30 @@ public class KeyLock2<K> {
         if (key == null) {
             return;
         }
-        LockInfo info = this.local.get().get(key);
-        if (info != null && --info.lockCount == 0) {
-            info.current.release();
-            this.map.remove(key, info.current);
-            this.local.get().remove(key);
+        LocalLock localLock = this.localLocks.get().get(key);
+        if (localLock != null && --localLock.lockCount == 0) {
+            this.locks.remove(key, localLock.current);
+            this.localLocks.get().remove(key);
+            localLock.current.unlock();
         }
+        E.checkState(localLock.lockCount >= 0,
+                     "The lock count must be >= 0, but got %s",
+                     localLock.lockCount);
     }
 
-    public void lockAll(K... keys) {
+    @SuppressWarnings("unchecked")
+    public void lockAll(Set<K> keys) {
         if (keys == null) {
             return;
         }
-        List<K> list = Arrays.asList(keys);
-        list.sort(Comparator.comparingInt(Object::hashCode));
+        List<K> list = new ArrayList<>(keys);
+        Collections.sort(list);
         for (K key : list) {
             this.lock(key);
         }
     }
 
-    public void unlockAll(K... keys) {
+    public void unlockAll(Set<K> keys) {
         if (keys == null) {
             return;
         }
@@ -84,12 +91,12 @@ public class KeyLock2<K> {
         }
     }
 
-    private static class LockInfo {
+    private static class LocalLock {
 
-        private final Semaphore current;
+        private final Lock current;
         private int lockCount;
 
-        private LockInfo(Semaphore current) {
+        private LocalLock(Lock current) {
             this.current = current;
             this.lockCount = 1;
         }
