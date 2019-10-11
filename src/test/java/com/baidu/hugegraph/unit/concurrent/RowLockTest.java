@@ -39,7 +39,19 @@ public class RowLockTest extends BaseUnitTest {
     @Test
     public void testRowLock() {
         RowLock<Integer> lock = new RowLock<>();
+        // Regular lock and unlock
         lock.lock(1);
+        lock.unlock(1);
+
+        // Lock one lock multiple times
+        lock.lock(1);
+        lock.lock(1);
+        lock.unlock(1);
+        lock.unlock(1);
+
+        // Unlock one lock multiple times
+        lock.lock(1);
+        lock.unlock(1);
         lock.unlock(1);
     }
 
