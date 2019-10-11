@@ -60,7 +60,10 @@ public class RowLock<K extends Comparable<K>> {
             return;
         }
         LocalLock localLock = this.localLocks.get().get(key);
-        if (localLock != null && --localLock.lockCount == 0) {
+        if (localLock == null) {
+            return;
+        }
+        if (--localLock.lockCount == 0) {
             this.locks.remove(key, localLock.current);
             this.localLocks.get().remove(key);
             localLock.current.unlock();
@@ -70,7 +73,6 @@ public class RowLock<K extends Comparable<K>> {
                      localLock.lockCount);
     }
 
-    @SuppressWarnings("unchecked")
     public void lockAll(Set<K> keys) {
         if (keys == null) {
             return;
