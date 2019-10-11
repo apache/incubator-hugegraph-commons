@@ -39,6 +39,13 @@ public class RowLockTest extends BaseUnitTest {
     @Test
     public void testRowLock() {
         RowLock<Integer> lock = new RowLock<>();
+        lock.lock(1);
+        lock.unlock(1);
+    }
+
+    @Test
+    public void testRowLockMultiRows() {
+        RowLock<Integer> lock = new RowLock<>();
         lock.lockAll(ImmutableSet.of(1, 2, 3));
         lock.unlockAll(ImmutableSet.of(1, 2, 3));
     }
