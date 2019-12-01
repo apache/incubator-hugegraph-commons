@@ -33,15 +33,9 @@ public class ConfigListOption<T> extends ConfigOption<List<T>> {
 
     @SuppressWarnings("unchecked")
     public ConfigListOption(String name, String desc,
-                            Predicate<List<T>> pred, T value) {
-        this(name, desc, pred, (Class<T>) value.getClass(), value);
-    }
-
-    @SuppressWarnings("unchecked")
-    public ConfigListOption(String name, String desc,
-                            Predicate<List<T>> pred, Class<T> clazz,
-                            T... values) {
-        this(name, false, desc, pred, clazz, Arrays.asList(values));
+                            Predicate<List<T>> pred, T... values) {
+        this(name, false, desc, pred,
+             (Class<T>) values[0].getClass(), Arrays.asList(values));
     }
 
     @SuppressWarnings("unchecked")
@@ -55,8 +49,13 @@ public class ConfigListOption<T> extends ConfigOption<List<T>> {
     }
 
     @Override
-    public List<T> convert(Object value) {
-        return convert(value, part -> super.convert(part, this.elemClass));
+    protected boolean forList() {
+        return true;
+    }
+
+    @Override
+    protected List<T> parse(Object value) {
+        return convert(value, part -> this.parse(part, this.elemClass));
     }
 
     @SuppressWarnings("unchecked")

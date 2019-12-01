@@ -105,15 +105,15 @@ public class HugeConfigTest extends BaseUnitTest {
 
         Assert.assertEquals(true, config.get(TestOptions.bool));
 
-        Assert.assertEquals(WeekDay.WEDNESDAY, config.get(TestOptions.weekday));
-        Assert.assertEquals(Arrays.asList(WeekDay.SATURDAY, WeekDay.SUNDAY),
-                            config.get(TestOptions.weekdays));
-
         Assert.assertEquals(Arrays.asList("list-value1", "list-value2"),
                             config.get(TestOptions.list));
 
         Assert.assertEquals(ImmutableMap.of("key1", "value1", "key2", "value2"),
                             config.getMap(TestOptions.map));
+
+        Assert.assertEquals(WeekDay.WEDNESDAY, config.get(TestOptions.weekday));
+        Assert.assertEquals(Arrays.asList(WeekDay.SATURDAY, WeekDay.SUNDAY),
+                            config.get(TestOptions.weekdays));
     }
 
     @Test
@@ -140,6 +140,10 @@ public class HugeConfigTest extends BaseUnitTest {
 
         Assert.assertEquals(ImmutableMap.of("key1", "value1", "key3", "value3"),
                             config.getMap(TestOptions.map));
+
+        Assert.assertEquals(WeekDay.SUNDAY, config.get(TestOptions.weekday));
+        Assert.assertEquals(Arrays.asList(WeekDay.SATURDAY, WeekDay.FRIDAY),
+                            config.get(TestOptions.weekdays));
     }
 
     @Test
@@ -258,7 +262,7 @@ public class HugeConfigTest extends BaseUnitTest {
                         true
                 );
 
-        public static final ConfigConvOption<WeekDay> weekday =
+        public static final ConfigConvOption<String, WeekDay> weekday =
                 new ConfigConvOption<>(
                         "group1.weekday",
                         "description of group1.weekday",
@@ -275,7 +279,6 @@ public class HugeConfigTest extends BaseUnitTest {
                         inValues("SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY",
                                  "THURSDAY", "FRIDAY", "SATURDAY"),
                         WeekDay::valueOf,
-                        String.class,
                         "SATURDAY", "SUNDAY"
                 );
 
@@ -284,7 +287,6 @@ public class HugeConfigTest extends BaseUnitTest {
                         "group1.list",
                         "description of group1.list",
                         disallowEmpty(),
-                        String.class,
                         "list-value1", "list-value2"
                 );
 
@@ -293,7 +295,6 @@ public class HugeConfigTest extends BaseUnitTest {
                         "group1.map",
                         "description of group1.map",
                         disallowEmpty(),
-                        String.class,
                         "key1:value1", "key2:value2"
                 );
     }

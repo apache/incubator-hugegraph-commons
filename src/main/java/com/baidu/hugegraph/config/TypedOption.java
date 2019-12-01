@@ -112,14 +112,24 @@ public class TypedOption<T, R> {
         return this.convert(this.defaultValue);
     }
 
-    @SuppressWarnings("unchecked")
-    public R convert(Object value) {
-        return (R) this.convert(value, this.dataType);
+    public R parseConvert(Object value) {
+        T parsed = this.parse(value);
+        this.check(parsed);
+        return this.convert(parsed);
     }
 
-    public Object convert(Object value, Class<?> dataType) {
+    @SuppressWarnings("unchecked")
+    protected T parse(Object value) {
+        return (T) this.parse(value, this.dataType);
+    }
+
+    protected Object parse(Object value, Class<?> dataType) {
         if (dataType.equals(String.class)) {
             return value;
+        } else if (List.class.isAssignableFrom(dataType)) {
+            E.checkState(this.forList(),
+                         "List option can't be registered with class %s",
+                         this.getClass().getSimpleName());
         }
 
         // Use PropertyConverter method `toXXX` convert value
@@ -138,11 +148,13 @@ public class TypedOption<T, R> {
         }
     }
 
-    public void check(Object value) {
+    protected void check(Object value) {
         E.checkNotNull(value, "value", this.name);
         E.checkArgument(this.dataType.isInstance(value),
-                        "Invalid type of value '%s' for option '%s'",
-                        value, this.name);
+                        "Invalid type of value '%s' for option '%s', " +
+                        "expect type %s but got %s", value, this.name,
+                        this.dataType.getSimpleName(),
+                        value.getClass().getSimpleName());
         if (this.checkFunc != null) {
             @SuppressWarnings("unchecked")
             T result = (T) value;
@@ -150,6 +162,15 @@ public class TypedOption<T, R> {
                             "Invalid option value for '%s': %s",
                             this.name, value);
         }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected R convert(T value) {
+        return (R) value;
+    }
+
+    protected boolean forList() {
+        return false;
     }
 
     @Override
