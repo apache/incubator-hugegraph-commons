@@ -20,6 +20,11 @@
 package com.baidu.hugegraph.testutil;
 
 import java.util.function.Consumer;
+import java.util.function.Function;
+
+import org.hamcrest.BaseMatcher;
+import org.hamcrest.CoreMatchers;
+import org.hamcrest.Description;
 
 public class Assert extends org.junit.Assert {
 
@@ -83,5 +88,67 @@ public class Assert extends org.junit.Assert {
 
     public static void assertEquals(double expected, Object actual) {
         org.junit.Assert.assertEquals(expected, actual);
+    }
+
+    public static void assertGt(Object expected, Object actual) {
+        org.junit.Assert.assertThat(actual, new NumberMatcher(expected, cmp -> {
+            return cmp > 0;
+        }, ">"));
+    }
+
+    public static void assertGte(Object expected, Object actual) {
+        org.junit.Assert.assertThat(actual, new NumberMatcher(expected, cmp -> {
+            return cmp >= 0;
+        }, ">="));
+    }
+
+    public static void assertLt(Object expected, Object actual) {
+        org.junit.Assert.assertThat(actual, new NumberMatcher(expected, cmp -> {
+            return cmp < 0;
+        }, "<"));
+    }
+
+    public static void assertLte(Object expected, Object actual) {
+        org.junit.Assert.assertThat(actual, new NumberMatcher(expected, cmp -> {
+            return cmp <= 0;
+        }, "<="));
+    }
+
+    public static void assertContains(String sub, String actual) {
+        org.junit.Assert.assertThat(actual, CoreMatchers.containsString(sub));
+    }
+
+    public static void assertInstanceOf(Object object, Class<?> clazz) {
+        org.junit.Assert.assertThat(object, CoreMatchers.instanceOf(clazz));
+    }
+
+    private static class NumberMatcher extends BaseMatcher<Object> {
+
+        private final String symbol;
+        private final Number expected;
+        private final Function<Integer, Boolean> cmp;
+
+        public NumberMatcher(Object expected, Function<Integer, Boolean> cmp,
+                             String symbol) {
+            Assert.assertInstanceOf(expected, Number.class);
+            this.expected = (Number) expected;
+            this.cmp = cmp;
+            this.symbol = symbol;
+        }
+
+        @SuppressWarnings("unchecked")
+        @Override
+        public boolean matches(Object actual) {
+            Assert.assertInstanceOf(actual, Number.class);
+            Assert.assertInstanceOf(actual, Comparable.class);
+            int cmp = ((Comparable<Number>) actual).compareTo(this.expected);
+            return this.cmp.apply(cmp);
+        }
+
+        @Override
+        public void describeTo(Description desc) {
+            desc.appendText("a number ").appendText(this.symbol)
+                .appendText(" ").appendText(this.expected.toString());
+        }
     }
 }
