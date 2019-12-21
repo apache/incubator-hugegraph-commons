@@ -26,8 +26,6 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
 
-import com.baidu.hugegraph.util.E;
-
 public class Assert extends org.junit.Assert {
 
     @FunctionalInterface
@@ -92,25 +90,25 @@ public class Assert extends org.junit.Assert {
         org.junit.Assert.assertEquals(expected, actual);
     }
 
-    public static void assertGt(Object expected, Object actual) {
+    public static void assertGt(Number expected, Object actual) {
         org.junit.Assert.assertThat(actual, new NumberMatcher(expected, cmp -> {
             return cmp > 0;
         }, ">"));
     }
 
-    public static void assertGte(Object expected, Object actual) {
+    public static void assertGte(Number expected, Object actual) {
         org.junit.Assert.assertThat(actual, new NumberMatcher(expected, cmp -> {
             return cmp >= 0;
         }, ">="));
     }
 
-    public static void assertLt(Object expected, Object actual) {
+    public static void assertLt(Number expected, Object actual) {
         org.junit.Assert.assertThat(actual, new NumberMatcher(expected, cmp -> {
             return cmp < 0;
         }, "<"));
     }
 
-    public static void assertLte(Object expected, Object actual) {
+    public static void assertLte(Number expected, Object actual) {
         org.junit.Assert.assertThat(actual, new NumberMatcher(expected, cmp -> {
             return cmp <= 0;
         }, "<="));
@@ -130,11 +128,9 @@ public class Assert extends org.junit.Assert {
         private final Number expected;
         private final Function<Integer, Boolean> cmp;
 
-        public NumberMatcher(Object expected, Function<Integer, Boolean> cmp,
+        public NumberMatcher(Number expected, Function<Integer, Boolean> cmp,
                              String symbol) {
-            E.checkArgument(expected instanceof Number,
-                            "The 'expected' value must be a number");
-            this.expected = (Number) expected;
+            this.expected = expected;
             this.cmp = cmp;
             this.symbol = symbol;
         }

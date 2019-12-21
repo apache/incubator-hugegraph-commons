@@ -212,10 +212,17 @@ public class AssertTest extends BaseUnitTest {
         Assert.assertGt(1f, Float.valueOf("1.01"));
         Assert.assertGt(1d, Double.valueOf("1.01"));
 
-        Assert.assertThrows(IllegalArgumentException.class, () -> {
-            Assert.assertGt('1', 2);
+        Assert.assertGt((byte) 1, (byte) 2);
+        Assert.assertGt((short) 1, (short) 2);
+        Assert.assertGt(1, 2);
+        Assert.assertGt(1L, 2L);
+        Assert.assertGt(1f, 1.01f);
+        Assert.assertGt(1d, 1.01d);
+
+        Assert.assertThrows(AssertionError.class, () -> {
+            Assert.assertGt(1, (byte) 2);
         }, e -> {
-            Assert.assertContains("The 'expected' value must be a number",
+            Assert.assertContains("Expected: an instance of java.lang.Integer",
                                   e.getMessage());
         });
 
@@ -239,6 +246,20 @@ public class AssertTest extends BaseUnitTest {
             Assert.assertContains("Expected: an instance of java.lang.Double",
                                   e.getMessage());
         });
+
+        Assert.assertThrows(AssertionError.class, () -> {
+            Assert.assertGt(0.9d, 0.98f);
+        }, e -> {
+            Assert.assertContains("Expected: an instance of java.lang.Double",
+                                  e.getMessage());
+        });
+
+        Assert.assertThrows(AssertionError.class, () -> {
+            Assert.assertGt(0.9f, 0.98d);
+        }, e -> {
+            Assert.assertContains("Expected: an instance of java.lang.Float",
+                                  e.getMessage());
+        });
     }
 
     @Test
@@ -256,13 +277,6 @@ public class AssertTest extends BaseUnitTest {
         Assert.assertGte(1L, Long.valueOf("1"));
         Assert.assertGte(1f, Float.valueOf("1"));
         Assert.assertGte(1d, Double.valueOf("1"));
-
-        Assert.assertThrows(IllegalArgumentException.class, () -> {
-            Assert.assertGte('1', 1);
-        }, e -> {
-            Assert.assertContains("The 'expected' value must be a number",
-                                  e.getMessage());
-        });
 
         Assert.assertThrows(AssertionError.class, () -> {
             Assert.assertGte(1, 1.1);
@@ -287,13 +301,6 @@ public class AssertTest extends BaseUnitTest {
         Assert.assertLt(1L, Long.valueOf("0"));
         Assert.assertLt(1f, Float.valueOf("0.99"));
         Assert.assertLt(1d, Double.valueOf("0.99"));
-
-        Assert.assertThrows(IllegalArgumentException.class, () -> {
-            Assert.assertGt('1', 0);
-        }, e -> {
-            Assert.assertContains("The 'expected' value must be a number",
-                                  e.getMessage());
-        });
 
         Assert.assertThrows(AssertionError.class, () -> {
             Assert.assertGt(1, 0.9);
@@ -325,13 +332,6 @@ public class AssertTest extends BaseUnitTest {
         Assert.assertLte(1L, Long.valueOf("1"));
         Assert.assertLte(1f, Float.valueOf("1"));
         Assert.assertLte(1d, Double.valueOf("1"));
-
-        Assert.assertThrows(IllegalArgumentException.class, () -> {
-            Assert.assertLte('1', 1);
-        }, e -> {
-            Assert.assertContains("The 'expected' value must be a number",
-                                  e.getMessage());
-        });
 
         Assert.assertThrows(AssertionError.class, () -> {
             Assert.assertLte(1, 0.9);
