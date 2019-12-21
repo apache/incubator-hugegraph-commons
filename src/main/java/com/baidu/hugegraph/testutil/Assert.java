@@ -26,6 +26,8 @@ import org.hamcrest.BaseMatcher;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
 
+import com.baidu.hugegraph.util.E;
+
 public class Assert extends org.junit.Assert {
 
     @FunctionalInterface
@@ -118,7 +120,7 @@ public class Assert extends org.junit.Assert {
         org.junit.Assert.assertThat(actual, CoreMatchers.containsString(sub));
     }
 
-    public static void assertInstanceOf(Object object, Class<?> clazz) {
+    public static void assertInstanceOf(Class<?> clazz, Object object) {
         org.junit.Assert.assertThat(object, CoreMatchers.instanceOf(clazz));
     }
 
@@ -130,7 +132,8 @@ public class Assert extends org.junit.Assert {
 
         public NumberMatcher(Object expected, Function<Integer, Boolean> cmp,
                              String symbol) {
-            Assert.assertInstanceOf(expected, Number.class);
+            E.checkArgument(expected instanceof Number,
+                            "The 'expected' value must be a number");
             this.expected = (Number) expected;
             this.cmp = cmp;
             this.symbol = symbol;
@@ -139,8 +142,8 @@ public class Assert extends org.junit.Assert {
         @SuppressWarnings("unchecked")
         @Override
         public boolean matches(Object actual) {
-            Assert.assertInstanceOf(actual, Number.class);
-            Assert.assertInstanceOf(actual, Comparable.class);
+            Assert.assertInstanceOf(this.expected.getClass(), actual);
+            Assert.assertInstanceOf(Comparable.class, actual);
             int cmp = ((Comparable<Number>) actual).compareTo(this.expected);
             return this.cmp.apply(cmp);
         }
