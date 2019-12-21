@@ -48,9 +48,6 @@ public class HugeConfig extends PropertiesConfiguration {
         Iterator<String> keys = config.getKeys();
         while (keys.hasNext()) {
             String key = keys.next();
-            if (key.contains("..")) {
-                key = key.replace("..", ".");
-            }
             this.addProperty(key, config.getProperty(key));
         }
         this.checkRequiredOptions();

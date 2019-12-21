@@ -21,12 +21,14 @@ package com.baidu.hugegraph.config;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 import org.slf4j.Logger;
 
+import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 
 public final class OptionSpace {
@@ -63,6 +65,11 @@ public final class OptionSpace {
         try {
             Method method = clazz.getMethod(INSTANCE_METHOD);
             instance = (OptionHolder) method.invoke(null);
+            if (instance == null) {
+                exception = new ConfigException(
+                                "Returned null from %s() method",
+                                INSTANCE_METHOD);
+            }
         } catch (NoSuchMethodException e) {
             LOG.warn("Class {} does not has static method {}.",
                      holder, INSTANCE_METHOD);
@@ -91,6 +98,7 @@ public final class OptionSpace {
             LOG.warn("Already registered option holder: {} ({})",
                      module, holders.get(module));
         }
+        E.checkArgumentNotNull(holder, "OptionHolder can't be null");
         holders.put(module, holder.getClass());
         options.putAll(holder.options());
         LOG.debug("Registered options for OptionHolder: {}",
@@ -98,10 +106,10 @@ public final class OptionSpace {
     }
 
     public static Set<String> keys() {
-        return options.keySet();
+        return Collections.unmodifiableSet(options.keySet());
     }
 
-    public static Boolean containKey(String key) {
+    public static boolean containKey(String key) {
         return options.containsKey(key);
     }
 

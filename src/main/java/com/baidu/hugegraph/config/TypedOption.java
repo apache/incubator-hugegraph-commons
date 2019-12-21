@@ -150,17 +150,21 @@ public class TypedOption<T, R> {
 
     protected void check(Object value) {
         E.checkNotNull(value, "value", this.name);
-        E.checkArgument(this.dataType.isInstance(value),
-                        "Invalid type of value '%s' for option '%s', " +
-                        "expect type %s but got %s", value, this.name,
-                        this.dataType.getSimpleName(),
-                        value.getClass().getSimpleName());
+        if (!this.dataType.isInstance(value)) {
+            throw new ConfigException(
+                      "Invalid type of value '%s' for option '%s', " +
+                      "expect type %s but got %s", value, this.name,
+                      this.dataType.getSimpleName(),
+                      value.getClass().getSimpleName());
+        }
+
         if (this.checkFunc != null) {
             @SuppressWarnings("unchecked")
             T result = (T) value;
-            E.checkArgument(this.checkFunc.apply(result),
-                            "Invalid option value for '%s': %s",
-                            this.name, value);
+            if (!this.checkFunc.apply(result)) {
+                throw new ConfigException("Invalid option value for '%s': %s",
+                                          this.name, value);
+            }
         }
     }
 
