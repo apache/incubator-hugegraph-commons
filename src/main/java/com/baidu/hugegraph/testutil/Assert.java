@@ -48,17 +48,17 @@ public class Assert extends org.junit.Assert {
             runnable.run();
             fail = true;
         } catch (Throwable e) {
-            exceptionConsumer.accept(e);
             if (!throwable.isInstance(e)) {
                 Assert.fail(String.format(
-                            "Bad exception type %s(expect %s)",
-                            e.getClass(), throwable));
+                            "Bad exception type %s(expected %s)",
+                            e.getClass().getName(), throwable.getName()));
             }
+            exceptionConsumer.accept(e);
         }
         if (fail) {
             Assert.fail(String.format(
-                        "No exception was thrown(expect %s)",
-                        throwable));
+                        "No exception was thrown(expected %s)",
+                        throwable.getName()));
         }
     }
 

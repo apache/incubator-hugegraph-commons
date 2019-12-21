@@ -159,6 +159,13 @@ public class AssertTest extends BaseUnitTest {
             Assert.assertContains("expected:<1> but was:<2>",
                                   e.getMessage());
         });
+
+        Assert.assertThrows(AssertionError.class, () -> {
+            Assert.assertEquals(1, null);
+        }, e -> {
+            Assert.assertContains("expected:<1> but was:<null>",
+                                  e.getMessage());
+        });
     }
 
     @Test
@@ -186,7 +193,7 @@ public class AssertTest extends BaseUnitTest {
             Assert.fail("Expect error");
         } catch (AssertionError e) {
             Assert.assertEquals("No exception was thrown" +
-                                "(expect class java.lang.NullPointerException)",
+                                "(expected java.lang.NullPointerException)",
                                 e.getMessage());
         }
 
@@ -196,9 +203,9 @@ public class AssertTest extends BaseUnitTest {
             });
             Assert.fail("Expect error");
         } catch (AssertionError e) {
-            Assert.assertEquals("Bad exception type class " +
+            Assert.assertEquals("Bad exception type " +
                                 "java.lang.RuntimeException" +
-                                "(expect class java.lang.NullPointerException)",
+                                "(expected java.lang.NullPointerException)",
                                 e.getMessage());
         }
     }
@@ -218,6 +225,19 @@ public class AssertTest extends BaseUnitTest {
         Assert.assertGt(1L, 2L);
         Assert.assertGt(1f, 1.01f);
         Assert.assertGt(1d, 1.01d);
+
+        Assert.assertThrows(AssertionError.class, () -> {
+            Assert.assertGt(1, 0);
+        }, e -> {
+            Assert.assertContains("Expected: a number > 1", e.getMessage());
+        });
+
+        Assert.assertThrows(AssertionError.class, () -> {
+            Assert.assertGt(1, null);
+        }, e -> {
+            Assert.assertContains("Expected: an instance of java.lang.Integer",
+                                  e.getMessage());
+        });
 
         Assert.assertThrows(AssertionError.class, () -> {
             Assert.assertGt(1, (byte) 2);
@@ -279,6 +299,12 @@ public class AssertTest extends BaseUnitTest {
         Assert.assertGte(1d, Double.valueOf("1"));
 
         Assert.assertThrows(AssertionError.class, () -> {
+            Assert.assertGte(1, 0);
+        }, e -> {
+            Assert.assertContains("Expected: a number >= 1", e.getMessage());
+        });
+
+        Assert.assertThrows(AssertionError.class, () -> {
             Assert.assertGte(1, 1.1);
         }, e -> {
             Assert.assertContains("Expected: an instance of java.lang.Integer",
@@ -301,6 +327,12 @@ public class AssertTest extends BaseUnitTest {
         Assert.assertLt(1L, Long.valueOf("0"));
         Assert.assertLt(1f, Float.valueOf("0.99"));
         Assert.assertLt(1d, Double.valueOf("0.99"));
+
+        Assert.assertThrows(AssertionError.class, () -> {
+            Assert.assertLt(1, 2);
+        }, e -> {
+            Assert.assertContains("Expected: a number < 1", e.getMessage());
+        });
 
         Assert.assertThrows(AssertionError.class, () -> {
             Assert.assertGt(1, 0.9);
@@ -334,6 +366,12 @@ public class AssertTest extends BaseUnitTest {
         Assert.assertLte(1d, Double.valueOf("1"));
 
         Assert.assertThrows(AssertionError.class, () -> {
+            Assert.assertLte(1, 2);
+        }, e -> {
+            Assert.assertContains("Expected: a number <= 1", e.getMessage());
+        });
+
+        Assert.assertThrows(AssertionError.class, () -> {
             Assert.assertLte(1, 0.9);
         }, e -> {
             Assert.assertContains("Expected: an instance of java.lang.Integer",
@@ -359,6 +397,19 @@ public class AssertTest extends BaseUnitTest {
         }, e -> {
             Assert.assertContains("Expected: a string containing",
                                   e.getMessage());
+        });
+
+        Assert.assertThrows(AssertionError.class, () -> {
+            Assert.assertContains("null", null);
+        }, e -> {
+            Assert.assertContains("Expected: a string containing",
+                                  e.getMessage());
+        });
+
+        Assert.assertThrows(NullPointerException.class, () -> {
+            Assert.assertContains(null, "null");
+        }, e -> {
+            Assert.assertNull(e.getMessage());
         });
     }
 
