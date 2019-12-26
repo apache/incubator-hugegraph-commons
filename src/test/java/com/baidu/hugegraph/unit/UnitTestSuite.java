@@ -35,6 +35,7 @@ import com.baidu.hugegraph.unit.iterator.FilterIteratorTest;
 import com.baidu.hugegraph.unit.iterator.FlatMapperFilterIteratorTest;
 import com.baidu.hugegraph.unit.iterator.FlatMapperIteratorTest;
 import com.baidu.hugegraph.unit.iterator.MapperIteratorTest;
+import com.baidu.hugegraph.unit.iterator.ToListIteratorTest;
 import com.baidu.hugegraph.unit.license.ExtraParamTest;
 import com.baidu.hugegraph.unit.license.LicenseCreateParamTest;
 import com.baidu.hugegraph.unit.license.LicenseManagerTest;
@@ -74,6 +75,7 @@ import com.baidu.hugegraph.unit.version.VersionTest;
     MapperIteratorTest.class,
     FlatMapperIteratorTest.class,
     FlatMapperFilterIteratorTest.class,
+    ToListIteratorTest.class,
 
     BytesTest.class,
     CollectionUtilTest.class,

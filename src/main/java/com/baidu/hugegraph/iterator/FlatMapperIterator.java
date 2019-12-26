@@ -39,6 +39,12 @@ public class FlatMapperIterator<T, R> extends WrappedIterator<R> {
     }
 
     @Override
+    public void close() throws Exception {
+        this.resetResults();
+        super.close();
+    }
+
+    @Override
     protected Iterator<?> originIterator() {
         return this.originIterator;
     }
@@ -70,7 +76,15 @@ public class FlatMapperIterator<T, R> extends WrappedIterator<R> {
                 return true;
             }
         }
-        this.results = null;
+        this.resetResults();
         return false;
+    }
+
+    protected final void resetResults() {
+        if (this.results == null) {
+            return;
+        }
+        close(this.results);
+        this.results = null;
     }
 }

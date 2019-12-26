@@ -20,33 +20,39 @@
 package com.baidu.hugegraph.iterator;
 
 import java.util.Iterator;
-import java.util.function.Function;
+import java.util.List;
 
-import com.baidu.hugegraph.util.E;
+import org.apache.commons.collections.IteratorUtils;
 
-public class FlatMapperFilterIterator<T, R> extends FlatMapperIterator<T, R> {
+public class ToListIterator <V> extends WrappedIterator<V> {
 
-    private final Function<R, Boolean> filterCallback;
+    private final Iterator<V> origin;
+    private final Iterator<V> iterator;
 
-    public FlatMapperFilterIterator(Iterator<T> origin,
-                                    Function<T, Iterator<R>> mapper,
-                                    Function<R, Boolean> filter) {
-        super(origin, mapper);
-        this.filterCallback = filter;
+    public ToListIterator(Iterator<V> origin) {
+        this.origin = origin;
+        @SuppressWarnings("unchecked")
+        List<V> results = IteratorUtils.toList(origin);
+        this.iterator = results.iterator();
     }
 
     @Override
-    protected final boolean fetchMapped() {
-        E.checkNotNull(this.results, "mapper results");
-        while (this.results.hasNext()) {
-            R result = this.results.next();
-            if (result != null && this.filterCallback.apply(result)) {
-                assert this.current == none();
-                this.current = result;
-                return true;
-            }
+    public void remove() {
+        this.iterator.remove();
+    }
+
+    @Override
+    protected boolean fetch() {
+        assert this.current == none();
+        if (!this.iterator.hasNext()) {
+            return false;
         }
-        this.resetResults();
-        return false;
+        this.current = this.iterator.next();
+        return true;
+    }
+
+    @Override
+    protected Iterator<V> originIterator() {
+        return this.origin;
     }
 }
