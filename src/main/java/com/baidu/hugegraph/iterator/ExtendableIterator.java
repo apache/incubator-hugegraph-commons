@@ -66,7 +66,7 @@ public class ExtendableIterator<T> extends WrappedIterator<T> {
     }
 
     @Override
-    protected Iterator<?> originIterator() {
+    protected Iterator<T> originIterator() {
         return this.currentIterator;
     }
 

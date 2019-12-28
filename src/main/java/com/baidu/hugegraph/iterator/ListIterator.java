@@ -19,40 +19,52 @@
 
 package com.baidu.hugegraph.iterator;
 
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
-import org.apache.commons.collections.IteratorUtils;
+import com.baidu.hugegraph.util.InsertionOrderUtil;
 
-public class ToListIterator <V> extends WrappedIterator<V> {
+public class ListIterator<T> extends WrappedIterator<T> {
 
-    private final Iterator<V> origin;
-    private final Iterator<V> iterator;
+    private final Iterator<T> originIterator;
+    private final Iterator<T> resultsIterator;
+    private final List<T> results;
 
-    public ToListIterator(Iterator<V> origin) {
-        this.origin = origin;
-        @SuppressWarnings("unchecked")
-        List<V> results = IteratorUtils.toList(origin);
-        this.iterator = results.iterator();
+    public ListIterator(long capacity, Iterator<T> origin) {
+        this.originIterator = origin;
+        this.results = InsertionOrderUtil.newList();
+        while (origin.hasNext()) {
+            if (capacity >= 0L && this.results.size() >= capacity) {
+                throw new IllegalArgumentException(
+                          "The iterator exceeded capacity " + capacity);
+            }
+            this.results.add(origin.next());
+        }
+        this.resultsIterator = this.results.iterator();
     }
 
     @Override
     public void remove() {
-        this.iterator.remove();
+        this.resultsIterator.remove();
+    }
+
+    public List<T> list() {
+        return Collections.unmodifiableList(this.results);
     }
 
     @Override
     protected boolean fetch() {
         assert this.current == none();
-        if (!this.iterator.hasNext()) {
+        if (!this.resultsIterator.hasNext()) {
             return false;
         }
-        this.current = this.iterator.next();
+        this.current = this.resultsIterator.next();
         return true;
     }
 
     @Override
-    protected Iterator<V> originIterator() {
-        return this.origin;
+    protected Iterator<T> originIterator() {
+        return this.originIterator;
     }
 }
