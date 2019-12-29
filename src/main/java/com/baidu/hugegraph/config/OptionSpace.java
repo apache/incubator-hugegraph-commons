@@ -21,6 +21,7 @@ package com.baidu.hugegraph.config;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
@@ -64,6 +65,9 @@ public final class OptionSpace {
         Exception exception = null;
         try {
             Method method = clazz.getMethod(INSTANCE_METHOD);
+            if (!Modifier.isStatic(method.getModifiers())) {
+                throw new NoSuchMethodException(INSTANCE_METHOD);
+            }
             instance = (OptionHolder) method.invoke(null);
             if (instance == null) {
                 exception = new ConfigException(

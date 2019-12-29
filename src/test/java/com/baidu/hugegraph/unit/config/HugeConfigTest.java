@@ -202,6 +202,40 @@ public class HugeConfigTest extends BaseUnitTest {
                     11D
             );
         });
+
+        Assert.assertThrows(ConfigException.class, () -> {
+            new ConfigListOption<>(
+                    "group1.list",
+                    "description of list with invalid default values",
+                    disallowEmpty()
+            );
+        });
+
+        Assert.assertThrows(IllegalArgumentException.class, () -> {
+            new ConfigListOption<>(
+                    "group1.list",
+                    "description of list with invalid default values",
+                    null
+            );
+        });
+
+        Assert.assertThrows(ConfigException.class, () -> {
+            new ConfigListConvOption<String, WeekDay>(
+                    "group1.list_conv",
+                    "description of list_conv with invalid default values",
+                    disallowEmpty(),
+                    s -> WeekDay.valueOf(s)
+            );
+        });
+
+        Assert.assertThrows(IllegalArgumentException.class, () -> {
+            new ConfigListConvOption<String, WeekDay>(
+                    "group1.list_conv",
+                    "description of list_conv with invalid default values",
+                    null,
+                    s -> WeekDay.valueOf(s)
+            );
+        });
     }
 
     @Test

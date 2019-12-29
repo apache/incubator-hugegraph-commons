@@ -34,8 +34,7 @@ public class ConfigListOption<T> extends ConfigOption<List<T>> {
     @SuppressWarnings("unchecked")
     public ConfigListOption(String name, String desc,
                             Predicate<List<T>> pred, T... values) {
-        this(name, false, desc, pred,
-             (Class<T>) values[0].getClass(), Arrays.asList(values));
+        this(name, false, desc, pred, null, Arrays.asList(values));
     }
 
     @SuppressWarnings("unchecked")
@@ -44,6 +43,9 @@ public class ConfigListOption<T> extends ConfigOption<List<T>> {
                             List<T> values) {
         super(name, required, desc, pred,
               (Class<List<T>>) values.getClass(), values);
+        if (clazz == null && values.size() > 0) {
+            clazz = (Class<T>) values.get(0).getClass();
+        }
         E.checkArgumentNotNull(clazz, "Element class can't be null");
         this.elemClass = clazz;
     }

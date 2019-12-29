@@ -39,13 +39,13 @@ public class OptionSpaceTest extends BaseUnitTest {
 
         OptionSpace.register("testgroup1", OptionHolder1.class.getName());
         Assert.assertEquals(oldSize + 2, OptionSpace.keys().size());
-        Assert.assertTrue(OptionSpace.containKey("group1.text1"));
-        Assert.assertTrue(OptionSpace.containKey("group1.text2"));
+        Assert.assertTrue(OptionSpace.containKey("testgroup1.text1"));
+        Assert.assertTrue(OptionSpace.containKey("testgroup1.text2"));
 
         OptionSpace.register("testgroup1", new OptionHolder1());
         Assert.assertEquals(oldSize + 2, OptionSpace.keys().size());
-        Assert.assertTrue(OptionSpace.containKey("group1.text1"));
-        Assert.assertTrue(OptionSpace.containKey("group1.text2"));
+        Assert.assertTrue(OptionSpace.containKey("testgroup1.text1"));
+        Assert.assertTrue(OptionSpace.containKey("testgroup1.text2"));
 
         OptionSpace.register("testgroup2", OptionHolder2.class.getName());
         Assert.assertEquals(oldSize + 4, OptionSpace.keys().size());
@@ -75,22 +75,11 @@ public class OptionSpaceTest extends BaseUnitTest {
             OptionSpace.register("test-error", Exception.class.getName());
         });
 
-        class OptionHolderWithoutInstance extends OptionHolder {
-            // no instance()
-        }
         Assert.assertThrows(ConfigException.class, () -> {
             OptionSpace.register("test-error",
                                  OptionHolderWithoutInstance.class.getName());
         });
 
-        class OptionHolderWithNonStaticInstance extends OptionHolder {
-
-            // not static instance()
-            @SuppressWarnings("unused")
-            public OptionHolderWithNonStaticInstance instance() {
-                return new OptionHolderWithNonStaticInstance();
-            }
-        }
         Assert.assertThrows(ConfigException.class, () -> {
             OptionSpace.register("test-error", OptionHolderWithNonStaticInstance
                                                .class.getName());
@@ -110,6 +99,18 @@ public class OptionSpaceTest extends BaseUnitTest {
             OptionSpace.register("test-error",
                                  OptionHolderWithInvalidOption.class.getName());
         });
+    }
+
+    public static class OptionHolderWithoutInstance extends OptionHolder {
+        // no instance()
+    }
+
+    public static class OptionHolderWithNonStaticInstance extends OptionHolder {
+
+        // not static instance()
+        public OptionHolderWithNonStaticInstance instance() {
+            return new OptionHolderWithNonStaticInstance();
+        }
     }
 
     public static class OptionHolderWithInstanceNull extends OptionHolder {
@@ -132,7 +133,7 @@ public class OptionSpaceTest extends BaseUnitTest {
             return new OptionHolderWithInvalidOption();
         }
 
-        OptionHolderWithInvalidOption() {
+        private OptionHolderWithInvalidOption() {
             this.registerOptions();
         }
 

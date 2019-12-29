@@ -36,8 +36,7 @@ public class ConfigListConvOption<T, R> extends TypedOption<List<T>, List<R>> {
     public ConfigListConvOption(String name, String desc,
                                 Predicate<List<T>> pred, Function<T, R> convert,
                                 T... values) {
-        this(name, false, desc, pred, convert,
-             (Class<T>) values[0].getClass(), Arrays.asList(values));
+        this(name, false, desc, pred, convert, null, Arrays.asList(values));
     }
 
     @SuppressWarnings("unchecked")
@@ -46,8 +45,11 @@ public class ConfigListConvOption<T, R> extends TypedOption<List<T>, List<R>> {
                                 Class<T> clazz, List<T> values) {
         super(name, required, desc, pred,
               (Class<List<T>>) values.getClass(), values);
-        E.checkNotNull(clazz, "element class");
         E.checkNotNull(convert, "convert");
+        if (clazz == null && values.size() > 0) {
+            clazz = (Class<T>) values.get(0).getClass();
+        }
+        E.checkArgumentNotNull(clazz, "Element class can't be null");
         this.elemClass = clazz;
         this.converter = convert;
     }
