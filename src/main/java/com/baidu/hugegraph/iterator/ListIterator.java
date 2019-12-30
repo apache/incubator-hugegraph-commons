@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.iterator;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -29,18 +30,27 @@ public class ListIterator<T> extends WrappedIterator<T> {
 
     private final Iterator<T> originIterator;
     private final Iterator<T> resultsIterator;
-    private final List<T> results;
+    private final Collection<T> results;
 
     public ListIterator(long capacity, Iterator<T> origin) {
-        this.originIterator = origin;
-        this.results = InsertionOrderUtil.newList();
+        List<T> results = InsertionOrderUtil.newList();
         while (origin.hasNext()) {
-            if (capacity >= 0L && this.results.size() >= capacity) {
+            if (capacity >= 0L && results.size() >= capacity) {
                 throw new IllegalArgumentException(
                           "The iterator exceeded capacity " + capacity);
             }
-            this.results.add(origin.next());
+            results.add(origin.next());
         }
+        this.originIterator = origin;
+        this.results = Collections.unmodifiableList(results);
+        this.resultsIterator = this.results.iterator();
+    }
+
+    public ListIterator(Collection<T> origin) {
+        this.originIterator = origin.iterator();
+        this.results = origin instanceof List ?
+                       Collections.unmodifiableList((List<T>) origin) :
+                       Collections.unmodifiableCollection(origin);
         this.resultsIterator = this.results.iterator();
     }
 
@@ -49,8 +59,8 @@ public class ListIterator<T> extends WrappedIterator<T> {
         this.resultsIterator.remove();
     }
 
-    public List<T> list() {
-        return Collections.unmodifiableList(this.results);
+    public Collection<T> list() {
+        return this.results;
     }
 
     @Override
