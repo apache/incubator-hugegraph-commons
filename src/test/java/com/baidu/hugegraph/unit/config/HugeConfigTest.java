@@ -588,7 +588,6 @@ public class HugeConfigTest extends BaseUnitTest {
         }
     }
 
-
     public enum WeekDay {
 
         SUNDAY, MONDAY, TUESDAY, WEDNESDAY, THURSDAY, FRIDAY, SATURDAY;
