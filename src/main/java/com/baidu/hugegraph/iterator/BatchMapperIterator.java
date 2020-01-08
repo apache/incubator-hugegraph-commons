@@ -55,7 +55,7 @@ public class BatchMapperIterator<T, R> extends WrappedIterator<R> {
             return true;
         }
 
-        List<T> list = this.fetchBatch();
+        List<T> list = this.nextBatch();
         if (!list.isEmpty()) {
             assert this.batchIterator == null;
             // Do fetch
@@ -67,7 +67,7 @@ public class BatchMapperIterator<T, R> extends WrappedIterator<R> {
         return false;
     }
 
-    protected List<T> fetchBatch() {
+    protected final List<T> nextBatch() {
         if (!this.originIterator.hasNext()) {
             return ImmutableList.of();
         }
@@ -79,7 +79,7 @@ public class BatchMapperIterator<T, R> extends WrappedIterator<R> {
         return list;
     }
 
-    protected boolean fetchFromBatch() {
+    protected final boolean fetchFromBatch() {
         E.checkNotNull(this.batchIterator, "mapper results");
         while (this.batchIterator.hasNext()) {
             R result = this.batchIterator.next();
@@ -89,11 +89,11 @@ public class BatchMapperIterator<T, R> extends WrappedIterator<R> {
                 return true;
             }
         }
-        this.resetResults();
+        this.resetBatchIterator();
         return false;
     }
 
-    protected final void resetResults() {
+    protected final void resetBatchIterator() {
         if (this.batchIterator == null) {
             return;
         }

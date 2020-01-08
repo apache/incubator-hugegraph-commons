@@ -142,6 +142,11 @@ public class BatchMapperIteratorTest extends BaseUnitTest {
         Assert.assertEquals(4, results.next());
         Assert.assertEquals(5, results.next());
         Assert.assertEquals(6, results.next());
+
+        results = new BatchMapperIterator<>(2, DATA3.iterator(), MAPPER);
+        Assert.assertEquals(4, results.next());
+        Assert.assertEquals(5, results.next());
+        Assert.assertEquals(6, results.next());
     }
 
     @Test
@@ -204,7 +209,7 @@ public class BatchMapperIteratorTest extends BaseUnitTest {
     }
 
     @Test
-    public void testMapperTHenReturn2X() {
+    public void testMapperThenReturn2X() {
         Iterator<Integer> results;
 
         results = new BatchMapperIterator<>(1, DATA3.iterator(), batch -> {

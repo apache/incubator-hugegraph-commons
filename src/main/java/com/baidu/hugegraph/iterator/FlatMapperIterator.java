@@ -40,7 +40,7 @@ public class FlatMapperIterator<T, R> extends WrappedIterator<R> {
 
     @Override
     public void close() throws Exception {
-        this.resetResults();
+        this.resetBatchIterator();
         super.close();
     }
 
@@ -51,7 +51,7 @@ public class FlatMapperIterator<T, R> extends WrappedIterator<R> {
 
     @Override
     protected final boolean fetch() {
-        if (this.batchIterator != null && this.fetchFromMap()) {
+        if (this.batchIterator != null && this.fetchFromBatch()) {
             return true;
         }
 
@@ -60,14 +60,14 @@ public class FlatMapperIterator<T, R> extends WrappedIterator<R> {
             assert this.batchIterator == null;
             // Do fetch
             this.batchIterator = this.mapperCallback.apply(next);
-            if (this.batchIterator != null && this.fetchFromMap()) {
+            if (this.batchIterator != null && this.fetchFromBatch()) {
                 return true;
             }
         }
         return false;
     }
 
-    protected boolean fetchFromMap() {
+    protected boolean fetchFromBatch() {
         E.checkNotNull(this.batchIterator, "mapper results");
         while (this.batchIterator.hasNext()) {
             R result = this.batchIterator.next();
@@ -77,11 +77,11 @@ public class FlatMapperIterator<T, R> extends WrappedIterator<R> {
                 return true;
             }
         }
-        this.resetResults();
+        this.resetBatchIterator();
         return false;
     }
 
-    protected final void resetResults() {
+    protected final void resetBatchIterator() {
         if (this.batchIterator == null) {
             return;
         }

@@ -36,7 +36,7 @@ public class FlatMapperFilterIterator<T, R> extends FlatMapperIterator<T, R> {
     }
 
     @Override
-    protected final boolean fetchFromMap() {
+    protected final boolean fetchFromBatch() {
         E.checkNotNull(this.batchIterator, "mapper results");
         while (this.batchIterator.hasNext()) {
             R result = this.batchIterator.next();
@@ -46,7 +46,7 @@ public class FlatMapperFilterIterator<T, R> extends FlatMapperIterator<T, R> {
                 return true;
             }
         }
-        this.resetResults();
+        this.resetBatchIterator();
         return false;
     }
 }
