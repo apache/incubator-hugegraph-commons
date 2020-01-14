@@ -40,7 +40,9 @@ public class ExtraParamTest {
                 + "\"cpus\":32,"
                 + "\"ram\":65536,"
                 + "\"threads\":96,"
-                + "\"memory\":32768"
+                + "\"memory\":32768,"
+                + "\"nodes\":3,"
+                + "\"data_size\":1024"
                 + "}";
         ObjectMapper mapper = new ObjectMapper();
         ExtraParam param = mapper.readValue(json, ExtraParam.class);
@@ -53,5 +55,7 @@ public class ExtraParamTest {
         Assert.assertEquals(65536, param.ram());
         Assert.assertEquals(96, param.threads());
         Assert.assertEquals(32768, param.memory());
+        Assert.assertEquals(3, param.nodes());
+        Assert.assertEquals(1024, param.dataSize());
     }
 }
