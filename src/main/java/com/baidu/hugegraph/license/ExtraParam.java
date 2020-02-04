@@ -59,6 +59,12 @@ public class ExtraParam {
     @JsonProperty("data_size")
     private long dataSize;
 
+    @JsonProperty("vertices")
+    private long vertices;
+
+    @JsonProperty("edges")
+    private long edges;
+
     public String id() {
         return this.id;
     }
@@ -101,5 +107,13 @@ public class ExtraParam {
 
     public long dataSize() {
         return this.dataSize;
+    }
+
+    public long vertices() {
+        return this.vertices;
+    }
+
+    public long edges() {
+        return this.edges;
     }
 }
