@@ -37,6 +37,52 @@ import com.baidu.hugegraph.util.NumericUtil;
 public class LongEncodingTest extends BaseUnitTest {
 
     @Test
+    public void testValidB64Char() {
+        Assert.assertTrue(LongEncoding.validB64Char('0'));
+        Assert.assertTrue(LongEncoding.validB64Char('1'));
+        Assert.assertTrue(LongEncoding.validB64Char('9'));
+        Assert.assertTrue(LongEncoding.validB64Char('A'));
+        Assert.assertTrue(LongEncoding.validB64Char('Z'));
+        Assert.assertTrue(LongEncoding.validB64Char('_'));
+        Assert.assertTrue(LongEncoding.validB64Char('a'));
+        Assert.assertTrue(LongEncoding.validB64Char('z'));
+        Assert.assertTrue(LongEncoding.validB64Char('~'));
+
+        Assert.assertFalse(LongEncoding.validB64Char('`'));
+        Assert.assertFalse(LongEncoding.validB64Char('!'));
+        Assert.assertFalse(LongEncoding.validB64Char('@'));
+        Assert.assertFalse(LongEncoding.validB64Char('#'));
+        Assert.assertFalse(LongEncoding.validB64Char('$'));
+        Assert.assertFalse(LongEncoding.validB64Char('%'));
+        Assert.assertFalse(LongEncoding.validB64Char('^'));
+        Assert.assertFalse(LongEncoding.validB64Char('&'));
+        Assert.assertFalse(LongEncoding.validB64Char('*'));
+        Assert.assertFalse(LongEncoding.validB64Char('('));
+        Assert.assertFalse(LongEncoding.validB64Char(')'));
+        Assert.assertFalse(LongEncoding.validB64Char('-'));
+        Assert.assertFalse(LongEncoding.validB64Char('+'));
+        Assert.assertFalse(LongEncoding.validB64Char('='));
+        Assert.assertFalse(LongEncoding.validB64Char('['));
+        Assert.assertFalse(LongEncoding.validB64Char(']'));
+        Assert.assertFalse(LongEncoding.validB64Char('{'));
+        Assert.assertFalse(LongEncoding.validB64Char('}'));
+        Assert.assertFalse(LongEncoding.validB64Char('|'));
+        Assert.assertFalse(LongEncoding.validB64Char('\\'));
+        Assert.assertFalse(LongEncoding.validB64Char(';'));
+        Assert.assertFalse(LongEncoding.validB64Char(':'));
+        Assert.assertFalse(LongEncoding.validB64Char('\''));
+        Assert.assertFalse(LongEncoding.validB64Char('\"'));
+        Assert.assertFalse(LongEncoding.validB64Char('<'));
+        Assert.assertFalse(LongEncoding.validB64Char(','));
+        Assert.assertFalse(LongEncoding.validB64Char('>'));
+        Assert.assertFalse(LongEncoding.validB64Char('.'));
+        Assert.assertFalse(LongEncoding.validB64Char('?'));
+        Assert.assertFalse(LongEncoding.validB64Char('/'));
+        Assert.assertFalse(LongEncoding.validB64Char('\t'));
+        Assert.assertFalse(LongEncoding.validB64Char('\b'));
+    }
+
+    @Test
     public void testEncode() {
         String val0 = LongEncoding.encodeB64(0);
         Assert.assertEquals("0", val0);

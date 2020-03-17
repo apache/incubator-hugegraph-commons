@@ -111,7 +111,7 @@ public final class LongEncoding {
         return negative ? -decoded : decoded;
     }
 
-    public static boolean validChar(char c) {
+    public static boolean validB64Char(char c) {
         return B64_SYMBOLS.indexOf(c) != -1;
     }
 
