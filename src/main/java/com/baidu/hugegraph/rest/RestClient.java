@@ -19,27 +19,8 @@
 
 package com.baidu.hugegraph.rest;
 
-import static org.glassfish.jersey.apache.connector.ApacheClientProperties.CONNECTION_MANAGER;
-
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.*;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Variant;
-
+import com.baidu.hugegraph.util.ExecutorUtil;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
@@ -53,8 +34,26 @@ import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.uri.UriComponent;
 
-import com.baidu.hugegraph.util.ExecutorUtil;
-import com.google.common.collect.ImmutableMap;
+import javax.net.ssl.*;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Variant;
+import java.security.KeyManagementException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import static org.glassfish.jersey.apache.connector.ApacheClientProperties.CONNECTION_MANAGER;
 
 public abstract class RestClient {
 
@@ -94,34 +93,38 @@ public abstract class RestClient {
                                      .config(maxTotal, maxPerRoute)
                                      .build());
     }
+
     public RestClient(String url, String user, String password, int timeout,
                       int maxTotal, int maxPerRoute, String protocol,
                       String trustStoreFile, String trustStorePassword) {
         this(url, new ConfigBuilder().config(timeout)
-                .config(user, password)
-                .config(maxTotal, maxPerRoute)
-                .config(protocol, trustStoreFile, trustStorePassword)
-                .build());
+                                     .config(user, password)
+                                     .config(maxTotal, maxPerRoute)
+                                     .config(protocol, trustStoreFile, trustStorePassword)
+                                     .build());
     }
-    private TrustManager[] getTrustManager() {
+
+    private TrustManager[] NoCheckTrustManager() {
         return new TrustManager[]{
-                new X509TrustManager() {
-                    @Override
-                    public void checkClientTrusted(X509Certificate[] chain, String authType)
-                            throws CertificateException {
-                    }
-
-                    @Override
-                    public void checkServerTrusted(X509Certificate[] chain, String authType)
-                            throws CertificateException {
-                    }
-
-                    @Override
-                    public X509Certificate[] getAcceptedIssuers() {
-                        return null;
-                    }
-                }
+               new X509TrustManager()
         };
+    }
+
+    private static class X509TrustManager implements javax.net.ssl.X509TrustManager {
+        @Override
+        public void checkClientTrusted(X509Certificate[] chain, String authType)
+                throws CertificateException {
+        }
+
+        @Override
+        public void checkServerTrusted(X509Certificate[] chain, String authType)
+                throws CertificateException {
+        }
+
+        @Override
+        public X509Certificate[] getAcceptedIssuers() {
+            return null;
+        }
     }
 
     public RestClient(String url, ClientConfig config) {
@@ -131,28 +134,17 @@ public abstract class RestClient {
             try {
                 SslConfigurator sslConfig = SslConfigurator.newInstance();
                 sslConfig.trustStoreFile(config.getProperties().get("trustStoreFile").toString())
-                        .trustStorePassword(config.getProperties().get("trustStorePassword").toString());
+                         .trustStorePassword(config.getProperties().get("trustStorePassword").toString());
                 sslConfig.securityProtocol("SSL");
                 SSLContext sc = sslConfig.createSSLContext();
-                TrustManager[] trustAllCerts = getTrustManager();
+                TrustManager[] trustAllCerts = NoCheckTrustManager();
                 sc.init(null, trustAllCerts, new java.security.SecureRandom());
-
                 client = ClientBuilder.newBuilder()
-                        .hostnameVerifier(new HostnameVerifier() {
-                            @Override
-                            public boolean verify(String hostname, SSLSession session) {
-                                if (!url.equals("") && url.contains(hostname)) {
-                                    return true;
-                                } else {
-                                    HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
-                                    return hv.verify(hostname, session);
-                                }
-                            }
-                        })
+                        .hostnameVerifier(new HostNameVerifier(url))
                         .sslContext(sc)
                         .build();
-            } catch (Exception e) {
-                e.printStackTrace();
+            } catch (KeyManagementException e) {
+                throw new ClientException("security key management exception", e);
             }
         } else {
             client = ClientBuilder.newClient(config);
@@ -347,6 +339,26 @@ public abstract class RestClient {
 
     private static String encode(String raw) {
         return UriComponent.encode(raw, UriComponent.Type.PATH_SEGMENT);
+    }
+
+    private static class HostNameVerifier implements HostnameVerifier {
+
+        private String url;
+
+        private HostNameVerifier(String url) {
+            this.url = url;
+        }
+
+        @Override
+        public boolean verify(String hostname, SSLSession session) {
+            if (!this.url.equals("") && this.url.contains(hostname)) {
+                return true;
+            } else {
+                HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
+                return hv.verify(hostname, session);
+            }
+        }
+
     }
 
     protected abstract void checkStatus(Response response,
