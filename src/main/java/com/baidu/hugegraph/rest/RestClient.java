@@ -105,20 +105,19 @@ public abstract class RestClient {
     }
 
     private TrustManager[] NoCheckTrustManager() {
-        return new TrustManager[]{
-               new X509TrustManager()
-        };
+        return new TrustManager[]{new X509TrustManager()};
     }
 
     private static class X509TrustManager implements javax.net.ssl.X509TrustManager {
+
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType)
-                throws CertificateException {
+                                       throws CertificateException {
         }
 
         @Override
         public void checkServerTrusted(X509Certificate[] chain, String authType)
-                throws CertificateException {
+                                       throws CertificateException {
         }
 
         @Override
@@ -127,25 +126,31 @@ public abstract class RestClient {
         }
     }
 
+    private Client TrustConfig(String url, ClientConfig config) {
+        Client client = null;
+        SslConfigurator sslConfig = SslConfigurator.newInstance();
+        sslConfig.trustStoreFile(config.getProperties().get("trustStoreFile").toString())
+                 .trustStorePassword(config.getProperties().get("trustStorePassword").toString());
+        sslConfig.securityProtocol("SSL");
+        SSLContext sc = sslConfig.createSSLContext();
+        TrustManager[] trustAllCerts = NoCheckTrustManager();
+        try {
+            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+        } catch (KeyManagementException e) {
+            throw new ClientException("security key init management exception", e);
+        }
+        client = ClientBuilder.newBuilder()
+                              .hostnameVerifier(new HostNameVerifier(url))
+                              .sslContext(sc)
+                              .build();
+        return client;
+    }
+
     public RestClient(String url, ClientConfig config) {
         Client client = null;
         Object protocol = config.getProperties().get("protocol");
         if (protocol != null && protocol.equals("https")) {
-            try {
-                SslConfigurator sslConfig = SslConfigurator.newInstance();
-                sslConfig.trustStoreFile(config.getProperties().get("trustStoreFile").toString())
-                         .trustStorePassword(config.getProperties().get("trustStorePassword").toString());
-                sslConfig.securityProtocol("SSL");
-                SSLContext sc = sslConfig.createSSLContext();
-                TrustManager[] trustAllCerts = NoCheckTrustManager();
-                sc.init(null, trustAllCerts, new java.security.SecureRandom());
-                client = ClientBuilder.newBuilder()
-                        .hostnameVerifier(new HostNameVerifier(url))
-                        .sslContext(sc)
-                        .build();
-            } catch (KeyManagementException e) {
-                throw new ClientException("security key management exception", e);
-            }
+            client = TrustConfig(url, config);
         } else {
             client = ClientBuilder.newClient(config);
         }
