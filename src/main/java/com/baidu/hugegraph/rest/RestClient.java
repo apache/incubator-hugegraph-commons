@@ -126,7 +126,7 @@ public abstract class RestClient {
         }
     }
 
-    private Client TrustConfig(String url, ClientConfig config) {
+    private Client wrapTrustConfig(String url, ClientConfig config) {
         Client client = null;
         SslConfigurator sslConfig = SslConfigurator.newInstance();
         sslConfig.trustStoreFile(config.getProperties().get("trustStoreFile").toString())
@@ -137,7 +137,7 @@ public abstract class RestClient {
         try {
             sc.init(null, trustAllCerts, new java.security.SecureRandom());
         } catch (KeyManagementException e) {
-            throw new ClientException("security key init management exception", e);
+            throw new ClientException("Failed to init security key management", e);
         }
         client = ClientBuilder.newBuilder()
                               .hostnameVerifier(new HostNameVerifier(url))
@@ -150,7 +150,7 @@ public abstract class RestClient {
         Client client = null;
         Object protocol = config.getProperties().get("protocol");
         if (protocol != null && protocol.equals("https")) {
-            client = TrustConfig(url, config);
+            client = wrapTrustConfig(url, config);
         } else {
             client = ClientBuilder.newClient(config);
         }
