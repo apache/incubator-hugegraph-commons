@@ -21,12 +21,15 @@ package com.baidu.hugegraph.rest;
 
 import static org.glassfish.jersey.apache.connector.ApacheClientProperties.CONNECTION_MANAGER;
 
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
 import java.util.Collection;
 import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
+import javax.net.ssl.*;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -40,6 +43,7 @@ import javax.ws.rs.core.Variant;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
+import org.glassfish.jersey.SslConfigurator;
 import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
@@ -90,9 +94,70 @@ public abstract class RestClient {
                                      .config(maxTotal, maxPerRoute)
                                      .build());
     }
-    
+    public RestClient(String url, String user, String password, int timeout,
+                      int maxTotal, int maxPerRoute, String protocol,
+                      String trustStoreFile, String trustStorePassword) {
+        this(url, new ConfigBuilder().config(timeout)
+                .config(user, password)
+                .config(maxTotal, maxPerRoute)
+                .config(protocol, trustStoreFile, trustStorePassword)
+                .build());
+    }
+    private TrustManager[] getTrustManager() {
+        return new TrustManager[]{
+                new X509TrustManager() {
+                    @Override
+                    public void checkClientTrusted(X509Certificate[] chain, String authType)
+                            throws CertificateException {
+                    }
+
+                    @Override
+                    public void checkServerTrusted(X509Certificate[] chain, String authType)
+                            throws CertificateException {
+                    }
+
+                    @Override
+                    public X509Certificate[] getAcceptedIssuers() {
+                        return null;
+                    }
+                }
+        };
+    }
+
     public RestClient(String url, ClientConfig config) {
-        this.client = ClientBuilder.newClient(config);
+        Client client = null;
+        Object protocol = config.getProperties().get("protocol");
+        if (protocol != null && protocol.equals("https")) {
+            try {
+                SslConfigurator sslConfig = SslConfigurator.newInstance();
+                sslConfig.trustStoreFile(config.getProperties().get("trustStoreFile").toString())
+                        .trustStorePassword(config.getProperties().get("trustStorePassword").toString());
+                sslConfig.securityProtocol("SSL");
+                SSLContext sc = sslConfig.createSSLContext();
+                TrustManager[] trustAllCerts = getTrustManager();
+                sc.init(null, trustAllCerts, new java.security.SecureRandom());
+
+                client = ClientBuilder.newBuilder()
+                        .hostnameVerifier(new HostnameVerifier() {
+                            @Override
+                            public boolean verify(String hostname, SSLSession session) {
+                                if (!url.equals("") && url.contains(hostname)) {
+                                    return true;
+                                } else {
+                                    HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
+                                    return hv.verify(hostname, session);
+                                }
+                            }
+                        })
+                        .sslContext(sc)
+                        .build();
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        } else {
+            client = ClientBuilder.newClient(config);
+        }
+        this.client = client;
         this.client.register(GZipEncoder.class);
         this.target = this.client.target(url);
         this.pool = (PoolingHttpClientConnectionManager)
@@ -333,6 +398,13 @@ public abstract class RestClient {
             pool.setDefaultMaxPerRoute(maxPerRoute);
             this.config.property(CONNECTION_MANAGER, pool);
             this.config.connectorProvider(new ApacheConnectorProvider());
+            return this;
+        }
+
+        public ConfigBuilder config(String protocol, String trustStoreFile, String trustStorePassword) {
+            this.config.property("protocol", protocol);
+            this.config.property("trustStoreFile", trustStoreFile);
+            this.config.property("trustStorePassword", trustStorePassword);
             return this;
         }
 
