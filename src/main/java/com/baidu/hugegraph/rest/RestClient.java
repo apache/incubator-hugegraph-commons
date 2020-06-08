@@ -19,8 +19,32 @@
 
 package com.baidu.hugegraph.rest;
 
-import com.baidu.hugegraph.util.ExecutorUtil;
-import com.google.common.collect.ImmutableMap;
+import static org.glassfish.jersey.apache.connector.ApacheClientProperties.CONNECTION_MANAGER;
+
+import java.security.KeyManagementException;
+import java.security.cert.CertificateException;
+import java.security.cert.X509Certificate;
+import java.util.Collection;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.TrustManager;
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
+import javax.ws.rs.client.Invocation.Builder;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.MultivaluedMap;
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.Variant;
+
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
@@ -34,28 +58,8 @@ import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.uri.UriComponent;
 
-import javax.net.ssl.*;
-import javax.ws.rs.client.Client;
-import javax.ws.rs.client.ClientBuilder;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.Variant;
-import java.security.KeyManagementException;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
-import java.util.Collection;
-import java.util.Map;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-
-import static org.glassfish.jersey.apache.connector.ApacheClientProperties.CONNECTION_MANAGER;
-
-
+import com.baidu.hugegraph.util.ExecutorUtil;
+import com.google.common.collect.ImmutableMap;
 
 public abstract class RestClient {
 
