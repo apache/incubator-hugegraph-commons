@@ -427,7 +427,8 @@ public abstract class RestClient {
             return this;
         }
 
-        public ConfigBuilder config(String protocol, String trustStoreFile, String trustStorePassword) {
+        public ConfigBuilder config(String protocol, String trustStoreFile,
+                                    String trustStorePassword) {
             this.config.property("protocol", protocol);
             this.config.property("trustStoreFile", trustStoreFile);
             this.config.property("trustStorePassword", trustStorePassword);
