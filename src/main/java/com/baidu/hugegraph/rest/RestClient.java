@@ -22,6 +22,7 @@ package com.baidu.hugegraph.rest;
 import static org.glassfish.jersey.apache.connector.ApacheClientProperties.CONNECTION_MANAGER;
 
 import java.security.KeyManagementException;
+import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
 import java.util.Collection;
@@ -133,7 +134,7 @@ public abstract class RestClient {
     }
 
     private Client wrapTrustConfig(String url, ClientConfig config) {
-        Client client = null;
+
         SslConfigurator sslConfig = SslConfigurator.newInstance();
         String trustStoreFile = config.getProperty("trustStoreFile").toString();
         String trustStorePassword = config.getProperty("trustStorePassword").toString();
@@ -143,15 +144,14 @@ public abstract class RestClient {
         SSLContext sc = sslConfig.createSSLContext();
         TrustManager[] trustAllCerts = NoCheckTrustManager();
         try {
-            sc.init(null, trustAllCerts, new java.security.SecureRandom());
+            sc.init(null, trustAllCerts, new SecureRandom());
         } catch (KeyManagementException e) {
             throw new ClientException("Failed to init security key management", e);
         }
-        client = ClientBuilder.newBuilder()
-                              .hostnameVerifier(new HostNameVerifier(url))
-                              .sslContext(sc)
-                              .build();
-        return client;
+        return ClientBuilder.newBuilder()
+                            .hostnameVerifier(new HostNameVerifier(url))
+                            .sslContext(sc)
+                            .build();
     }
 
     public RestClient(String url, ClientConfig config) {
@@ -371,7 +371,6 @@ public abstract class RestClient {
                 return hv.verify(hostname, session);
             }
         }
-
     }
 
     protected abstract void checkStatus(Response response,

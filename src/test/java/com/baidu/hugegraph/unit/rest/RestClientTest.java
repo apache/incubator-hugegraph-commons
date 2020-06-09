@@ -85,7 +85,7 @@ public class RestClientTest {
                               String protocol, String trustStoreFile,
                               String trustStorePassword, int status) {
             super(url, user, password, timeout, maxTotal, maxPerRoute, protocol,
-                              trustStoreFile, trustStorePassword);
+                  trustStoreFile, trustStorePassword);
             this.status = status;
             this.headers = ImmutableMultivaluedMap.empty();
             this.content = "";
