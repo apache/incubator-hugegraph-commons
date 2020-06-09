@@ -36,6 +36,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
+import javax.net.ssl.X509TrustManager;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -107,15 +108,16 @@ public abstract class RestClient {
         this(url, new ConfigBuilder().config(timeout)
                                      .config(user, password)
                                      .config(maxTotal, maxPerRoute)
-                                     .config(protocol, trustStoreFile, trustStorePassword)
+                                     .config(protocol, trustStoreFile,
+                                             trustStorePassword)
                                      .build());
     }
 
-    private TrustManager[] NoCheckTrustManager() {
-        return new TrustManager[]{new X509TrustManager()};
+    private TrustManager[] createNoCheckTrustManager() {
+        return new TrustManager[]{new NoCheckTrustManager()};
     }
 
-    private static class X509TrustManager implements javax.net.ssl.X509TrustManager {
+    private static class NoCheckTrustManager implements X509TrustManager {
 
         @Override
         public void checkClientTrusted(X509Certificate[] chain, String authType)
@@ -142,7 +144,7 @@ public abstract class RestClient {
                  .trustStorePassword(trustStorePassword);
         sslConfig.securityProtocol("SSL");
         SSLContext sc = sslConfig.createSSLContext();
-        TrustManager[] trustAllCerts = NoCheckTrustManager();
+        TrustManager[] trustAllCerts = createNoCheckTrustManager();
         try {
             sc.init(null, trustAllCerts, new SecureRandom());
         } catch (KeyManagementException e) {
