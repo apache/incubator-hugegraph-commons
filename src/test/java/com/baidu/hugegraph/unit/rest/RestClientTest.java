@@ -250,6 +250,7 @@ public class RestClientTest {
     @Test
     public void testHostNameVerifier() {
         String url = "http://www.test1.com";
+        String empty = "";
         String hostname = "http://www.test2.com";
         RestClient.HostNameVerifier verifier;
         SSLSession session;
@@ -261,8 +262,12 @@ public class RestClientTest {
         } catch (NoSuchAlgorithmException e) {
             throw new RuntimeException(e);
         }
-        Assert.assertSame(false, verifier.verify(hostname, session));
-        Assert.assertSame(true, verifier.verify(url, session));
+        Assert.assertFalse(verifier.verify(hostname, session));
+        Assert.assertTrue(verifier.verify(url, session));
+
+        verifier = new RestClient.HostNameVerifier(empty);
+        Assert.assertFalse(verifier.verify(hostname, session));
+
     }
 
     @Test
