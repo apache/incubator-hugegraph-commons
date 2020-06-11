@@ -356,7 +356,7 @@ public abstract class RestClient {
         return UriComponent.encode(raw, UriComponent.Type.PATH_SEGMENT);
     }
 
-    private static class HostNameVerifier implements HostnameVerifier {
+    private final static class HostNameVerifier implements HostnameVerifier {
 
         private String url;
 
@@ -366,11 +366,11 @@ public abstract class RestClient {
 
         @Override
         public boolean verify(String hostname, SSLSession session) {
-            if (!this.url.equals("") && this.url.contains(hostname)) {
+            if (!this.url.isEmpty() && this.url.contains(hostname)) {
                 return true;
             } else {
-                HostnameVerifier hv = HttpsURLConnection.getDefaultHostnameVerifier();
-                return hv.verify(hostname, session);
+                HostnameVerifier verifier = HttpsURLConnection.getDefaultHostnameVerifier();
+                return verifier.verify(hostname, session);
             }
         }
     }
