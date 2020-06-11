@@ -237,7 +237,7 @@ public class RestClientTest {
         String trustStoreFile = "src/test/resources/cacerts.jks";
         String trustStorePassword = "changeit";
         RestClient client = new RestClientImpl("/test", "user", "", 1000,
-                                      10, 5, "https", trustStoreFile,
+                                               10, 5, "https", trustStoreFile,
                                                trustStorePassword, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
