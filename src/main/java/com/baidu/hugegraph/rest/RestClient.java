@@ -21,6 +21,7 @@ package com.baidu.hugegraph.rest;
 
 import static org.glassfish.jersey.apache.connector.ApacheClientProperties.CONNECTION_MANAGER;
 
+import java.net.URI;
 import java.security.KeyManagementException;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
@@ -361,12 +362,16 @@ public abstract class RestClient {
         private final String url;
 
         public HostNameVerifier(String url) {
+            if (!url.startsWith("http://") && !url.startsWith("https://")) {
+                url = "http://" + url;
+            }
+            url = URI.create(url).getHost();
             this.url = url;
         }
 
         @Override
         public boolean verify(String hostname, SSLSession session) {
-            if (!this.url.isEmpty() && this.url.contains(hostname)) {
+            if (!this.url.isEmpty() && this.url.endsWith(hostname)) {
                 return true;
             } else {
                 HostnameVerifier verifier = HttpsURLConnection.getDefaultHostnameVerifier();

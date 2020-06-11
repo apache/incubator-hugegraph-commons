@@ -26,6 +26,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiFunction;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
@@ -249,25 +250,29 @@ public class RestClientTest {
 
     @Test
     public void testHostNameVerifier() {
-        String url = "http://www.test1.com";
-        String empty = "";
-        String hostname = "http://www.test2.com";
-        RestClient.HostNameVerifier verifier;
-        SSLSession session;
-        try {
-            SSLSessionContext sc = SSLContext.getDefault()
-                                             .getClientSessionContext();
-            session = sc.getSession(new byte[]{11});
-            verifier = new RestClient.HostNameVerifier(url);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException(e);
-        }
-        Assert.assertFalse(verifier.verify(hostname, session));
-        Assert.assertTrue(verifier.verify(url, session));
+        BiFunction<String, String, Boolean> verifer = (url, hostname) -> {
+            RestClient.HostNameVerifier verifier;
+            SSLSession session;
+            try {
+                SSLSessionContext sc = SSLContext.getDefault()
+                                                 .getClientSessionContext();
+                session = sc.getSession(new byte[]{11});
+                verifier = new RestClient.HostNameVerifier(url);
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+            return verifier.verify(hostname, session);
+        };
 
-        verifier = new RestClient.HostNameVerifier(empty);
-        Assert.assertFalse(verifier.verify(hostname, session));
-
+        Assert.assertTrue(verifer.apply("http://baidu.com", "baidu.com"));
+        Assert.assertTrue(verifer.apply("http://test1.baidu.com", "baidu.com"));
+        Assert.assertTrue(verifer.apply("http://test2.baidu.com", "baidu.com"));
+        Assert.assertFalse(verifer.apply("http://baidu2.com", "baidu.com"));
+        Assert.assertTrue(verifer.apply("http://baidu.com", ""));
+        Assert.assertTrue(verifer.apply("baidu.com", "baidu.com"));
+        Assert.assertTrue(verifer.apply("http://baidu.com/test/abc", "baidu.com"));
+        Assert.assertTrue(verifer.apply("baidu.com/test/abc", "baidu.com"));
+        Assert.assertFalse(verifer.apply("baidu.com.sina.com", "baidu.com"));
     }
 
     @Test
