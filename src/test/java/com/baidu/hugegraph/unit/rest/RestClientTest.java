@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.unit.rest;
 
+import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -26,6 +27,9 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLSession;
+import javax.net.ssl.SSLSessionContext;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -241,6 +245,24 @@ public class RestClientTest {
                                                trustStorePassword, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
+    }
+
+    @Test
+    public void testHostNameVerifier() {
+        String url = "http://www.test1.com";
+        String hostname = "http://www.test2.com";
+        RestClient.HostNameVerifier verifier;
+        SSLSession session;
+        try {
+            SSLSessionContext sc = SSLContext.getDefault()
+                                             .getClientSessionContext();
+            session = sc.getSession(new byte[]{11});
+            verifier = new RestClient.HostNameVerifier(url);
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
+        Assert.assertSame(false, verifier.verify(hostname, session));
+        Assert.assertSame(true, verifier.verify(url, session));
     }
 
     @Test

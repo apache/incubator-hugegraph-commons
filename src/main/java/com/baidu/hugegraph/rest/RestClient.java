@@ -356,11 +356,11 @@ public abstract class RestClient {
         return UriComponent.encode(raw, UriComponent.Type.PATH_SEGMENT);
     }
 
-    private static class HostNameVerifier implements HostnameVerifier {
+    public static class HostNameVerifier implements HostnameVerifier {
 
         private final String url;
 
-        private HostNameVerifier(String url) {
+        public HostNameVerifier(String url) {
             this.url = url;
         }
 
