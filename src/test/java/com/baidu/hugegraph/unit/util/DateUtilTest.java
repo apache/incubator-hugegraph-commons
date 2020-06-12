@@ -45,7 +45,6 @@ public class DateUtilTest extends BaseUnitTest {
         Assert.assertThrows(IllegalArgumentException.class, () -> {
             DateUtil.parse("2018-15-07 12:00:00");
         }, e -> {
-            System.out.println(e.getMessage());
             Assert.assertContains(", expect format: ", e.getMessage());
         });
     }
