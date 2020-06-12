@@ -31,8 +31,9 @@ public class DateUtilTest extends BaseUnitTest {
 
     @Test
     public void testParse() {
-        Date date = DateUtil.parse("2020-06-12 12:00:00");
-        Assert.assertEquals(1591934400000L, date.getTime());
+        Date date1 = DateUtil.parse("2020-06-12 12:00:00");
+        Date date2 = DateUtil.parse("2020-06-13");
+        Assert.assertTrue(date1.before(date2));
 
         Assert.assertThrows(IllegalArgumentException.class, () -> {
             DateUtil.parse("2018-");
