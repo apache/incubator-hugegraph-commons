@@ -44,6 +44,7 @@ import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.junit.Test;
 import org.mockito.Mockito;
 
+import com.baidu.hugegraph.rest.AbstractRestClient;
 import com.baidu.hugegraph.rest.ClientException;
 import com.baidu.hugegraph.rest.RestClient;
 import com.baidu.hugegraph.rest.RestResult;
@@ -54,7 +55,7 @@ import com.google.common.collect.ImmutableMap;
 
 public class RestClientTest {
 
-    private static class RestClientImpl extends RestClient {
+    private static class RestClientImpl extends AbstractRestClient {
 
         private final int status;
         private final MultivaluedMap<String, Object> headers;
@@ -164,15 +165,16 @@ public class RestClientTest {
 
     @Test
     public void testCleanExecutor() throws Exception {
-        long oldIdleTime = Whitebox.getInternalState(RestClient.class,
+        long oldIdleTime = Whitebox.getInternalState(RestClientImpl.class,
                                                      "IDLE_TIME");
-        long oldCheckPeriod = Whitebox.getInternalState(RestClient.class,
+        long oldCheckPeriod = Whitebox.getInternalState(RestClientImpl.class,
                                                         "CHECK_PERIOD");
         long newCheckPeriod = 1L;
         long newIdleTime = 2 * newCheckPeriod;
         // Modify IDLE_TIME and CHECK_PERIOD to speed test
-        Whitebox.setInternalState(RestClient.class, "IDLE_TIME", newIdleTime);
-        Whitebox.setInternalState(RestClient.class, "CHECK_PERIOD",
+        Whitebox.setInternalState(RestClientImpl.class, "IDLE_TIME",
+                                  newIdleTime);
+        Whitebox.setInternalState(RestClientImpl.class, "CHECK_PERIOD",
                                   newCheckPeriod);
 
         try {
@@ -215,9 +217,9 @@ public class RestClientTest {
             Mockito.verify(pool, Mockito.atLeastOnce())
                    .closeIdleConnections(newIdleTime, TimeUnit.SECONDS);
         } finally {
-            Whitebox.setInternalState(RestClient.class, "IDLE_TIME",
+            Whitebox.setInternalState(RestClientImpl.class, "IDLE_TIME",
                                       oldIdleTime);
-            Whitebox.setInternalState(RestClient.class, "CHECK_PERIOD",
+            Whitebox.setInternalState(RestClientImpl.class, "CHECK_PERIOD",
                                       oldCheckPeriod);
         }
     }
@@ -251,13 +253,13 @@ public class RestClientTest {
     @Test
     public void testHostNameVerifier() {
         BiFunction<String, String, Boolean> verifer = (url, hostname) -> {
-            RestClient.HostNameVerifier verifier;
+            AbstractRestClient.HostNameVerifier verifier;
             SSLSession session;
             try {
                 SSLSessionContext sc = SSLContext.getDefault()
                                                  .getClientSessionContext();
                 session = sc.getSession(new byte[]{11});
-                verifier = new RestClient.HostNameVerifier(url);
+                verifier = new AbstractRestClient.HostNameVerifier(url);
             } catch (NoSuchAlgorithmException e) {
                 throw new RuntimeException(e);
             }
@@ -270,7 +272,7 @@ public class RestClientTest {
         Assert.assertFalse(verifer.apply("http://baidu2.com", "baidu.com"));
         Assert.assertTrue(verifer.apply("http://baidu.com", ""));
         Assert.assertTrue(verifer.apply("baidu.com", "baidu.com"));
-        Assert.assertTrue(verifer.apply("http://baidu.com/test/abc", "baidu.com"));
+        Assert.assertTrue(verifer.apply("http://baidu.com/test", "baidu.com"));
         Assert.assertTrue(verifer.apply("baidu.com/test/abc", "baidu.com"));
         Assert.assertFalse(verifer.apply("baidu.com.sina.com", "baidu.com"));
     }
