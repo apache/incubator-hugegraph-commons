@@ -82,29 +82,32 @@ public abstract class AbstractRestClient implements RestClient {
         this(url, new ConfigBuilder().config(timeout).build());
     }
 
-    public AbstractRestClient(String url, String user, String password, int timeout) {
+    public AbstractRestClient(String url, String user, String password,
+                              int timeout) {
         this(url, new ConfigBuilder().config(timeout)
                                      .config(user, password)
                                      .build());
     }
 
-    public AbstractRestClient(String url, int timeout, int maxTotal, int maxPerRoute) {
+    public AbstractRestClient(String url, int timeout, int maxTotal,
+                              int maxPerRoute) {
         this(url, new ConfigBuilder().config(timeout)
                                      .config(maxTotal, maxPerRoute)
                                      .build());
     }
 
-    public AbstractRestClient(String url, String user, String password, int timeout,
-                      int maxTotal, int maxPerRoute) {
+    public AbstractRestClient(String url, String user, String password,
+                              int timeout, int maxTotal, int maxPerRoute) {
         this(url, new ConfigBuilder().config(timeout)
                                      .config(user, password)
                                      .config(maxTotal, maxPerRoute)
                                      .build());
     }
 
-    public AbstractRestClient(String url, String user, String password, int timeout,
-                      int maxTotal, int maxPerRoute, String protocol,
-                      String trustStoreFile, String trustStorePassword) {
+    public AbstractRestClient(String url, String user, String password,
+                              int timeout, int maxTotal, int maxPerRoute,
+                              String protocol, String trustStoreFile,
+                              String trustStorePassword) {
         this(url, new ConfigBuilder().config(timeout)
                                      .config(user, password)
                                      .config(maxTotal, maxPerRoute)
