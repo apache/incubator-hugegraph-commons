@@ -67,10 +67,8 @@ public abstract class AbstractRestClient implements RestClient {
 
     // Time unit: hours
     private static final long TTL = 24L;
-    // Time unit: seconds
-    private static final long IDLE_TIME = 40L;
-    // Time unit: seconds
-    private static final long CHECK_PERIOD = IDLE_TIME / 2;
+    // Time unit: ms
+    private static final long IDLE_TIME = 40L * 1000L;
 
     private final Client client;
     private final WebTarget target;
@@ -79,28 +77,36 @@ public abstract class AbstractRestClient implements RestClient {
     private ScheduledExecutorService cleanExecutor;
 
     public AbstractRestClient(String url, int timeout) {
-        this(url, new ConfigBuilder().config(timeout).build());
+        this(url, new ConfigBuilder().configTimeout(timeout).build());
     }
 
     public AbstractRestClient(String url, String user, String password,
                               int timeout) {
-        this(url, new ConfigBuilder().config(timeout)
-                                     .config(user, password)
+        this(url, new ConfigBuilder().configTimeout(timeout)
+                                     .configUser(user, password)
                                      .build());
     }
 
-    public AbstractRestClient(String url, int timeout, int maxTotal,
-                              int maxPerRoute) {
-        this(url, new ConfigBuilder().config(timeout)
-                                     .config(maxTotal, maxPerRoute)
+    public AbstractRestClient(String url, int timeout,
+                              int maxTotal, int maxPerRoute) {
+        this(url, new ConfigBuilder().configTimeout(timeout)
+                                     .configPool(maxTotal, maxPerRoute)
+                                     .build());
+    }
+
+    public AbstractRestClient(String url, int timeout, int idleTime,
+                              int maxTotal, int maxPerRoute) {
+        this(url, new ConfigBuilder().configTimeout(timeout)
+                                     .configIdleTime(idleTime)
+                                     .configPool(maxTotal, maxPerRoute)
                                      .build());
     }
 
     public AbstractRestClient(String url, String user, String password,
                               int timeout, int maxTotal, int maxPerRoute) {
-        this(url, new ConfigBuilder().config(timeout)
-                                     .config(user, password)
-                                     .config(maxTotal, maxPerRoute)
+        this(url, new ConfigBuilder().configTimeout(timeout)
+                                     .configUser(user, password)
+                                     .configPool(maxTotal, maxPerRoute)
                                      .build());
     }
 
@@ -108,10 +114,10 @@ public abstract class AbstractRestClient implements RestClient {
                               int timeout, int maxTotal, int maxPerRoute,
                               String protocol, String trustStoreFile,
                               String trustStorePassword) {
-        this(url, new ConfigBuilder().config(timeout)
-                                     .config(user, password)
-                                     .config(maxTotal, maxPerRoute)
-                                     .config(protocol, trustStoreFile,
+        this(url, new ConfigBuilder().configTimeout(timeout)
+                                     .configUser(user, password)
+                                     .configPool(maxTotal, maxPerRoute)
+                                     .configSSL(protocol, trustStoreFile,
                                              trustStorePassword)
                                      .build());
     }
@@ -132,6 +138,10 @@ public abstract class AbstractRestClient implements RestClient {
         if (this.pool != null) {
             this.cleanExecutor = ExecutorUtil.newScheduledThreadPool(
                                               "conn-clean-worker-%d");
+            Number idleTimeProp = (Number) config.getProperty("idleTime");
+            final long idleTime = idleTimeProp == null ?
+                                  IDLE_TIME : idleTimeProp.longValue();
+            final long checkPeriod = idleTime / 2L;
             this.cleanExecutor.scheduleWithFixedDelay(() -> {
                 PoolStats stats = this.pool.getTotalStats();
                 int using = stats.getLeased() + stats.getPending();
@@ -139,9 +149,10 @@ public abstract class AbstractRestClient implements RestClient {
                     // Do clean only when all connections are idle
                     return;
                 }
-                this.pool.closeIdleConnections(IDLE_TIME, TimeUnit.SECONDS);
+                // Release connections when all clients are inactive
+                this.pool.closeIdleConnections(idleTime, TimeUnit.MILLISECONDS);
                 this.pool.closeExpiredConnections();
-            }, CHECK_PERIOD, CHECK_PERIOD, TimeUnit.SECONDS);
+            }, checkPeriod, checkPeriod, TimeUnit.MILLISECONDS);
         }
     }
 
@@ -372,7 +383,8 @@ public abstract class AbstractRestClient implements RestClient {
             if (!this.url.isEmpty() && this.url.endsWith(hostname)) {
                 return true;
             } else {
-                HostnameVerifier verifier = HttpsURLConnection.getDefaultHostnameVerifier();
+                HostnameVerifier verifier = HttpsURLConnection
+                                            .getDefaultHostnameVerifier();
                 return verifier.verify(hostname, session);
             }
         }
@@ -408,13 +420,13 @@ public abstract class AbstractRestClient implements RestClient {
             this.config = new ClientConfig();
         }
 
-        public ConfigBuilder config(int timeout) {
+        public ConfigBuilder configTimeout(int timeout) {
             this.config.property(ClientProperties.CONNECT_TIMEOUT, timeout);
             this.config.property(ClientProperties.READ_TIMEOUT, timeout);
             return this;
         }
 
-        public ConfigBuilder config(String username, String password) {
+        public ConfigBuilder configUser(String username, String password) {
             /*
              * NOTE: don't use non-preemptive mode
              * In non-preemptive mode the authentication information is added
@@ -429,7 +441,7 @@ public abstract class AbstractRestClient implements RestClient {
             return this;
         }
 
-        public ConfigBuilder config(int maxTotal, int maxPerRoute) {
+        public ConfigBuilder configPool(int maxTotal, int maxPerRoute) {
             /*
              * Using httpclient with connection pooling, and configuring the
              * jersey connector, reference:
@@ -444,14 +456,18 @@ public abstract class AbstractRestClient implements RestClient {
             pool = new PoolingHttpClientConnectionManager(TTL, TimeUnit.HOURS);
             pool.setMaxTotal(maxTotal);
             pool.setDefaultMaxPerRoute(maxPerRoute);
-            this.config.property(ApacheClientProperties.CONNECTION_MANAGER,
-                                 pool);
+            this.config.property(ApacheClientProperties.CONNECTION_MANAGER, pool);
             this.config.connectorProvider(new ApacheConnectorProvider());
             return this;
         }
 
-        public ConfigBuilder config(String protocol, String trustStoreFile,
-                                    String trustStorePassword) {
+        public ConfigBuilder configIdleTime(int idleTime) {
+            this.config.property("idleTime", idleTime);
+            return this;
+        }
+
+        public ConfigBuilder configSSL(String protocol, String trustStoreFile,
+                                       String trustStorePassword) {
             this.config.property("protocol", protocol);
             this.config.property("trustStoreFile", trustStoreFile);
             this.config.property("trustStorePassword", trustStorePassword);

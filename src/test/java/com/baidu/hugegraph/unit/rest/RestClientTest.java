@@ -61,6 +61,14 @@ public class RestClientTest {
         private final MultivaluedMap<String, Object> headers;
         private final String content;
 
+        public RestClientImpl(String url, int timeout, int idleTime,
+                              int maxTotal, int maxPerRoute, int status) {
+            super(url, timeout, idleTime, maxTotal, maxPerRoute);
+            this.status = status;
+            this.headers = ImmutableMultivaluedMap.empty();
+            this.content = "";
+        }
+
         public RestClientImpl(String url, int timeout,
                               int maxTotal, int maxPerRoute, int status) {
             super(url, timeout, maxTotal, maxPerRoute);
@@ -90,8 +98,8 @@ public class RestClientTest {
                               int timeout, int maxTotal, int maxPerRoute,
                               String protocol, String trustStoreFile,
                               String trustStorePassword, int status) {
-            super(url, user, password, timeout, maxTotal, maxPerRoute, protocol,
-                  trustStoreFile, trustStorePassword);
+            super(url, user, password, timeout, maxTotal, maxPerRoute,
+                  protocol, trustStoreFile, trustStorePassword);
             this.status = status;
             this.headers = ImmutableMultivaluedMap.empty();
             this.content = "";
@@ -99,18 +107,6 @@ public class RestClientTest {
 
         public RestClientImpl(String url, int timeout, int status) {
             this(url, timeout, status, ImmutableMultivaluedMap.empty(), "");
-        }
-
-        @SuppressWarnings("unused")
-        public RestClientImpl(String url, int timeout, int status,
-                              MultivaluedMap<String, Object> headers) {
-            this(url, timeout, status, headers, "");
-        }
-
-        @SuppressWarnings("unused")
-        public RestClientImpl(String url, int timeout, int status,
-                              String content) {
-            this(url, timeout, status, ImmutableMultivaluedMap.empty(), content);
         }
 
         public RestClientImpl(String url, int timeout, int status,
@@ -165,63 +161,48 @@ public class RestClientTest {
 
     @Test
     public void testCleanExecutor() throws Exception {
-        long oldIdleTime = Whitebox.getInternalState(RestClientImpl.class,
-                                                     "IDLE_TIME");
-        long oldCheckPeriod = Whitebox.getInternalState(RestClientImpl.class,
-                                                        "CHECK_PERIOD");
-        long newCheckPeriod = 1L;
-        long newIdleTime = 2 * newCheckPeriod;
-        // Modify IDLE_TIME and CHECK_PERIOD to speed test
-        Whitebox.setInternalState(RestClientImpl.class, "IDLE_TIME",
-                                  newIdleTime);
-        Whitebox.setInternalState(RestClientImpl.class, "CHECK_PERIOD",
-                                  newCheckPeriod);
+        // Modify IDLE_TIME 100ms to speed test
+        int newIdleTime = 100;
+        int newCheckPeriod = newIdleTime + 20;
 
-        try {
-            RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
+        RestClient client = new RestClientImpl("/test", 1000, newIdleTime,
+                                               10, 5, 200);
 
-            PoolingHttpClientConnectionManager pool;
-            pool = Whitebox.getInternalState(client, "pool");
-            pool = Mockito.spy(pool);
-            Whitebox.setInternalState(client, "pool", pool);
-            HttpRoute route = new HttpRoute(HttpHost.create(
-                                            "http://127.0.0.1:8080"));
-            // Create a connection manually, it will be put into leased list
-            HttpClientConnection conn = pool.requestConnection(route, null)
-                                            .get(1L, TimeUnit.SECONDS);
-            PoolStats stats = pool.getTotalStats();
-            int usingConns = stats.getLeased() + stats.getPending();
-            Assert.assertTrue(usingConns >= 1);
+        PoolingHttpClientConnectionManager pool;
+        pool = Whitebox.getInternalState(client, "pool");
+        pool = Mockito.spy(pool);
+        Whitebox.setInternalState(client, "pool", pool);
+        HttpRoute route = new HttpRoute(HttpHost.create(
+                                        "http://127.0.0.1:8080"));
+        // Create a connection manually, it will be put into leased list
+        HttpClientConnection conn = pool.requestConnection(route, null)
+                                        .get(1L, TimeUnit.SECONDS);
+        PoolStats stats = pool.getTotalStats();
+        int usingConns = stats.getLeased() + stats.getPending();
+        Assert.assertGte(1, usingConns);
 
-            // Sleep more than two check periods for busy connection
-            Thread.sleep(newCheckPeriod * 1000 * 2);
-            Mockito.verify(pool, Mockito.never())
-                   .closeExpiredConnections();
-            stats = pool.getTotalStats();
-            usingConns = stats.getLeased() + stats.getPending();
-            Assert.assertTrue(usingConns >= 1);
+        // Sleep more than two check periods for busy connection
+        Thread.sleep(newCheckPeriod);
+        Mockito.verify(pool, Mockito.never()).closeExpiredConnections();
+        stats = pool.getTotalStats();
+        usingConns = stats.getLeased() + stats.getPending();
+        Assert.assertGte(1, usingConns);
 
-            // The connection will be put into available list
-            pool.releaseConnection(conn, null, 0, TimeUnit.SECONDS);
+        // The connection will be put into available list
+        pool.releaseConnection(conn, null, 0, TimeUnit.SECONDS);
 
-            stats = pool.getTotalStats();
-            usingConns = stats.getLeased() + stats.getPending();
-            Assert.assertEquals(0, usingConns);
-            /*
-             * Sleep more than two check periods for free connection,
-             * ensure connection has been closed
-             */
-            Thread.sleep(newCheckPeriod * 1000 * 2);
-            Mockito.verify(pool, Mockito.atLeastOnce())
-                   .closeExpiredConnections();
-            Mockito.verify(pool, Mockito.atLeastOnce())
-                   .closeIdleConnections(newIdleTime, TimeUnit.SECONDS);
-        } finally {
-            Whitebox.setInternalState(RestClientImpl.class, "IDLE_TIME",
-                                      oldIdleTime);
-            Whitebox.setInternalState(RestClientImpl.class, "CHECK_PERIOD",
-                                      oldCheckPeriod);
-        }
+        stats = pool.getTotalStats();
+        usingConns = stats.getLeased() + stats.getPending();
+        Assert.assertEquals(0, usingConns);
+        /*
+         * Sleep more than two check periods for free connection,
+         * ensure connection has been closed
+         */
+        Thread.sleep(newCheckPeriod);
+        Mockito.verify(pool, Mockito.atLeastOnce())
+               .closeExpiredConnections();
+        Mockito.verify(pool, Mockito.atLeastOnce())
+               .closeIdleConnections(newIdleTime, TimeUnit.MILLISECONDS);
     }
 
     @Test
