@@ -66,11 +66,11 @@ import com.google.common.collect.ImmutableMap;
 public abstract class AbstractRestClient implements RestClient {
 
     // Time unit: hours
-    private static long TTL = 24L;
+    private static final long TTL = 24L;
     // Time unit: seconds
-    private static long IDLE_TIME = 40L;
+    private static final long IDLE_TIME = 40L;
     // Time unit: seconds
-    private static long CHECK_PERIOD = IDLE_TIME / 2;
+    private static final long CHECK_PERIOD = IDLE_TIME / 2;
 
     private final Client client;
     private final WebTarget target;
