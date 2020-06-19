@@ -118,7 +118,7 @@ public abstract class AbstractRestClient implements RestClient {
                                      .configUser(user, password)
                                      .configPool(maxTotal, maxPerRoute)
                                      .configSSL(protocol, trustStoreFile,
-                                             trustStorePassword)
+                                                trustStorePassword)
                                      .build());
     }
 
@@ -341,7 +341,6 @@ public abstract class AbstractRestClient implements RestClient {
     }
 
     private static Client wrapTrustConfig(String url, ClientConfig config) {
-
         SslConfigurator sslConfig = SslConfigurator.newInstance();
         String trustStoreFile = config.getProperty("trustStoreFile").toString();
         String trustStorePassword = config.getProperty("trustStorePassword")
