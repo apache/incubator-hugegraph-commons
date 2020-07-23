@@ -43,7 +43,7 @@ public class LockManager {
     public LockGroup create(String group) {
         if (exists(group)) {
             throw new RuntimeException(String.format(
-                      "LockGroup '%s' already exists!", group));
+                      "LockGroup '%s' already exists", group));
         }
         LockGroup lockGroup = new LockGroup(group);
         LockGroup previous = this.lockGroupMap.putIfAbsent(group, lockGroup);
