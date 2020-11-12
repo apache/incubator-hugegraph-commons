@@ -47,6 +47,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Variant;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.conn.socket.ConnectionSocketFactory;
+import org.apache.http.conn.socket.PlainConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
 import org.glassfish.jersey.SslConfigurator;
@@ -123,14 +128,12 @@ public abstract class AbstractRestClient implements RestClient {
     }
 
     public AbstractRestClient(String url, ClientConfig config) {
-        Client client = null;
         Object protocol = config.getProperty("protocol");
         if (protocol != null && protocol.equals("https")) {
-            client = wrapTrustConfig(url, config);
-        } else {
-            client = ClientBuilder.newClient(config);
+            wrapTrustConfig(url, config);
         }
-        this.client = client;
+
+        this.client = ClientBuilder.newClient(config);
         this.client.register(GZipEncoder.class);
         this.target = this.client.target(url);
         this.pool = (PoolingHttpClientConnectionManager) config.getProperty(
@@ -340,25 +343,40 @@ public abstract class AbstractRestClient implements RestClient {
         return Pair.of(builder, entity);
     }
 
-    private static Client wrapTrustConfig(String url, ClientConfig config) {
-        SslConfigurator sslConfig = SslConfigurator.newInstance();
+    private static void wrapTrustConfig(String url, ClientConfig config) {
         String trustStoreFile = config.getProperty("trustStoreFile").toString();
-        String trustStorePassword = config.getProperty("trustStorePassword")
-                                          .toString();
-        sslConfig.trustStoreFile(trustStoreFile)
-                 .trustStorePassword(trustStorePassword);
-        sslConfig.securityProtocol("SSL");
-        SSLContext context = sslConfig.createSSLContext();
+        String trustStorePass = config.getProperty("trustStorePassword")
+                                      .toString();
+        SSLContext context = SslConfigurator.newInstance()
+                                            .trustStoreFile(trustStoreFile)
+                                            .trustStorePassword(trustStorePass)
+                                            .securityProtocol("SSL")
+                                            .createSSLContext();
         TrustManager[] trustAllManager = NoCheckTrustManager.create();
         try {
             context.init(null, trustAllManager, new SecureRandom());
         } catch (KeyManagementException e) {
             throw new ClientException("Failed to init security management", e);
         }
-        return ClientBuilder.newBuilder()
-                            .hostnameVerifier(new HostNameVerifier(url))
-                            .sslContext(context)
-                            .build();
+
+        HostnameVerifier verifier = new HostNameVerifier(url);
+        ConnectionSocketFactory httpSocketFactory, httpsSocketFactory;
+        httpSocketFactory = PlainConnectionSocketFactory.getSocketFactory();
+        httpsSocketFactory = new SSLConnectionSocketFactory(context, verifier);
+        final Registry<ConnectionSocketFactory> registry =
+                RegistryBuilder.<ConnectionSocketFactory>create()
+                .register("http", httpSocketFactory)
+                .register("https", httpsSocketFactory)
+                .build();
+
+        config.property(ApacheClientProperties.CONNECTION_MANAGER,
+                        new PoolingHttpClientConnectionManager(registry));
+        config.connectorProvider(new ApacheConnectorProvider());
+
+        // Setting property value null means remove property
+        config.property("protocol", null);
+        config.property("trustStoreFile", null);
+        config.property("trustStorePassword", null);
     }
 
     public static String encode(String raw) {
