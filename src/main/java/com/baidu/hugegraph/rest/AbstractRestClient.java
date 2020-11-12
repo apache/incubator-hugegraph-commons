@@ -342,6 +342,8 @@ public abstract class AbstractRestClient implements RestClient {
 
     private static Client wrapTrustConfig(String url, ClientConfig config) {
         SslConfigurator sslConfig = SslConfigurator.newInstance();
+        String username = config.getProperty(ClientProperties.PROXY_USERNAME).toString();
+        String password = config.getProperty(ClientProperties.PROXY_PASSWORD).toString();
         String trustStoreFile = config.getProperty("trustStoreFile").toString();
         String trustStorePassword = config.getProperty("trustStorePassword")
                                           .toString();
@@ -355,10 +357,14 @@ public abstract class AbstractRestClient implements RestClient {
         } catch (KeyManagementException e) {
             throw new ClientException("Failed to init security management", e);
         }
-        return ClientBuilder.newBuilder()
-                            .hostnameVerifier(new HostNameVerifier(url))
-                            .sslContext(context)
-                            .build();
+        Client client = ClientBuilder.newBuilder()
+                                     .hostnameVerifier(new HostNameVerifier(url))
+                                     .sslContext(context)
+                                     .build();
+        if (client != null) {
+            client.register(HttpAuthenticationFeature.basic(username, password));
+        }
+        return client;
     }
 
     public static String encode(String raw) {
@@ -435,6 +441,8 @@ public abstract class AbstractRestClient implements RestClient {
              * advantage is it doesn't send credentials when they are not needed
              * https://jersey.github.io/documentation/latest/client.html#d0e5461
              */
+            this.config.property(ClientProperties.PROXY_USERNAME, username);
+            this.config.property(ClientProperties.PROXY_PASSWORD, password);
             this.config.register(HttpAuthenticationFeature.basic(username,
                                                                  password));
             return this;
