@@ -65,6 +65,7 @@ import org.glassfish.jersey.internal.util.collection.Refs;
 import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.uri.UriComponent;
 
+import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.ExecutorUtil;
 import com.google.common.collect.ImmutableMap;
 
@@ -122,7 +123,7 @@ public abstract class AbstractRestClient implements RestClient {
         this(url, new ConfigBuilder().configTimeout(timeout)
                                      .configUser(user, password)
                                      .configPool(maxTotal, maxPerRoute)
-                                     .configSSL(protocol, trustStoreFile,
+                                     .configSSL(trustStoreFile,
                                                 trustStorePassword)
                                      .build());
     }
@@ -373,7 +374,11 @@ public abstract class AbstractRestClient implements RestClient {
 
         assert protocol.equals("https");
         String trustStoreFile = (String) conf.getProperty("trustStoreFile");
+        E.checkArgument(trustStoreFile != null && !trustStoreFile.isEmpty(),
+                        "The trust store file must be set when use https");
         String trustStorePass = (String) conf.getProperty("trustStorePassword");
+        E.checkArgument(trustStorePass != null && !trustStorePass.isEmpty(),
+                        "The trust store password must be set when use https");
         SSLContext context = SslConfigurator.newInstance()
                                             .trustStoreFile(trustStoreFile)
                                             .trustStorePassword(trustStorePass)
@@ -490,9 +495,9 @@ public abstract class AbstractRestClient implements RestClient {
             return this;
         }
 
-        public ConfigBuilder configSSL(String protocol, String trustStoreFile,
+        public ConfigBuilder configSSL(String trustStoreFile,
                                        String trustStorePassword) {
-            this.config.property("protocol", protocol);
+            this.config.property("protocol", "https");
             this.config.property("trustStoreFile", trustStoreFile);
             this.config.property("trustStorePassword", trustStorePassword);
             return this;
