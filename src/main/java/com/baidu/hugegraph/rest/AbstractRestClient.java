@@ -128,11 +128,7 @@ public abstract class AbstractRestClient implements RestClient {
     }
 
     public AbstractRestClient(String url, ClientConfig config) {
-        Object protocol = config.getProperty("protocol");
-        if (protocol != null && protocol.equals("https")) {
-            wrapTrustConfig(url, config);
-        }
-
+        configConnectionManager(url, config);
         this.client = ClientBuilder.newClient(config);
         this.client.register(GZipEncoder.class);
         this.target = this.client.target(url);
@@ -343,10 +339,41 @@ public abstract class AbstractRestClient implements RestClient {
         return Pair.of(builder, entity);
     }
 
-    private static void wrapTrustConfig(String url, ClientConfig config) {
-        String trustStoreFile = config.getProperty("trustStoreFile").toString();
-        String trustStorePass = config.getProperty("trustStorePassword")
-                                      .toString();
+    private static void configConnectionManager(String url, ClientConfig conf) {
+        /*
+         * Using httpclient with connection pooling, and configuring the
+         * jersey connector, reference:
+         * http://www.theotherian.com/2013/08/jersey-client-2.0-httpclient-timeouts-max-connections.html
+         * https://stackoverflow.com/questions/43228051/memory-issue-with-jax-rs-using-jersey/46175943#46175943
+         *
+         * But the jersey that has been released in the maven central
+         * repository seems to have a bug.
+         * https://github.com/jersey/jersey/pull/3752
+         */
+        PoolingHttpClientConnectionManager pool = connectionManager(url, conf);
+        Object maxTotal = conf.getProperty("maxTotal");
+        Object maxPerRoute = conf.getProperty("maxPerRoute");
+        if (maxTotal != null) {
+            pool.setMaxTotal((int) maxTotal);
+        }
+        if (maxPerRoute != null) {
+            pool.setDefaultMaxPerRoute((int) maxPerRoute);
+        }
+        conf.property(ApacheClientProperties.CONNECTION_MANAGER, pool);
+        conf.connectorProvider(new ApacheConnectorProvider());
+    }
+
+    private static PoolingHttpClientConnectionManager connectionManager(
+                                                      String url,
+                                                      ClientConfig conf) {
+        String protocol = (String) conf.getProperty("protocol");
+        if (protocol == null || protocol.equals("http")) {
+            return new PoolingHttpClientConnectionManager(TTL, TimeUnit.HOURS);
+        }
+
+        assert protocol.equals("https");
+        String trustStoreFile = (String) conf.getProperty("trustStoreFile");
+        String trustStorePass = (String) conf.getProperty("trustStorePassword");
         SSLContext context = SslConfigurator.newInstance()
                                             .trustStoreFile(trustStoreFile)
                                             .trustStorePassword(trustStorePass)
@@ -363,20 +390,14 @@ public abstract class AbstractRestClient implements RestClient {
         ConnectionSocketFactory httpSocketFactory, httpsSocketFactory;
         httpSocketFactory = PlainConnectionSocketFactory.getSocketFactory();
         httpsSocketFactory = new SSLConnectionSocketFactory(context, verifier);
-        final Registry<ConnectionSocketFactory> registry =
+        Registry<ConnectionSocketFactory> registry =
                 RegistryBuilder.<ConnectionSocketFactory>create()
                 .register("http", httpSocketFactory)
                 .register("https", httpsSocketFactory)
                 .build();
-
-        config.property(ApacheClientProperties.CONNECTION_MANAGER,
-                        new PoolingHttpClientConnectionManager(registry));
-        config.connectorProvider(new ApacheConnectorProvider());
-
-        // Setting property value null means remove property
-        config.property("protocol", null);
-        config.property("trustStoreFile", null);
-        config.property("trustStorePassword", null);
+        return new PoolingHttpClientConnectionManager(registry, null,
+                                                      null, null, TTL,
+                                                      TimeUnit.HOURS);
     }
 
     public static String encode(String raw) {
@@ -459,22 +480,8 @@ public abstract class AbstractRestClient implements RestClient {
         }
 
         public ConfigBuilder configPool(int maxTotal, int maxPerRoute) {
-            /*
-             * Using httpclient with connection pooling, and configuring the
-             * jersey connector, reference:
-             * http://www.theotherian.com/2013/08/jersey-client-2.0-httpclient-timeouts-max-connections.html
-             * https://stackoverflow.com/questions/43228051/memory-issue-with-jax-rs-using-jersey/46175943#46175943
-             *
-             * But the jersey that has been released in the maven central
-             * repository seems to have a bug.
-             * https://github.com/jersey/jersey/pull/3752
-             */
-            PoolingHttpClientConnectionManager pool;
-            pool = new PoolingHttpClientConnectionManager(TTL, TimeUnit.HOURS);
-            pool.setMaxTotal(maxTotal);
-            pool.setDefaultMaxPerRoute(maxPerRoute);
-            this.config.property(ApacheClientProperties.CONNECTION_MANAGER, pool);
-            this.config.connectorProvider(new ApacheConnectorProvider());
+            this.config.property("maxTotal", maxTotal);
+            this.config.property("maxPerRoute", maxPerRoute);
             return this;
         }
 
