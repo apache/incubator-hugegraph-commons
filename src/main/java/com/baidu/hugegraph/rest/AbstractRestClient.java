@@ -377,7 +377,7 @@ public abstract class AbstractRestClient implements RestClient {
         E.checkArgument(trustStoreFile != null && !trustStoreFile.isEmpty(),
                         "The trust store file must be set when use https");
         String trustStorePass = (String) conf.getProperty("trustStorePassword");
-        E.checkArgument(trustStorePass != null && !trustStorePass.isEmpty(),
+        E.checkArgument(trustStorePass != null,
                         "The trust store password must be set when use https");
         SSLContext context = SslConfigurator.newInstance()
                                             .trustStoreFile(trustStoreFile)
@@ -497,7 +497,12 @@ public abstract class AbstractRestClient implements RestClient {
 
         public ConfigBuilder configSSL(String trustStoreFile,
                                        String trustStorePassword) {
-            this.config.property("protocol", "https");
+            if (trustStoreFile == null || trustStoreFile.isEmpty() ||
+                trustStorePassword == null) {
+                this.config.property("protocol", "http");
+            } else {
+                this.config.property("protocol", "https");
+            }
             this.config.property("trustStoreFile", trustStoreFile);
             this.config.property("trustStorePassword", trustStorePassword);
             return this;
