@@ -118,7 +118,7 @@ public abstract class AbstractRestClient implements RestClient {
 
     public AbstractRestClient(String url, String user, String password,
                               int timeout, int maxTotal, int maxPerRoute,
-                              String protocol, String trustStoreFile,
+                              String trustStoreFile,
                               String trustStorePassword) {
         this(url, new ConfigBuilder().configTimeout(timeout)
                                      .configUser(user, password)
