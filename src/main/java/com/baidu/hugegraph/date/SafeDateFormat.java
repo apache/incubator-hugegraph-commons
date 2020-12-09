@@ -29,15 +29,27 @@ import org.joda.time.format.DateTimeFormatter;
 /**
  * The SafeDateFormat actually is a proxy for joda DateTimeFormatter
  */
-@Deprecated
 public class SafeDateFormat {
 
+    private static final int ONE_HOUR_MS = 3600 * 1000;
+
     private final String pattern;
-    private final DateTimeFormatter formatter;
+    private DateTimeFormatter formatter;
 
     public SafeDateFormat(String pattern) {
         this.pattern = pattern;
         this.formatter = DateTimeFormat.forPattern(pattern);
+    }
+
+    public synchronized void setTimeZone(String zoneId) {
+        int hoursOffset = TimeZone.getTimeZone(zoneId).getRawOffset() /
+                          ONE_HOUR_MS;
+        DateTimeZone zone = DateTimeZone.forOffsetHours(hoursOffset);
+        this.formatter = this.formatter.withZone(zone);
+    }
+
+    public TimeZone getTimeZome() {
+        return this.formatter.getZone().toTimeZone();
     }
 
     public Date parse(String source) {
@@ -46,14 +58,6 @@ public class SafeDateFormat {
 
     public String format(Date date) {
         return this.formatter.print(date.getTime());
-    }
-
-    public void setLenient(boolean lenient) {
-        // pass
-    }
-
-    public void setTimeZone(TimeZone timeZone) {
-        this.formatter.withZone(DateTimeZone.forTimeZone(timeZone));
     }
 
     public Object toPattern() {

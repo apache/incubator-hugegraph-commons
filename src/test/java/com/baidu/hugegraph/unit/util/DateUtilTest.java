@@ -50,7 +50,8 @@ public class DateUtilTest extends BaseUnitTest {
         Assert.assertThrows(IllegalArgumentException.class, () -> {
             DateUtil.parse("2018-15-07 12:00:00");
         }, e -> {
-            Assert.assertContains("Value 15 for monthOfYear must be in the range [1,12]", e.getMessage());
+            Assert.assertContains("Value 15 for monthOfYear must be " +
+                                  "in the range [1,12]", e.getMessage());
         });
     }
 

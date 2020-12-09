@@ -19,9 +19,13 @@
 
 package com.baidu.hugegraph.unit.date;
 
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
 
 import org.junit.Test;
@@ -32,7 +36,6 @@ import com.google.common.collect.ImmutableList;
 
 public class SafeDateFormatTest {
 
-    @SuppressWarnings("deprecation")
     @Test
     public void testSafeDateFormatInConcurrency() throws Exception {
         SafeDateFormat format = new SafeDateFormat("yyyy-MM-dd");
@@ -95,5 +98,31 @@ public class SafeDateFormatTest {
         }
 
         Assert.assertTrue(exceptions.isEmpty());
+    }
+
+    @Test
+    public void testTimeZone() throws ParseException {
+        DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        df.setTimeZone(TimeZone.getTimeZone("GMT+10"));
+
+        SafeDateFormat sdf = new SafeDateFormat("yyyy-MM-dd HH:mm:ss");
+        sdf.setTimeZone("GMT+10");
+
+        Assert.assertEquals(df.getTimeZone(), sdf.getTimeZome());
+        Assert.assertEquals(df.parse("2019-08-10 00:00:00"),
+                            sdf.parse("2019-08-10 00:00:00"));
+        Assert.assertEquals("2019-08-10 00:00:00",
+                            sdf.format(sdf.parse("2019-08-10 00:00:00")));
+        Assert.assertEquals(df.format(df.parse("2019-08-10 00:00:00")),
+                            sdf.format(sdf.parse("2019-08-10 00:00:00")));
+
+        sdf.setTimeZone("GMT+11");
+        Assert.assertNotEquals(df.getTimeZone(), sdf.getTimeZome());
+        Assert.assertNotEquals(df.parse("2019-08-10 00:00:00"),
+                               sdf.parse("2019-08-10 00:00:00"));
+        Assert.assertEquals("2019-08-10 00:00:00",
+                            sdf.format(sdf.parse("2019-08-10 00:00:00")));
+        Assert.assertEquals(df.format(df.parse("2019-08-10 00:00:00")),
+                            sdf.format(sdf.parse("2019-08-10 00:00:00")));
     }
 }
