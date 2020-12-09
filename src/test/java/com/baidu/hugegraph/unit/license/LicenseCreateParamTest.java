@@ -93,7 +93,7 @@ public class LicenseCreateParamTest {
         Assert.assertEquals("./hugegraph-evaluation.license",
                             param.licensePath());
 
-        DateFormat df = new SafeDateFormat("yyyy-MM-dd HH:mm:ss");
+        SafeDateFormat df = new SafeDateFormat("yyyy-MM-dd HH:mm:ss");
         df.setTimeZone(TimeZone.getTimeZone("GMT+08:00"));
         Assert.assertEquals(df.parse("2019-08-10 00:00:00"),
                             param.issuedTime());

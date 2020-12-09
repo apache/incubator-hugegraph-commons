@@ -19,7 +19,6 @@
 
 package com.baidu.hugegraph.unit.date;
 
-import java.text.DateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -36,7 +35,7 @@ public class SafeDateFormatTest {
     @SuppressWarnings("deprecation")
     @Test
     public void testSafeDateFormatInConcurrency() throws Exception {
-        DateFormat format = new SafeDateFormat("yyyy-MM-dd");
+        SafeDateFormat format = new SafeDateFormat("yyyy-MM-dd");
         List<String> sources = ImmutableList.of(
                 "2010-01-01",
                 "2011-02-02",
