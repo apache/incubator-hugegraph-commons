@@ -18,7 +18,7 @@
  *  under the License.
  */
 
-package com.baidu.hugegraph.event;
+package com.baidu.hugegraph.concurrent;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.Condition;
@@ -32,6 +32,49 @@ public class BarrierEvent {
     private final Lock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
     private boolean signaled = false;
+
+    /**
+     * Wait forever until the signal is received.
+     * @return true if signal is received
+     * @throws InterruptedException if interrupted.
+     */
+    public void await() throws InterruptedException {
+        this.lock.lock();
+        try {
+            while (!this.signaled) {
+                this.cond.await();
+            }
+        } finally {
+            this.lock.unlock();
+        }
+    }
+
+    /**
+     * Wait specified time in milliseconds.
+     * @param timeout: the time in millisecond to wait.
+     * @return true if signal is received, false if time out.
+     */
+    public boolean await(long timeout) throws InterruptedException {
+        E.checkArgument(timeout >= 0L,
+                        "The time must be >= 0, but got '%d'.",
+                        timeout);
+        long deadline = System.currentTimeMillis() + timeout;
+        this.lock.lock();
+        try {
+            while (!this.signaled) {
+                timeout = deadline - System.currentTimeMillis();
+                if (timeout > 0) {
+                    this.cond.await(timeout, TimeUnit.MILLISECONDS);
+                }
+                if (System.currentTimeMillis() >= deadline) {
+                    return this.signaled;
+                }
+            }
+        } finally {
+            this.lock.unlock();
+        }
+        return true;
+    }
 
     public void reset() {
         this.lock.lock();
@@ -60,43 +103,5 @@ public class BarrierEvent {
         } finally {
             this.lock.unlock();
         }
-    }
-
-    /**
-     * Wait forever until the signal is received.
-     * @return true if signal is received
-     * @throws InterruptedException if interrupted.
-     */
-    public void await() throws InterruptedException {
-        this.lock.lock();
-        try {
-            while (!this.signaled) {
-                this.cond.await();
-            }
-        } finally {
-            this.lock.unlock();
-        }
-    }
-
-    public boolean await(long time) throws InterruptedException {
-        E.checkArgument(time >= 0L,
-                        "The time must be >= 0, but got '%d'.",
-                        time);
-        long deadline = System.currentTimeMillis() + time;
-        this.lock.lock();
-        try {
-            while (!this.signaled) {
-                time = deadline - System.currentTimeMillis();
-                if (time > 0) {
-                    this.cond.await(time, TimeUnit.MILLISECONDS);
-                }
-                if (System.currentTimeMillis() >= deadline) {
-                    return this.signaled;
-                }
-            }
-        } finally {
-            this.lock.unlock();
-        }
-        return true;
     }
 }
