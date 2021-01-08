@@ -68,13 +68,53 @@ public class BarrierEventTest {
         Assert.assertTrue(signaled);
     }
 
-    @Test(timeout = 5000)
-    public void testSignalMultiThread() throws InterruptedException {
+    @Test
+    public void testSignalByMultiThreadWithSignalFirst()
+                throws InterruptedException {
         BarrierEvent barrierEvent = new BarrierEvent();
-        AtomicInteger result = new AtomicInteger(0);
+        AtomicInteger eventCount = new AtomicInteger(0);
+        AtomicInteger waitThreadInterruptedCount = new AtomicInteger(0);
         int waitThreadNum = 10;
         ExecutorService executorService =
-                        Executors.newFixedThreadPool(waitThreadNum);
+                        Executors.newFixedThreadPool(waitThreadNum + 1);
+        CountDownLatch waitLatch = new CountDownLatch(waitThreadNum);
+        CountDownLatch signalLatch = new CountDownLatch(1);
+        for (int i = 0; i < waitThreadNum; i++) {
+            executorService.submit(() -> {
+                try {
+                    signalLatch.await();
+                    barrierEvent.await();
+                    eventCount.incrementAndGet();
+                } catch (InterruptedException e) {
+                    waitThreadInterruptedCount.incrementAndGet();
+                } finally {
+                    waitLatch.countDown();
+                }
+            });
+        }
+
+        executorService.submit(() -> {
+            barrierEvent.signal();
+            signalLatch.countDown();
+        });
+
+        executorService.shutdown();
+        executorService.awaitTermination(2L, TimeUnit.SECONDS);
+        waitLatch.await();
+        Assert.assertEquals(10, eventCount.get());
+        Assert.assertEquals(0, waitThreadInterruptedCount.get());
+    }
+
+    @Test
+    public void testSignalByMultiThreadWithSignalLast()
+                throws InterruptedException {
+        BarrierEvent barrierEvent = new BarrierEvent();
+        AtomicInteger eventCount = new AtomicInteger(0);
+        AtomicInteger waitThreadInterruptedCount = new AtomicInteger(0);
+        AtomicInteger signalThreadInterruptedCount = new AtomicInteger(0);
+        int waitThreadNum = 10;
+        ExecutorService executorService =
+                        Executors.newFixedThreadPool(waitThreadNum + 1);
         CountDownLatch waitLatch = new CountDownLatch(waitThreadNum);
         CountDownLatch signalLatch = new CountDownLatch(1);
         for (int i = 0; i < waitThreadNum; i++) {
@@ -82,24 +122,30 @@ public class BarrierEventTest {
                 try {
                     waitLatch.countDown();
                     barrierEvent.await();
-                    result.incrementAndGet();
+                    eventCount.incrementAndGet();
                 } catch (InterruptedException e) {
-                    // Do nothing
+                    waitThreadInterruptedCount.incrementAndGet();
                 }
             });
         }
 
-        Thread signalThread = new Thread(() -> {
+        executorService.submit(() -> {
+            try {
+                waitLatch.await();
+            } catch (InterruptedException e) {
+                signalThreadInterruptedCount.incrementAndGet();
+            }
             barrierEvent.signal();
             signalLatch.countDown();
         });
-        signalThread.start();
-        waitLatch.await();
         signalLatch.await();
-        TimeUnit.MICROSECONDS.sleep(100);
+        TimeUnit.MILLISECONDS.sleep(10L);
         executorService.shutdownNow();
-
-        Assert.assertEquals(1, result.get());
+        executorService.awaitTermination(1L, TimeUnit.SECONDS);
+        Assert.assertEquals(1, eventCount.get());
+        Assert.assertEquals(waitThreadNum - 1,
+                            waitThreadInterruptedCount.get());
+        Assert.assertEquals(0, signalThreadInterruptedCount.get());
     }
 
     @Test
@@ -112,33 +158,79 @@ public class BarrierEventTest {
         Assert.assertTrue(signaled);
     }
 
-    @Test(timeout = 5000)
-    public void testSignalAllMultiThread() throws InterruptedException {
+    @Test
+    public void testSignalAllByMultiThreadWithSignalFirst()
+                throws InterruptedException {
         BarrierEvent barrierEvent = new BarrierEvent();
-        AtomicInteger result = new AtomicInteger(0);
+        AtomicInteger eventCount = new AtomicInteger(0);
+        AtomicInteger waitThreadInterruptedCount = new AtomicInteger(0);
         int waitThreadNum = 10;
         ExecutorService executorService =
-                        Executors.newFixedThreadPool(waitThreadNum);
-        CountDownLatch latch = new CountDownLatch(waitThreadNum + 1);
+                        Executors.newFixedThreadPool(waitThreadNum + 1);
+        CountDownLatch waitLatch = new CountDownLatch(waitThreadNum);
+        CountDownLatch signalLatch = new CountDownLatch(1);
         for (int i = 0; i < waitThreadNum; i++) {
             executorService.submit(() -> {
                 try {
+                    signalLatch.await();
+                    waitLatch.countDown();
                     barrierEvent.await();
-                    result.incrementAndGet();
-                    latch.countDown();
+                    eventCount.incrementAndGet();
                 } catch (InterruptedException e) {
-                    // Do nothing
+                    waitThreadInterruptedCount.incrementAndGet();
                 }
             });
         }
-        Thread signalThread = new Thread(() -> {
-            barrierEvent.signalAll();
-            latch.countDown();
-        });
-        signalThread.start();
-        latch.await();
-        executorService.shutdownNow();
 
-        Assert.assertEquals(waitThreadNum, result.get());
+        executorService.submit(() -> {
+            barrierEvent.signalAll();
+            signalLatch.countDown();
+        });
+
+        executorService.shutdown();
+        executorService.awaitTermination(1L, TimeUnit.SECONDS);
+        Assert.assertEquals(10, eventCount.get());
+        Assert.assertEquals(0, waitThreadInterruptedCount.get());
+    }
+
+    @Test
+    public void testSignalAllByMultiThreadWithSignalLast()
+                throws InterruptedException {
+        BarrierEvent barrierEvent = new BarrierEvent();
+        AtomicInteger eventCount = new AtomicInteger(0);
+        AtomicInteger waitThreadInterruptedCount = new AtomicInteger(0);
+        AtomicInteger signalThreadInterruptedCount = new AtomicInteger(0);
+        int waitThreadNum = 10;
+        ExecutorService executorService =
+                        Executors.newFixedThreadPool(waitThreadNum  + 1);
+        CountDownLatch waitLatch = new CountDownLatch(waitThreadNum);
+        CountDownLatch signalLatch = new CountDownLatch(1);
+        for (int i = 0; i < waitThreadNum; i++) {
+            executorService.submit(() -> {
+                try {
+                    waitLatch.countDown();
+                    barrierEvent.await();
+                    eventCount.incrementAndGet();
+                } catch (InterruptedException e) {
+                    waitThreadInterruptedCount.incrementAndGet();
+                }
+            });
+        }
+
+        executorService.submit(() -> {
+            try {
+                waitLatch.await();
+            } catch (InterruptedException e) {
+                signalThreadInterruptedCount.incrementAndGet();
+            }
+            barrierEvent.signalAll();
+            signalLatch.countDown();
+        });
+        signalLatch.await();
+        executorService.shutdown();
+        executorService.awaitTermination(1L, TimeUnit.SECONDS);
+        Assert.assertEquals(waitThreadNum, eventCount.get());
+        Assert.assertEquals(0, waitThreadInterruptedCount.get());
+        Assert.assertEquals(0, signalThreadInterruptedCount.get());
     }
 }
