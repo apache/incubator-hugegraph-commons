@@ -233,4 +233,43 @@ public class BarrierEventTest {
         Assert.assertEquals(0, waitThreadInterruptedCount.get());
         Assert.assertEquals(0, signalThreadInterruptedCount.get());
     }
+
+    @Test
+    public void testSignalAllByMultiThreadWithSignalAwaitConcurrent()
+                throws InterruptedException {
+        BarrierEvent barrierEvent = new BarrierEvent();
+        AtomicInteger eventCount = new AtomicInteger(0);
+        AtomicInteger waitThreadInterruptedCount = new AtomicInteger(0);
+        AtomicInteger signalThreadInterruptedCount = new AtomicInteger(0);
+        int waitThreadNum = 10;
+        ExecutorService executorService =
+                        Executors.newFixedThreadPool(waitThreadNum  + 1);
+        CountDownLatch syncLatch = new CountDownLatch(1);
+        for (int i = 0; i < waitThreadNum; i++) {
+            executorService.submit(() -> {
+                try {
+                    syncLatch.await();
+                    barrierEvent.await();
+                    eventCount.incrementAndGet();
+                } catch (InterruptedException e) {
+                    waitThreadInterruptedCount.incrementAndGet();
+                }
+            });
+        }
+
+        executorService.submit(() -> {
+            try {
+                syncLatch.await();
+            } catch (InterruptedException e) {
+                signalThreadInterruptedCount.incrementAndGet();
+            }
+            barrierEvent.signalAll();
+        });
+        syncLatch.countDown();
+        executorService.shutdown();
+        executorService.awaitTermination(1L, TimeUnit.SECONDS);
+        Assert.assertEquals(waitThreadNum, eventCount.get());
+        Assert.assertEquals(0, waitThreadInterruptedCount.get());
+        Assert.assertEquals(0, signalThreadInterruptedCount.get());
+    }
 }
