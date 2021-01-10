@@ -12,6 +12,8 @@ import com.baidu.hugegraph.concurrent.BarrierEvent;
 import com.baidu.hugegraph.testutil.Assert;
 
 public class BarrierEventTest {
+    
+    private static int WAIT_THREADS_COUNT = 10;
 
     @Test(timeout = 5000)
     public void testAWait() throws InterruptedException {
@@ -74,12 +76,11 @@ public class BarrierEventTest {
         BarrierEvent barrierEvent = new BarrierEvent();
         AtomicInteger eventCount = new AtomicInteger(0);
         AtomicInteger waitThreadInterruptedCount = new AtomicInteger(0);
-        int waitThreadNum = 10;
         ExecutorService executorService =
-                        Executors.newFixedThreadPool(waitThreadNum + 1);
-        CountDownLatch waitLatch = new CountDownLatch(waitThreadNum);
+                        Executors.newFixedThreadPool(WAIT_THREADS_COUNT + 1);
+        CountDownLatch waitLatch = new CountDownLatch(WAIT_THREADS_COUNT);
         CountDownLatch signalLatch = new CountDownLatch(1);
-        for (int i = 0; i < waitThreadNum; i++) {
+        for (int i = 0; i < WAIT_THREADS_COUNT; i++) {
             executorService.submit(() -> {
                 try {
                     signalLatch.await();
@@ -112,12 +113,11 @@ public class BarrierEventTest {
         AtomicInteger eventCount = new AtomicInteger(0);
         AtomicInteger waitThreadInterruptedCount = new AtomicInteger(0);
         AtomicInteger signalThreadInterruptedCount = new AtomicInteger(0);
-        int waitThreadNum = 10;
         ExecutorService executorService =
-                        Executors.newFixedThreadPool(waitThreadNum + 1);
-        CountDownLatch waitLatch = new CountDownLatch(waitThreadNum);
+                        Executors.newFixedThreadPool(WAIT_THREADS_COUNT + 1);
+        CountDownLatch waitLatch = new CountDownLatch(WAIT_THREADS_COUNT);
         CountDownLatch signalLatch = new CountDownLatch(1);
-        for (int i = 0; i < waitThreadNum; i++) {
+        for (int i = 0; i < WAIT_THREADS_COUNT; i++) {
             executorService.submit(() -> {
                 try {
                     waitLatch.countDown();
@@ -139,11 +139,10 @@ public class BarrierEventTest {
             signalLatch.countDown();
         });
         signalLatch.await();
-        TimeUnit.MILLISECONDS.sleep(10L);
         executorService.shutdownNow();
         executorService.awaitTermination(1L, TimeUnit.SECONDS);
         Assert.assertEquals(1, eventCount.get());
-        Assert.assertEquals(waitThreadNum - 1,
+        Assert.assertEquals(WAIT_THREADS_COUNT - 1,
                             waitThreadInterruptedCount.get());
         Assert.assertEquals(0, signalThreadInterruptedCount.get());
     }
@@ -164,12 +163,11 @@ public class BarrierEventTest {
         BarrierEvent barrierEvent = new BarrierEvent();
         AtomicInteger eventCount = new AtomicInteger(0);
         AtomicInteger waitThreadInterruptedCount = new AtomicInteger(0);
-        int waitThreadNum = 10;
         ExecutorService executorService =
-                        Executors.newFixedThreadPool(waitThreadNum + 1);
-        CountDownLatch waitLatch = new CountDownLatch(waitThreadNum);
+                        Executors.newFixedThreadPool(WAIT_THREADS_COUNT + 1);
+        CountDownLatch waitLatch = new CountDownLatch(WAIT_THREADS_COUNT);
         CountDownLatch signalLatch = new CountDownLatch(1);
-        for (int i = 0; i < waitThreadNum; i++) {
+        for (int i = 0; i < WAIT_THREADS_COUNT; i++) {
             executorService.submit(() -> {
                 try {
                     signalLatch.await();
@@ -200,12 +198,11 @@ public class BarrierEventTest {
         AtomicInteger eventCount = new AtomicInteger(0);
         AtomicInteger waitThreadInterruptedCount = new AtomicInteger(0);
         AtomicInteger signalThreadInterruptedCount = new AtomicInteger(0);
-        int waitThreadNum = 10;
         ExecutorService executorService =
-                        Executors.newFixedThreadPool(waitThreadNum  + 1);
-        CountDownLatch waitLatch = new CountDownLatch(waitThreadNum);
+                        Executors.newFixedThreadPool(WAIT_THREADS_COUNT + 1);
+        CountDownLatch waitLatch = new CountDownLatch(WAIT_THREADS_COUNT);
         CountDownLatch signalLatch = new CountDownLatch(1);
-        for (int i = 0; i < waitThreadNum; i++) {
+        for (int i = 0; i < WAIT_THREADS_COUNT; i++) {
             executorService.submit(() -> {
                 try {
                     waitLatch.countDown();
@@ -229,7 +226,7 @@ public class BarrierEventTest {
         signalLatch.await();
         executorService.shutdown();
         executorService.awaitTermination(1L, TimeUnit.SECONDS);
-        Assert.assertEquals(waitThreadNum, eventCount.get());
+        Assert.assertEquals(WAIT_THREADS_COUNT, eventCount.get());
         Assert.assertEquals(0, waitThreadInterruptedCount.get());
         Assert.assertEquals(0, signalThreadInterruptedCount.get());
     }
@@ -241,11 +238,10 @@ public class BarrierEventTest {
         AtomicInteger eventCount = new AtomicInteger(0);
         AtomicInteger waitThreadInterruptedCount = new AtomicInteger(0);
         AtomicInteger signalThreadInterruptedCount = new AtomicInteger(0);
-        int waitThreadNum = 10;
         ExecutorService executorService =
-                        Executors.newFixedThreadPool(waitThreadNum  + 1);
+                        Executors.newFixedThreadPool(WAIT_THREADS_COUNT + 1);
         CountDownLatch syncLatch = new CountDownLatch(1);
-        for (int i = 0; i < waitThreadNum; i++) {
+        for (int i = 0; i < WAIT_THREADS_COUNT; i++) {
             executorService.submit(() -> {
                 try {
                     syncLatch.await();
@@ -268,7 +264,7 @@ public class BarrierEventTest {
         syncLatch.countDown();
         executorService.shutdown();
         executorService.awaitTermination(1L, TimeUnit.SECONDS);
-        Assert.assertEquals(waitThreadNum, eventCount.get());
+        Assert.assertEquals(WAIT_THREADS_COUNT, eventCount.get());
         Assert.assertEquals(0, waitThreadInterruptedCount.get());
         Assert.assertEquals(0, signalThreadInterruptedCount.get());
     }
