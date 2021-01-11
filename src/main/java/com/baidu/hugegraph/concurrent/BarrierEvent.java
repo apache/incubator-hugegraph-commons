@@ -31,7 +31,7 @@ public class BarrierEvent {
 
     private final Lock lock = new ReentrantLock();
     private final Condition cond = lock.newCondition();
-    private boolean signaled = false;
+    private volatile boolean signaled = false;
 
     /**
      * Wait forever until the signal is received.
