@@ -32,7 +32,7 @@ public class PausableScheduledThreadPool extends ScheduledThreadPoolExecutor {
     private static final Logger LOG = Log.logger(
                                       PausableScheduledThreadPool.class);
 
-    private boolean paused = false;
+    private volatile boolean paused = false;
 
     public PausableScheduledThreadPool(int corePoolSize) {
         super(corePoolSize);
@@ -43,20 +43,22 @@ public class PausableScheduledThreadPool extends ScheduledThreadPoolExecutor {
         super(corePoolSize, factory);
     }
 
-    public synchronized void pauseSchedule() {
+    public void pauseSchedule() {
         this.paused = true;
         LOG.info("PausableScheduledThreadPool was paused");
     }
 
-    public synchronized void resumeSchedule() {
+    public void resumeSchedule() {
         this.paused = false;
-        this.notifyAll();
+        synchronized (this) {
+            this.notifyAll();
+        }
         LOG.info("PausableScheduledThreadPool was resumed");
     }
 
     @Override
-    protected synchronized void beforeExecute(Thread t, Runnable r) {
-        if (this.paused) {
+    protected void beforeExecute(Thread t, Runnable r) {
+        synchronized (this) {
             while (this.paused) {
                 try {
                     this.wait();
@@ -69,7 +71,7 @@ public class PausableScheduledThreadPool extends ScheduledThreadPoolExecutor {
     }
 
     @Override
-    public synchronized void shutdown() {
+    public void shutdown() {
         if (this.paused) {
             this.resumeSchedule();
         }
@@ -77,7 +79,7 @@ public class PausableScheduledThreadPool extends ScheduledThreadPoolExecutor {
     }
 
     @Override
-    public synchronized List<Runnable> shutdownNow() {
+    public List<Runnable> shutdownNow() {
         if (this.paused) {
             this.resumeSchedule();
         }
