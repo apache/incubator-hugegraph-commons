@@ -43,16 +43,14 @@ public class PausableScheduledThreadPool extends ScheduledThreadPoolExecutor {
         super(corePoolSize, factory);
     }
 
-    public void pauseSchedule() {
+    public synchronized void pauseSchedule() {
         this.paused = true;
         LOG.info("PausableScheduledThreadPool was paused");
     }
 
-    public void resumeSchedule() {
+    public synchronized void resumeSchedule() {
         this.paused = false;
-        synchronized (this) {
-            this.notifyAll();
-        }
+        this.notifyAll();
         LOG.info("PausableScheduledThreadPool was resumed");
     }
 
