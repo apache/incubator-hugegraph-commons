@@ -34,10 +34,6 @@ public class PausableScheduledThreadPool extends ScheduledThreadPoolExecutor {
 
     private volatile boolean paused = false;
 
-    public PausableScheduledThreadPool(int corePoolSize) {
-        super(corePoolSize);
-    }
-
     public PausableScheduledThreadPool(int corePoolSize,
                                        ThreadFactory factory) {
         super(corePoolSize, factory);

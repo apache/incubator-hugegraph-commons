@@ -33,7 +33,7 @@ public class PausableScheduledThreadPoolTest {
     @Test
     public void testscheduleWithFixedDelay() throws InterruptedException {
         PausableScheduledThreadPool executor =
-                ExecutorUtil.newPausableScheduledThreadPool(2, "test");
+                ExecutorUtil.newPausableScheduledThreadPool("test");
         AtomicInteger counter = new AtomicInteger(0);
         executor.scheduleWithFixedDelay(() -> {
             System.out.println("counter: " + counter.incrementAndGet());
@@ -51,6 +51,9 @@ public class PausableScheduledThreadPoolTest {
         executor.resumeSchedule();
         Thread.sleep(2000);
         Assert.assertEquals(3, counter.get());
+
+        // pause again
+        executor.pauseSchedule();
 
         executor.shutdown();
         executor.awaitTermination(3, TimeUnit.SECONDS);
@@ -76,6 +79,9 @@ public class PausableScheduledThreadPoolTest {
         executor.resumeSchedule();
         Thread.sleep(2000);
         Assert.assertEquals(4, counter.get());
+
+        // pause again
+        executor.pauseSchedule();
 
         executor.shutdownNow();
         executor.awaitTermination(3, TimeUnit.SECONDS);
