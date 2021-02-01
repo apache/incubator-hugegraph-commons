@@ -37,26 +37,26 @@ public class PausableScheduledThreadPoolTest {
         AtomicInteger counter = new AtomicInteger(0);
         executor.scheduleWithFixedDelay(() -> {
             System.out.println("counter: " + counter.incrementAndGet());
-        }, 2, 2, TimeUnit.SECONDS);
+        }, 2L, 2L, TimeUnit.SECONDS);
 
-        Thread.sleep(4500);
+        Thread.sleep(4500L);
         Assert.assertEquals(2, counter.get());
 
         // pause
         executor.pauseSchedule();
-        Thread.sleep(2000);
+        Thread.sleep(2000L);
         Assert.assertEquals(2, counter.get());
 
         // resume
         executor.resumeSchedule();
-        Thread.sleep(2000);
+        Thread.sleep(2000L);
         Assert.assertEquals(3, counter.get());
 
         // pause again
         executor.pauseSchedule();
 
         executor.shutdown();
-        executor.awaitTermination(3, TimeUnit.SECONDS);
+        executor.awaitTermination(3L, TimeUnit.SECONDS);
     }
 
     @Test
@@ -66,24 +66,24 @@ public class PausableScheduledThreadPoolTest {
         AtomicInteger counter = new AtomicInteger(0);
         executor.scheduleAtFixedRate(() -> {
             System.out.println("counter: " + counter.incrementAndGet());
-        }, 2, 2, TimeUnit.SECONDS);
-        Thread.sleep(4500);
+        }, 2L, 2L, TimeUnit.SECONDS);
+        Thread.sleep(4500L);
         Assert.assertEquals(2, counter.get());
 
         // pause
         executor.pauseSchedule();
-        Thread.sleep(2000);
+        Thread.sleep(2000L);
         Assert.assertEquals(2, counter.get());
 
         // resume
         executor.resumeSchedule();
-        Thread.sleep(2000);
+        Thread.sleep(2000L);
         Assert.assertEquals(4, counter.get());
 
         // pause again
         executor.pauseSchedule();
 
         executor.shutdownNow();
-        executor.awaitTermination(3, TimeUnit.SECONDS);
+        executor.awaitTermination(3L, TimeUnit.SECONDS);
     }
 }
