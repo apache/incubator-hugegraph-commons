@@ -34,23 +34,27 @@ public class PausableScheduledThreadPoolTest {
     public void testscheduleWithFixedDelay() throws InterruptedException {
         PausableScheduledThreadPool executor =
                 ExecutorUtil.newPausableScheduledThreadPool("test");
+        long period = 500L;
         AtomicInteger counter = new AtomicInteger(0);
         executor.scheduleWithFixedDelay(() -> {
             System.out.println("counter: " + counter.incrementAndGet());
-        }, 2L, 2L, TimeUnit.SECONDS);
+        }, period, period, TimeUnit.MILLISECONDS);
 
-        Thread.sleep(4500L);
+        Thread.sleep((long) (2.1 * period));
         Assert.assertEquals(2, counter.get());
 
         // pause
         executor.pauseSchedule();
-        Thread.sleep(2000L);
+        Thread.sleep(period);
         Assert.assertEquals(2, counter.get());
 
         // resume
         executor.resumeSchedule();
-        Thread.sleep(2000L);
+        Thread.sleep((long) (0.5 * period));
         Assert.assertEquals(3, counter.get());
+
+        Thread.sleep((long) (0.6 * period));
+        Assert.assertEquals(4, counter.get());
 
         // pause again
         executor.pauseSchedule();
@@ -63,21 +67,23 @@ public class PausableScheduledThreadPoolTest {
     public void testscheduleWithFixedRate() throws InterruptedException {
         PausableScheduledThreadPool executor =
                 ExecutorUtil.newPausableScheduledThreadPool(2, "test");
+        long period = 500L;
         AtomicInteger counter = new AtomicInteger(0);
         executor.scheduleAtFixedRate(() -> {
             System.out.println("counter: " + counter.incrementAndGet());
-        }, 2L, 2L, TimeUnit.SECONDS);
-        Thread.sleep(4500L);
+        }, period, period, TimeUnit.MILLISECONDS);
+
+        Thread.sleep((long) (2.1 * period));
         Assert.assertEquals(2, counter.get());
 
         // pause
         executor.pauseSchedule();
-        Thread.sleep(2000L);
+        Thread.sleep(period);
         Assert.assertEquals(2, counter.get());
 
         // resume
         executor.resumeSchedule();
-        Thread.sleep(2000L);
+        Thread.sleep((long) (1.1 * period));
         Assert.assertEquals(4, counter.get());
 
         // pause again
