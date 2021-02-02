@@ -26,7 +26,7 @@ import java.util.concurrent.ThreadFactory;
 
 import org.apache.commons.lang3.concurrent.BasicThreadFactory;
 
-import com.baidu.hugegraph.threadpool.PausableScheduledThreadPool;
+import com.baidu.hugegraph.concurrent.PausableScheduledThreadPool;
 
 public final class ExecutorUtil {
 

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.unit.threadpool;
+package com.baidu.hugegraph.unit.concurrent;
 
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -25,7 +25,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.baidu.hugegraph.threadpool.PausableScheduledThreadPool;
+import com.baidu.hugegraph.concurrent.PausableScheduledThreadPool;
 import com.baidu.hugegraph.util.ExecutorUtil;
 
 public class PausableScheduledThreadPoolTest {

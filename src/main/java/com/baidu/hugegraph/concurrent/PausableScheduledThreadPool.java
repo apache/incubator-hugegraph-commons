@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.threadpool;
+package com.baidu.hugegraph.concurrent;
 
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
