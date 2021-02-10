@@ -41,7 +41,6 @@ public class FilterIteratorTest extends BaseUnitTest {
 
     @Test
     public void testFilter() {
-
         AtomicInteger valuesCount = new AtomicInteger(0);
 
         Iterator<Integer> values = DATA.iterator();

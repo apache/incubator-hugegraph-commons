@@ -41,7 +41,6 @@ public class LimitIteratorTest extends BaseUnitTest {
 
     @Test
     public void testLimit() {
-
         AtomicInteger valuesCount = new AtomicInteger(0);
 
         Iterator<Integer> values = DATA.iterator();
@@ -144,7 +143,7 @@ public class LimitIteratorTest extends BaseUnitTest {
         List<Integer> list = new ArrayList<>(DATA);
 
         Iterator<Integer> results = new LimitIterator<>(list.iterator(),
-                                                         val -> false);
+                                                        val -> false);
 
         Assert.assertEquals(ImmutableList.of(1, 2, 3, 4), list);
 
@@ -160,7 +159,7 @@ public class LimitIteratorTest extends BaseUnitTest {
         CloseableItor<Integer> vals = new CloseableItor<>(DATA.iterator());
 
         LimitIterator<Integer> results = new LimitIterator<>(vals,
-                                                               val -> true);
+                                                             val -> true);
 
         Assert.assertFalse(vals.closed());
         results.close();
