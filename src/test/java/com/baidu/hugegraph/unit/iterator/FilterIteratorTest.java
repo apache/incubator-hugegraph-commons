@@ -41,12 +41,12 @@ public class FilterIteratorTest extends BaseUnitTest {
 
     @Test
     public void testFilter() {
-        AtomicInteger valuesCount = new AtomicInteger(0);
+        AtomicInteger callbackCount = new AtomicInteger(0);
 
         Iterator<Integer> values = DATA.iterator();
 
         Function<Integer, Boolean> filter = value -> {
-            valuesCount.incrementAndGet();
+            callbackCount.incrementAndGet();
             return (value % 2 == 0);
         };
 
@@ -57,7 +57,7 @@ public class FilterIteratorTest extends BaseUnitTest {
             actual.add(results.next());
         }
 
-        Assert.assertEquals(4, valuesCount.get());
+        Assert.assertEquals(4, callbackCount.get());
         Assert.assertEquals(ImmutableList.of(2, 4), actual);
     }
 
@@ -136,6 +136,29 @@ public class FilterIteratorTest extends BaseUnitTest {
         Assert.assertThrows(NoSuchElementException.class, () -> {
             results.next();
         });
+    }
+
+    @Test
+    public void testNextWithOringinIteratorReturnNullElem() {
+        List<Integer> list = new ArrayList<>();
+        list.add(1);
+        list.add(null);
+        list.add(3);
+        Iterator<Integer> vals = list.iterator();
+
+        AtomicInteger callbackCount = new AtomicInteger(0);
+
+        Iterator<Integer> results = new FilterIterator<>(vals, val -> {
+            callbackCount.incrementAndGet();
+            return true;
+        });
+
+        Assert.assertTrue(results.hasNext());
+        for (int i = 0; i < 2; i++) {
+            results.next();
+        }
+        Assert.assertFalse(results.hasNext());
+        Assert.assertEquals(2, callbackCount.get());
     }
 
     @Test

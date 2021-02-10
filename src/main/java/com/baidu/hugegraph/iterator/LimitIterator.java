@@ -41,17 +41,18 @@ public class LimitIterator<T> extends WrappedIterator<T> {
     protected final boolean fetch() {
         while (this.originIterator.hasNext()) {
             T next = this.originIterator.next();
+            if (next == null) {
+                continue;
+            }
             // Do filter
             boolean reachLimit = this.filterCallback.apply(next);
             if (reachLimit) {
                 this.closeOriginIterator();
                 return false;
             }
-            if (next != null) {
-                assert this.current == none();
-                this.current = next;
-                return true;
-            }
+            assert this.current == none();
+            this.current = next;
+            return true;
         }
         return false;
     }

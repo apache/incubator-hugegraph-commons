@@ -41,13 +41,13 @@ public class LimitIteratorTest extends BaseUnitTest {
 
     @Test
     public void testLimit() {
-        AtomicInteger valuesCount = new AtomicInteger(0);
+        AtomicInteger callbackCount = new AtomicInteger(0);
 
         Iterator<Integer> values = DATA.iterator();
 
         int limit = 2;
         Function<Integer, Boolean> filter = value -> {
-            return valuesCount.incrementAndGet() > limit;
+            return callbackCount.incrementAndGet() > limit;
         };
 
         Iterator<Integer> results = new LimitIterator<>(values, filter);
@@ -57,7 +57,7 @@ public class LimitIteratorTest extends BaseUnitTest {
             actual.add(results.next());
         }
 
-        Assert.assertEquals(3, valuesCount.get());
+        Assert.assertEquals(3, callbackCount.get());
         Assert.assertEquals(ImmutableList.of(1, 2), actual);
     }
 
@@ -101,6 +101,9 @@ public class LimitIteratorTest extends BaseUnitTest {
         Assert.assertThrows(NoSuchElementException.class, () -> {
             results.next();
         });
+
+        Iterator<Integer> results2 = new LimitIterator<>(vals, val -> false);
+        Assert.assertFalse(results2.hasNext());
     }
 
     @Test
@@ -136,6 +139,28 @@ public class LimitIteratorTest extends BaseUnitTest {
         Assert.assertThrows(NoSuchElementException.class, () -> {
             results.next();
         });
+    }
+
+    @Test
+    public void testNextWithOringinIteratorReturnNullElem() {
+        List<Integer> list = new ArrayList<>();
+        list.add(1);
+        list.add(null);
+        list.add(3);
+        Iterator<Integer> vals = list.iterator();
+
+        AtomicInteger callbackCount = new AtomicInteger(0);
+
+        Iterator<Integer> results = new LimitIterator<>(vals, val -> {
+            callbackCount.incrementAndGet();
+            return false;
+        });
+        Assert.assertTrue(results.hasNext());
+        for (int i = 0; i < 2; i++) {
+            results.next();
+        }
+        Assert.assertFalse(results.hasNext());
+        Assert.assertEquals(2, callbackCount.get());
     }
 
     @Test
