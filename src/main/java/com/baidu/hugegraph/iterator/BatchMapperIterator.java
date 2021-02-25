@@ -56,17 +56,15 @@ public class BatchMapperIterator<T, R> extends WrappedIterator<R> {
         }
 
         List<T> batch = this.nextBatch();
-        if (!batch.isEmpty()) {
-            assert this.batchIterator == null;
-            while (!batch.isEmpty()) {
-                // Do fetch
-                this.batchIterator = this.mapperCallback.apply(batch);
-                if (this.batchIterator != null && this.fetchFromBatch()) {
-                    return true;
-                }
-                // Try next batch
-                batch = this.nextBatch();
+        assert this.batchIterator == null;
+        while (!batch.isEmpty()) {
+            // Do fetch
+            this.batchIterator = this.mapperCallback.apply(batch);
+            if (this.batchIterator != null && this.fetchFromBatch()) {
+                return true;
             }
+            // Try next batch
+            batch = this.nextBatch();
         }
         return false;
     }
