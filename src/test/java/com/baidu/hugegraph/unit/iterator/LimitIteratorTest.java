@@ -142,7 +142,7 @@ public class LimitIteratorTest extends BaseUnitTest {
     }
 
     @Test
-    public void testNextWithOringinIteratorReturnNullElem() {
+    public void testNextWithOriginIteratorReturnNullElem() {
         List<Integer> list = new ArrayList<>();
         list.add(1);
         list.add(null);
