@@ -132,7 +132,7 @@ public class TypedOption<T, R> {
                 return Class.forName(value);
             } catch (ClassNotFoundException e) {
                 throw new RuntimeException(String.format(
-                          "Failed to convert String to Class '%s'", value), e);
+                          "Failed to parse Class from String '%s'", value), e);
             }
         } else if (List.class.isAssignableFrom(dataType)) {
             E.checkState(this.forList(),
