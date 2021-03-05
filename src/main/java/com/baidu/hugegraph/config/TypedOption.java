@@ -131,8 +131,8 @@ public class TypedOption<T, R> {
             try {
                 return Class.forName(value);
             } catch (ClassNotFoundException e) {
-                throw new RuntimeException(String.format(
-                          "Failed to parse Class from String '%s'", value), e);
+                throw new ConfigException(
+                          "Failed to parse Class from String '%s'", e, value);
             }
         } else if (List.class.isAssignableFrom(dataType)) {
             E.checkState(this.forList(),

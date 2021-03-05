@@ -279,6 +279,12 @@ public class HugeConfigTest extends BaseUnitTest {
         Assert.assertEquals(true, config.get(TestOptions.bool));
 
         Assert.assertEquals(Object.class, config.get(TestOptions.clazz));
+        Assert.assertThrows(ConfigException.class, () -> {
+            config.setProperty(TestOptions.clazz.name(),
+                               "com.baidu.hugegraph.HugeGraph");
+        }, e -> {
+            Assert.assertTrue(e.getCause() instanceof ClassNotFoundException);
+        });
 
         Assert.assertEquals(Arrays.asList("list-value1", "list-value2"),
                             config.get(TestOptions.list));
