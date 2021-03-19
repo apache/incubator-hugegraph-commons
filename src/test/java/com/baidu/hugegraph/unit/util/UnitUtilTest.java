@@ -132,7 +132,7 @@ public class UnitUtilTest {
         value = UnitUtil.bytesToGB(Bytes.GB * 7357924680L);
         Assert.assertEquals(7357924680d, value, 0d);
 
-        // overflow
+        // Bytes overflow long value
         value = UnitUtil.bytesToGB(Bytes.GB * 9357924680L);
         Assert.assertEquals(-7.821944504E9, value, 0d);
     }
@@ -337,7 +337,7 @@ public class UnitUtilTest {
                                                (long) (755 * 1.024) * Bytes.PB);
         Assert.assertEquals("7.75 EB", value);
 
-        // overflow
+        // Bytes overflow long value
         value = UnitUtil.bytesToReadableString(Bytes.EB * 8);
         Assert.assertEquals("0 B", value);
     }
@@ -465,7 +465,7 @@ public class UnitUtilTest {
 
     @Test
     public void testBytesFromReadableStringWithInvalidFormat() {
-        // no space
+        // No space
         Assert.assertThrows(IllegalArgumentException.class, () -> {
             UnitUtil.bytesFromReadableString("1kb");
         }, e -> {
@@ -473,7 +473,7 @@ public class UnitUtilTest {
                                   e.getMessage());
         });
 
-        // invalid unit
+        // Invalid unit
         Assert.assertThrows(IllegalArgumentException.class, () -> {
             UnitUtil.bytesFromReadableString("1 aBc");
         }, e -> {
@@ -495,7 +495,7 @@ public class UnitUtilTest {
             Assert.assertContains("Unrecognized unit 2 MB", e.getMessage());
         });
 
-        // invalid number
+        // Invalid number
         Assert.assertThrows(IllegalArgumentException.class, () -> {
             UnitUtil.bytesFromReadableString("2b kb");
         }, e -> {
@@ -509,7 +509,7 @@ public class UnitUtilTest {
                                   e.getMessage());
         });
 
-        // overflow
+        // Bytes overflow long value
         Assert.assertThrows(IllegalArgumentException.class, () -> {
             UnitUtil.bytesFromReadableString("8.1 EIB");
         }, e -> {
