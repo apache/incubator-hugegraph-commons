@@ -27,10 +27,13 @@ import org.apache.commons.collections.IteratorUtils;
 import org.junit.Test;
 
 import com.baidu.hugegraph.perf.PerfUtil.Watched;
-import com.baidu.hugegraph.testclass.TestClass.Base;
-import com.baidu.hugegraph.testclass.TestClass.Sub;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
+import com.baidu.hugegraph.unit.perf.testclass.TestClass;
+import com.baidu.hugegraph.unit.perf.testclass.TestClass.Bar;
+import com.baidu.hugegraph.unit.perf.testclass.TestClass.Base;
+import com.baidu.hugegraph.unit.perf.testclass.TestClass.Foo;
+import com.baidu.hugegraph.unit.perf.testclass.TestClass.Sub;
 import com.baidu.hugegraph.util.ReflectionUtil;
 import com.google.common.reflect.ClassPath.ClassInfo;
 
@@ -110,5 +113,17 @@ public class ReflectionUtilTest extends BaseUnitTest {
         classes.sort((c1, c2) -> c1.compareTo(c2));
         Assert.assertEquals(Base.class.getName(), classes.get(0));
         Assert.assertEquals(Object.class.getName(), classes.get(1));
+    }
+
+    @Test
+    public void testNestedClasses() throws NotFoundException {
+        List<String> classes = ReflectionUtil.nestedClasses(
+                               TestClass.class.getName());
+        Assert.assertEquals(4, classes.size());
+        classes.sort((c1, c2) -> c1.compareTo(c2));
+        Assert.assertEquals(Bar.class.getName(), classes.get(0));
+        Assert.assertEquals(Base.class.getName(), classes.get(1));
+        Assert.assertEquals(Foo.class.getName(), classes.get(2));
+        Assert.assertEquals(Sub.class.getName(), classes.get(3));
     }
 }

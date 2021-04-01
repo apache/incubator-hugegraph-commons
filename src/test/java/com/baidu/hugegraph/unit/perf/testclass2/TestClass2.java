@@ -17,11 +17,16 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.testclass;
+package com.baidu.hugegraph.unit.perf.testclass2;
 
 import com.baidu.hugegraph.perf.PerfUtil.Watched;
 
-public class TestClass {
+public class TestClass2 {
+
+    @Watched
+    public void test() {
+        new Foo().bar();
+    }
 
     public static class Foo {
 

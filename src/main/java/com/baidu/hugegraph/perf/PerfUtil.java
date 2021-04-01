@@ -19,7 +19,6 @@
 
 package com.baidu.hugegraph.perf;
 
-import java.io.IOException;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -38,6 +37,7 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.func.TriFunction;
+import com.baidu.hugegraph.testutil.Assert.ThrowableConsumer;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 import com.baidu.hugegraph.util.ReflectionUtil;
@@ -47,7 +47,6 @@ import javassist.CannotCompileException;
 import javassist.ClassPool;
 import javassist.CtClass;
 import javassist.CtMethod;
-import javassist.NotFoundException;
 
 public final class PerfUtil {
 
@@ -120,43 +119,48 @@ public final class PerfUtil {
         this.stopwatches.clear();
     }
 
-    public void profilePackage(String... packages)
-                               throws NotFoundException, IOException,
-                               ClassNotFoundException, CannotCompileException {
+    public void profilePackage(String... packages) throws Throwable {
         Set<String> loadedClasses = new HashSet<>();
+
+        ThrowableConsumer<String> profileClassIfPresent = (cls) -> {
+            if (!loadedClasses.contains(cls)) {
+                // Profile super class
+                for (String s : ReflectionUtil.superClasses(cls)) {
+                    if (!loadedClasses.contains(s)) {
+                        profileClass(s);
+                        loadedClasses.add(s);
+                    }
+                }
+                // Profile self class
+                profileClass(cls);
+                loadedClasses.add(cls);
+            }
+        };
 
         Iterator<ClassInfo> classes = ReflectionUtil.classes(packages);
         while (classes.hasNext()) {
             String cls = classes.next().getName();
-            // super class first
-            for (String s : ReflectionUtil.superClasses(cls)) {
-                if (!loadedClasses.contains(s)) {
-                    profileClass(s);
-                    loadedClasses.add(s);
-                }
-            }
-            // self class
-            if (!loadedClasses.contains(cls)) {
-                profileClass(cls);
-                loadedClasses.add(cls);
+            // Profile self class
+            profileClassIfPresent.accept(cls);
+            // Profile nested class
+            for (String s : ReflectionUtil.nestedClasses(cls)) {
+                profileClassIfPresent.accept(s);
             }
         }
     }
 
-    public void profileClass(String... classes)
-                             throws NotFoundException, CannotCompileException,
-                             ClassNotFoundException {
+    public void profileClass(String... classes) throws Throwable {
         ClassPool classPool = ClassPool.getDefault();
 
         for (String cls : classes) {
             CtClass ctClass = classPool.get(cls);
             List<CtMethod> methods = ReflectionUtil.getMethodsAnnotatedWith(
-                    ctClass, Watched.class, false);
+                                     ctClass, Watched.class, false);
             for (CtMethod method : methods) {
                 profile(method);
             }
 
-            // load class and make it effective
+            // Load class and make it effective
             if (!methods.isEmpty()) {
                 ctClass.toClass();
             }
