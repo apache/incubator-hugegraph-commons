@@ -26,6 +26,7 @@ import org.junit.After;
 import org.junit.Test;
 
 import com.baidu.hugegraph.perf.PerfUtil;
+import com.baidu.hugegraph.testclass.TestClass.Bar;
 import com.baidu.hugegraph.testclass.TestClass.Foo;
 import com.baidu.hugegraph.testclass.TestClass.Sub;
 import com.baidu.hugegraph.testutil.Assert;
@@ -56,6 +57,33 @@ public class PerfUtilTest extends BaseUnitTest {
         Foo obj = new Foo();
         obj.foo();
 
+        perf.toString();
+        perf.toECharts();
+        String json = perf.toJson();
+
+        assertContains(json, "foo.times", 1);
+        assertContains(json, "foo/bar.times", 1);
+
+        perf.clear();
+
+        obj.foo();
+        obj.foo();
+
+        perf.toString();
+        perf.toECharts();
+        json = perf.toJson();
+
+        assertContains(json, "foo.times", 2);
+        assertContains(json, "foo/bar.times", 2);
+    }
+
+    @Test
+    public void testPerfUtilWithSingleThread() throws Exception {
+        perf.profileClass("com.baidu.hugegraph.testclass.TestClass$Bar");
+        PerfUtil.profileSingleThread(true);
+
+        Bar obj = new Bar();
+        obj.foo();
         perf.toString();
         perf.toECharts();
         String json = perf.toJson();

@@ -19,7 +19,12 @@
 
 package com.baidu.hugegraph.perf;
 
-public class Stopwatch implements Cloneable {
+public final class Stopwatch implements Cloneable {
+
+    private static final String MULTI_THREAD_ACCESS_ERROR =
+                         "There may be multi-threaded access, ensure " +
+                         "not call PerfUtil.profileSingleThread(true) when " +
+                         "multithreading.";
 
     private long lastStartTime = -1L;
 
@@ -29,8 +34,8 @@ public class Stopwatch implements Cloneable {
 
     private long times = 0L;
 
-    private String name;
-    private String parent;
+    private final String name;
+    private final String parent;
 
     public Stopwatch(String name, String parent) {
         this.name = name;
@@ -45,7 +50,9 @@ public class Stopwatch implements Cloneable {
         if (parent == null || parent.isEmpty()) {
             return name;
         }
-        return parent + "/" + name;
+        int len = parent.length() + 1 + name.length();
+        StringBuilder sb = new StringBuilder(len);
+        return sb.append(parent).append('/').append(name).toString();
     }
 
     public String name() {
@@ -57,14 +64,15 @@ public class Stopwatch implements Cloneable {
     }
 
     public void startTime(long time) {
-        assert this.lastStartTime == -1L;
+        assert this.lastStartTime == -1L : MULTI_THREAD_ACCESS_ERROR;
 
         this.lastStartTime = time;
         this.times++;
     }
 
     public void endTime(long time) {
-        assert time >= this.lastStartTime && this.lastStartTime != -1L;
+        assert time >= this.lastStartTime && this.lastStartTime != -1L :
+               MULTI_THREAD_ACCESS_ERROR;
 
         long cost = time - this.lastStartTime;
         this.totalCost += cost;
@@ -119,14 +127,16 @@ public class Stopwatch implements Cloneable {
     }
 
     public String toJson() {
-        return String.format("{\"totalCost\":%s, " +
-                "\"minCost\":%s, \"maxCost\":%s, \"times\":%s, " +
-                "\"name\":\"%s\", \"parent\":\"%s\"}",
-                this.totalCost,
-                this.minCost,
-                this.maxCost,
-                this.times,
-                this.name,
-                this.parent);
+        int len = 200 + this.name.length() + this.parent.length();
+        StringBuilder sb = new StringBuilder(len);
+        sb.append("{");
+        sb.append("\"total_cost\":").append(this.totalCost);
+        sb.append(",\"min_cost\":").append(this.minCost);
+        sb.append(",\"max_cost\":").append(this.maxCost);
+        sb.append(",\"times\":").append(this.times);
+        sb.append(",\"name\":\"").append(this.name).append("\"");
+        sb.append(",\"parent\":\"").append(this.parent).append("\"");
+        sb.append("}");
+        return sb.toString();
     }
 }

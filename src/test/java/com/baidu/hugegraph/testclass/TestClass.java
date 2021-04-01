@@ -34,6 +34,17 @@ public class TestClass {
         public void bar() {}
     }
 
+    public static class Bar {
+
+        @Watched
+        public void foo() {
+            this.bar();
+        }
+
+        @Watched
+        public void bar() {}
+    }
+
     public static class Base {
 
         @Watched

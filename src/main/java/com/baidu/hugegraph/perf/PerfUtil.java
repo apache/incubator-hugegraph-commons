@@ -24,7 +24,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.security.InvalidParameterException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -50,26 +49,38 @@ import javassist.CtClass;
 import javassist.CtMethod;
 import javassist.NotFoundException;
 
-public class PerfUtil {
+public final class PerfUtil {
 
     private static final Logger LOG = Log.logger(PerfUtil.class);
+    private static final int DEFAUL_CAPATICY = 1024;
+
     private static final ThreadLocal<PerfUtil> INSTANCE = new ThreadLocal<>();
+    private static PerfUtil SINGLE_INSTANCE = null;
 
     private final Map<String, Stopwatch> stopwatches;
     private final Stack<String> callStack;
 
     private PerfUtil() {
-        this.stopwatches = new HashMap<>();
+        this.stopwatches = new HashMap<>(DEFAUL_CAPATICY);
         this.callStack = new Stack<>();
     }
 
     public static PerfUtil instance() {
+        if (SINGLE_INSTANCE != null) {
+            // Return the only one instance for single thread, for performance
+            return SINGLE_INSTANCE;
+        }
+
         PerfUtil p = INSTANCE.get();
         if (p == null) {
             p = new PerfUtil();
             INSTANCE.set(p);
         }
         return p;
+    }
+
+    public static void profileSingleThread(boolean yes) {
+        SINGLE_INSTANCE = yes ? PerfUtil.instance() : null;
     }
 
     private static long now() {
@@ -92,12 +103,11 @@ public class PerfUtil {
     public boolean end(String name) {
         long time = now();
         String current = this.callStack.pop();
-        assert current.endsWith(name);
+        assert current.endsWith(name) : current;
 
-        String parent = this.callStack.empty() ? "" : this.callStack.peek();
-        Stopwatch item = this.stopwatches.get(Stopwatch.id(parent, name));
+        Stopwatch item = this.stopwatches.get(current);
         if (item == null) {
-            throw new InvalidParameterException(name);
+            throw new IllegalArgumentException("Invalid watch name: " + name);
         }
         item.endTime(time);
 
@@ -205,7 +215,6 @@ public class PerfUtil {
 
     // TODO: move toECharts() method out of this class
     public String toECharts() {
-
         TriFunction<Integer, Integer, List<Stopwatch>, String> formatLevel = (
                 totalDepth, depth, items) -> {
             float factor = 100.0f / (totalDepth + 1);
@@ -325,7 +334,7 @@ public class PerfUtil {
     }
 
     @Retention(RetentionPolicy.RUNTIME)
-    @Target(ElementType.METHOD)
+    @Target({ ElementType.METHOD, ElementType.CONSTRUCTOR })
     public static @interface Watched {
         public String value() default "";
         public String prefix() default "";
