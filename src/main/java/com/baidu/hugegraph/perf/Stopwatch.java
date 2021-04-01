@@ -28,11 +28,11 @@ public final class Stopwatch implements Cloneable {
 
     private long lastStartTime = -1L;
 
+    private long times = 0L;
     private long totalCost = 0L;
     private long minCost = 0L;
     private long maxCost = 0L;
-
-    private long times = 0L;
+    private long totalWasted = 0L;
 
     private final String name;
     private final String parent;
@@ -63,20 +63,22 @@ public final class Stopwatch implements Cloneable {
         return this.parent;
     }
 
-    public void startTime(long time) {
+    public void startTime(long time, long wastedTime) {
         assert this.lastStartTime == -1L : MULTI_THREAD_ACCESS_ERROR;
 
         this.lastStartTime = time;
         this.times++;
+        this.totalWasted += wastedTime;
     }
 
-    public void endTime(long time) {
+    public void endTime(long time, long wastedTime) {
         assert time >= this.lastStartTime && this.lastStartTime != -1L :
                MULTI_THREAD_ACCESS_ERROR;
 
         long cost = time - this.lastStartTime;
         this.totalCost += cost;
         this.lastStartTime = -1L;
+        this.totalWasted += wastedTime;
         this.updateMinMax(cost);
     }
 
@@ -93,6 +95,10 @@ public final class Stopwatch implements Cloneable {
         this.totalCost = totalCost;
     }
 
+    public long times() {
+        return this.times;
+    }
+
     public long totalCost() {
         return this.totalCost;
     }
@@ -105,8 +111,8 @@ public final class Stopwatch implements Cloneable {
         return this.maxCost;
     }
 
-    public long times() {
-        return this.times;
+    public long totalWasted() {
+        return this.totalWasted;
     }
 
     public Stopwatch copy() {
@@ -119,11 +125,11 @@ public final class Stopwatch implements Cloneable {
 
     @Override
     public String toString() {
-        return String.format(
-                "{totalCost:%sms, minCost:%sns, maxCost:%sns, times:%s}",
-                this.totalCost / 1000000.0F,
-                this.minCost, this.maxCost,
-                this.times);
+        return String.format("{totalCost:%sms, minCost:%sns, maxCost:%sns," +
+                             "totalWasted:%sns,times:%s}",
+                             this.totalCost / 1000000.0F,
+                             this.minCost, this.maxCost,
+                             this.totalWasted, this.times);
     }
 
     public String toJson() {
@@ -133,6 +139,7 @@ public final class Stopwatch implements Cloneable {
         sb.append("\"total_cost\":").append(this.totalCost);
         sb.append(",\"min_cost\":").append(this.minCost);
         sb.append(",\"max_cost\":").append(this.maxCost);
+        sb.append(",\"total_wasted\":").append(this.totalWasted);
         sb.append(",\"times\":").append(this.times);
         sb.append(",\"name\":\"").append(this.name).append("\"");
         sb.append(",\"parent\":\"").append(this.parent).append("\"");

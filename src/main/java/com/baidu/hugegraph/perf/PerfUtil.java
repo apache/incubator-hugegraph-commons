@@ -87,6 +87,8 @@ public final class PerfUtil {
     }
 
     public boolean start(String name) {
+        long start = now();
+
         String parent = this.callStack.empty() ? "" : this.callStack.peek();
         Stopwatch item = this.stopwatches.get(Stopwatch.id(parent, name));
         if (item == null) {
@@ -94,13 +96,18 @@ public final class PerfUtil {
             this.stopwatches.put(item.id(), item);
         }
         this.callStack.push(item.id());
-        item.startTime(now());
+
+        long end = now();
+        long wastedTime = end - start;
+
+        item.startTime(start, wastedTime);
 
         return true; // just for assert
     }
 
     public boolean end(String name) {
-        long time = now();
+        long start = now();
+
         String current = this.callStack.pop();
         assert current.endsWith(name) : current;
 
@@ -108,7 +115,11 @@ public final class PerfUtil {
         if (item == null) {
             throw new IllegalArgumentException("Invalid watch name: " + name);
         }
-        item.endTime(time);
+
+        long end = now();
+        long wastedTime = end - start;
+
+        item.endTime(end, wastedTime);
 
         return true;
     }
@@ -268,6 +279,10 @@ public final class PerfUtil {
                 sb.append(w.name());
                 sb.append("',");
 
+                sb.append("wasted:");
+                sb.append(w.totalWasted() / 1000000.0);
+                sb.append(',');
+
                 sb.append("times:");
                 sb.append(w.times());
 
@@ -316,6 +331,7 @@ public final class PerfUtil {
             "        + 'cost: ' + params.data.value + ' (ms) <br/>'" +
             "        + 'min: ' + params.data.min + ' (ns) <br/>'" +
             "        + 'max: ' + params.data.max + ' (ns) <br/>'" +
+            "        + 'wasted: ' + params.data.wasted + ' (ms) <br/>'" +
             "        + 'times: ' + params.data.times + '<br/>'" +
             "       + params.data.id + '<br/>';" +
             "}");
