@@ -118,4 +118,12 @@ public final class ReflectionUtil {
         }
         return results;
     }
+
+    public static String packageName(String clazz) {
+        int offset = clazz.lastIndexOf(".");
+        if (offset > 0) {
+            return clazz.substring(0, offset);
+        }
+        return "";
+    }
 }

@@ -126,4 +126,35 @@ public class ReflectionUtilTest extends BaseUnitTest {
         Assert.assertEquals(Foo.class.getName(), classes.get(2));
         Assert.assertEquals(Sub.class.getName(), classes.get(3));
     }
+
+    @Test
+    public void testPackageName() {
+        String clazz = "com.baidu.hugegraph.unit.perf.testclass2.Test";
+        Assert.assertEquals("com.baidu.hugegraph.unit.perf.testclass2",
+                            ReflectionUtil.packageName(clazz));
+
+        clazz = "com.baidu.hugegraph.unit.perf.testclass2.Test$Bar";
+        Assert.assertEquals("com.baidu.hugegraph.unit.perf.testclass2",
+                            ReflectionUtil.packageName(clazz));
+
+        clazz = "com.baidu.hugegraph.unit.perf.testclass.Test$Bar";
+        Assert.assertEquals("com.baidu.hugegraph.unit.perf.testclass",
+                            ReflectionUtil.packageName(clazz));
+
+        clazz = "com.baidu.hugegraph.unit.perf.testclass..Test$Bar";
+        Assert.assertEquals("com.baidu.hugegraph.unit.perf.testclass.",
+                            ReflectionUtil.packageName(clazz));
+
+        clazz = "com";
+        Assert.assertEquals("", ReflectionUtil.packageName(clazz));
+
+        clazz = "com.";
+        Assert.assertEquals("com", ReflectionUtil.packageName(clazz));
+
+        clazz = "Test";
+        Assert.assertEquals("", ReflectionUtil.packageName(clazz));
+
+        clazz = ".Test";
+        Assert.assertEquals("", ReflectionUtil.packageName(clazz));
+    }
 }

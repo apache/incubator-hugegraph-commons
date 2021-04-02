@@ -28,7 +28,7 @@ public class TestClass2 {
         new Foo().bar();
     }
 
-    public static class Foo {
+    public static class Foo extends FooBase {
 
         @Watched
         public void foo() {
@@ -38,6 +38,8 @@ public class TestClass2 {
         @Watched
         public void bar() {}
     }
+
+    public static class FooBase {}
 
     public static class Bar {
 

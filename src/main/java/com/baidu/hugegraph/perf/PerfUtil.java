@@ -136,8 +136,9 @@ public final class PerfUtil {
         ThrowableConsumer<String> profileClassIfPresent = (cls) -> {
             if (!loadedClasses.contains(cls)) {
                 // Profile super class
+                String pkg = ReflectionUtil.packageName(cls);
                 for (String s : ReflectionUtil.superClasses(cls)) {
-                    if (!loadedClasses.contains(s)) {
+                    if (!loadedClasses.contains(s) && s.startsWith(pkg)) {
                         profileClass(s);
                         loadedClasses.add(s);
                     }
