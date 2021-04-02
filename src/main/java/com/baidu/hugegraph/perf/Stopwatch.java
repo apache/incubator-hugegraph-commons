@@ -32,7 +32,8 @@ public final class Stopwatch implements Cloneable {
     private long totalCost = 0L;
     private long minCost = 0L;
     private long maxCost = 0L;
-    private long totalWasted = 0L;
+    private long totalSelfWasted = 0L;
+    private long totalChildrenWasted = -1L;
 
     private final String name;
     private final String parent;
@@ -68,7 +69,7 @@ public final class Stopwatch implements Cloneable {
 
         this.lastStartTime = time;
         this.times++;
-        this.totalWasted += wastedTime;
+        this.totalSelfWasted += wastedTime;
     }
 
     public void endTime(long time, long wastedTime) {
@@ -78,7 +79,7 @@ public final class Stopwatch implements Cloneable {
         long cost = time - this.lastStartTime;
         this.totalCost += cost;
         this.lastStartTime = -1L;
-        this.totalWasted += wastedTime;
+        this.totalSelfWasted += wastedTime;
         this.updateMinMax(cost);
     }
 
@@ -93,6 +94,10 @@ public final class Stopwatch implements Cloneable {
 
     protected void totalCost(long totalCost) {
         this.totalCost = totalCost;
+    }
+
+    protected void totalChildrenWasted(long totalChildrenWasted) {
+        this.totalChildrenWasted = totalChildrenWasted;
     }
 
     public long times() {
@@ -112,7 +117,18 @@ public final class Stopwatch implements Cloneable {
     }
 
     public long totalWasted() {
-        return this.totalWasted;
+        if (this.totalChildrenWasted >= 0L) {
+            return this.totalSelfWasted + this.totalChildrenWasted;
+        }
+        return this.totalSelfWasted;
+    }
+
+    public long totalSelfWasted() {
+        return this.totalSelfWasted;
+    }
+
+    public long totalChildrenWasted() {
+        return this.totalChildrenWasted;
     }
 
     public Stopwatch copy() {
@@ -125,24 +141,27 @@ public final class Stopwatch implements Cloneable {
 
     @Override
     public String toString() {
-        return String.format("{totalCost:%sms, minCost:%sns, maxCost:%sns," +
-                             "totalWasted:%sns,times:%s}",
-                             this.totalCost / 1000000.0F,
-                             this.minCost, this.maxCost,
-                             this.totalWasted, this.times);
+        return String.format("{parent:%s,name:%s,times:%s," +
+                             "totalCost:%s, minCost:%s, maxCost:%s," +
+                             "totalSelfWasted:%s,totalChildrenWasted:%s}",
+                             this.parent, this.name, this.times,
+                             this.totalCost, this.minCost, this.maxCost,
+                             this.totalSelfWasted, this.totalChildrenWasted);
     }
 
     public String toJson() {
         int len = 200 + this.name.length() + this.parent.length();
         StringBuilder sb = new StringBuilder(len);
         sb.append("{");
-        sb.append("\"total_cost\":").append(this.totalCost);
+        sb.append("\"parent\":\"").append(this.parent).append("\"");
+        sb.append(",\"name\":\"").append(this.name).append("\"");
+        sb.append(",\"times\":").append(this.times);
+        sb.append(",\"total_cost\":").append(this.totalCost);
         sb.append(",\"min_cost\":").append(this.minCost);
         sb.append(",\"max_cost\":").append(this.maxCost);
-        sb.append(",\"total_wasted\":").append(this.totalWasted);
-        sb.append(",\"times\":").append(this.times);
-        sb.append(",\"name\":\"").append(this.name).append("\"");
-        sb.append(",\"parent\":\"").append(this.parent).append("\"");
+        sb.append(",\"total_self_wasted\":").append(this.totalSelfWasted);
+        sb.append(",\"total_children_wasted\":").append(
+                                                 this.totalChildrenWasted);
         sb.append("}");
         return sb.toString();
     }

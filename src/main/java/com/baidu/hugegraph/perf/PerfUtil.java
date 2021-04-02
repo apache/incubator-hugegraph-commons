@@ -231,7 +231,7 @@ public final class PerfUtil {
     // TODO: move toECharts() method out of this class
     public String toECharts() {
         TriFunction<Integer, Integer, List<Stopwatch>, String> formatLevel = (
-                totalDepth, depth, items) -> {
+                    totalDepth, depth, items) -> {
             float factor = 100.0f / (totalDepth + 1);
             float showFactor = 1 + (totalDepth - depth) / (float) depth;
 
@@ -259,18 +259,6 @@ public final class PerfUtil {
             for (Stopwatch w : items) {
                 sb.append('{');
 
-                sb.append("value:");
-                sb.append(w.totalCost() / 1000000.0);
-                sb.append(',');
-
-                sb.append("min:");
-                sb.append(w.minCost());
-                sb.append(',');
-
-                sb.append("max:");
-                sb.append(w.maxCost());
-                sb.append(',');
-
                 sb.append("id:'");
                 sb.append(w.id());
                 sb.append("',");
@@ -279,8 +267,28 @@ public final class PerfUtil {
                 sb.append(w.name());
                 sb.append("',");
 
+                sb.append("value:");
+                sb.append(w.totalCost()); // w.totalCost() - w.totalWasted() ?
+                sb.append(',');
+
+                sb.append("cost:");
+                sb.append(w.totalCost() / 1000000.0);
+                sb.append(',');
+
+                sb.append("minCost:");
+                sb.append(w.minCost());
+                sb.append(',');
+
+                sb.append("maxCost:");
+                sb.append(w.maxCost());
+                sb.append(',');
+
                 sb.append("wasted:");
                 sb.append(w.totalWasted() / 1000000.0);
+                sb.append(',');
+
+                sb.append("selfWasted:");
+                sb.append(w.totalSelfWasted() / 1000000.0);
                 sb.append(',');
 
                 sb.append("times:");
@@ -296,17 +304,32 @@ public final class PerfUtil {
             return sb.toString();
         };
 
-        BiConsumer<List<Stopwatch>, List<Stopwatch>> fillOther =
-            (itemsOfI, parents) -> {
-            for (Stopwatch parent : parents) {
-                Stream<Stopwatch> children = itemsOfI.stream().filter(c -> {
+        BiConsumer<List<Stopwatch>, List<Stopwatch>> fillWasted =
+                                    (itemsOfLn, itemsOfLnParent) -> {
+            for (Stopwatch parent : itemsOfLnParent) {
+                Stream<Stopwatch> children = itemsOfLn.stream().filter(c -> {
                     return c.parent().equals(parent.id());
                 });
-                long sum = children.mapToLong(c -> c.totalCost()).sum();
-                if (sum < parent.totalCost()) {
+                // Fill wasted cost
+                long sumWasted = children.mapToLong(c -> c.totalSelfWasted())
+                                         .sum();
+                parent.totalChildrenWasted(sumWasted);
+            }
+        };
+
+        BiConsumer<List<Stopwatch>, List<Stopwatch>> fillOther =
+                                    (itemsOfLn, itemsOfLnParent) -> {
+            for (Stopwatch parent : itemsOfLnParent) {
+                Stream<Stopwatch> children = itemsOfLn.stream().filter(c -> {
+                    return c.parent().equals(parent.id());
+                });
+                // Fill other cost
+                long sumCost = children.mapToLong(c -> c.totalCost()).sum();
+                long otherCost = parent.totalCost() - sumCost;
+                if (otherCost > 0L) {
                     Stopwatch other = new Stopwatch("~", parent.id());
-                    other.totalCost(parent.totalCost() - sum);
-                    itemsOfI.add(other);
+                    other.totalCost(otherCost);
+                    itemsOfLn.add(other);
                 }
             }
         };
@@ -316,8 +339,12 @@ public final class PerfUtil {
         int maxDepth = 1;
         for (Map.Entry<String, Stopwatch> e : items.entrySet()) {
             int depth = e.getKey().split("/").length;
-            levelItems.putIfAbsent(depth, new LinkedList<>());
-            levelItems.get(depth).add(e.getValue().copy());
+            List<Stopwatch> levelItem = levelItems.get(depth);
+            if (levelItem == null) {
+                levelItem = new LinkedList<>();
+                levelItems.putIfAbsent(depth, levelItem);
+            }
+            levelItem.add(e.getValue().copy());
             if (depth > maxDepth) {
                 maxDepth = depth;
             }
@@ -327,21 +354,28 @@ public final class PerfUtil {
         sb.append("{");
         sb.append("tooltip: {trigger: 'item', " +
             "formatter: function(params) {" +
-            "    return params.data.name + ' ' + params.percent + '% <br/>'" +
-            "        + 'cost: ' + params.data.value + ' (ms) <br/>'" +
-            "        + 'min: ' + params.data.min + ' (ns) <br/>'" +
-            "        + 'max: ' + params.data.max + ' (ns) <br/>'" +
-            "        + 'wasted: ' + params.data.wasted + ' (ms) <br/>'" +
-            "        + 'times: ' + params.data.times + '<br/>'" +
-            "       + params.data.id + '<br/>';" +
+            "  return params.data.name + ' ' + params.percent + '% <br/>'" +
+            "    + 'cost: ' + params.data.cost + ' (ms) <br/>'" +
+            "    + 'min cost: ' + params.data.minCost + ' (ns) <br/>'" +
+            "    + 'max cost: ' + params.data.maxCost + ' (ns) <br/>'" +
+            "    + 'wasted: ' + params.data.wasted + ' (ms) <br/>'" +
+            "    + 'self wasted: ' + params.data.selfWasted + ' (ms) <br/>'" +
+            "    + 'times: ' + params.data.times + '<br/>'" +
+            "    + 'path: ' + params.data.id + '<br/>';" +
             "}");
         sb.append("},");
         sb.append("series: [");
-        for (int i = 1; levelItems.containsKey(i); i++) {
+        for (int i = maxDepth; i > 0; i--) {
+            assert levelItems.containsKey(i) : i;
             List<Stopwatch> itemsOfI = levelItems.get(i);
-            if (i > 1) {
-                fillOther.accept(itemsOfI, levelItems.get(i - 1));
+            List<Stopwatch> itemsOfParent = levelItems.get(i - 1);
+            if (itemsOfParent != null) {
+                // Fill wasted cost
+                fillWasted.accept(itemsOfI, itemsOfParent);
+                // Fill other cost for non-root level, ignore root level (i=1)
+                fillOther.accept(itemsOfI, itemsOfParent);
             }
+            // Output items of level I
             sb.append(formatLevel.apply(maxDepth, i, itemsOfI));
             sb.append(',');
         }
