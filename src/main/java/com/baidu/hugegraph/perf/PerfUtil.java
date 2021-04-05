@@ -23,6 +23,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.EmptyStackException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -30,15 +31,14 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.Stack;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 
 import com.baidu.hugegraph.func.TriFunction;
+import com.baidu.hugegraph.perf.Stopwatch.Path;
 import com.baidu.hugegraph.testutil.Assert.ThrowableConsumer;
-import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 import com.baidu.hugegraph.util.ReflectionUtil;
 import com.google.common.reflect.ClassPath.ClassInfo;
@@ -56,12 +56,16 @@ public final class PerfUtil {
     private static final ThreadLocal<PerfUtil> INSTANCE = new ThreadLocal<>();
     private static PerfUtil SINGLE_INSTANCE = null;
 
-    private final Map<String, Stopwatch> stopwatches;
-    private final Stack<String> callStack;
+    private static LocalTimer LOCAL_TIMER = null;
+
+    private final Map<Path, Stopwatch> stopwatches;
+    private final LocalStack<Stopwatch> callStack;
+    private final Stopwatch root;
 
     private PerfUtil() {
         this.stopwatches = new HashMap<>(DEFAUL_CAPATICY);
-        this.callStack = new Stack<>();
+        this.callStack = new LocalStack<>(DEFAUL_CAPATICY);
+        this.root = new Stopwatch("", Path.EMPTY);
     }
 
     public static PerfUtil instance() {
@@ -82,25 +86,76 @@ public final class PerfUtil {
         SINGLE_INSTANCE = yes ? PerfUtil.instance() : null;
     }
 
+    public static void useLocalTimer(boolean yes) {
+        if (yes) {
+            if (LOCAL_TIMER != null) {
+                return;
+            }
+            LOCAL_TIMER = new LocalTimer();
+            LOCAL_TIMER.startTimeUpdateLoop();
+        } else {
+            if (LOCAL_TIMER == null) {
+                return;
+            }
+            try {
+                LOCAL_TIMER.stop();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            } finally {
+                LOCAL_TIMER = null;
+            }
+        }
+    }
+
     private static long now() {
+        if (LOCAL_TIMER != null) {
+            return LOCAL_TIMER.now();
+        }
+        // System.nanoTime() cost about 40 ns each call
         return System.nanoTime();
     }
 
     public boolean start(String name) {
         long start = now();
 
-        String parent = this.callStack.empty() ? "" : this.callStack.peek();
-        Stopwatch item = this.stopwatches.get(Stopwatch.id(parent, name));
-        if (item == null) {
-            item = new Stopwatch(name, parent);
-            this.stopwatches.put(item.id(), item);
+        Stopwatch parent = this.callStack.empty() ?
+                           this.root : this.callStack.peek();
+
+        // Get watch by name from local tree
+        Stopwatch watch = parent.child(name);
+        if (watch == null) {
+            watch = new Stopwatch(name, parent);
+            assert !this.stopwatches.containsKey(watch.id()) : watch;
+            this.stopwatches.put(watch.id(), watch);
         }
-        this.callStack.push(item.id());
+        this.callStack.push(watch);
 
         long end = now();
         long wastedTime = end - start;
 
-        item.startTime(start, wastedTime);
+        watch.startTime(start, wastedTime);
+
+        return true; // just for assert
+    }
+
+    public boolean start2(String name) {
+        long start = now(); // cost 70 ns with System.nanoTime()
+
+        Path parent = this.callStack.empty() ?
+                      Path.EMPTY : this.callStack.peek().id();
+        Path id = Stopwatch.id(parent, name); // cost 130
+        // Get watch by id from global map
+        Stopwatch watch = this.stopwatches.get(id); // cost 170
+        if (watch == null) {
+            watch = new Stopwatch(name, parent);
+            this.stopwatches.put(watch.id(), watch); // cost 180
+        }
+        this.callStack.push(watch); // cost 190
+
+        long end = now();
+        long wastedTime = end - start;
+
+        watch.startTime(start, wastedTime);
 
         return true; // just for assert
     }
@@ -108,26 +163,27 @@ public final class PerfUtil {
     public boolean end(String name) {
         long start = now();
 
-        String current = this.callStack.pop();
-        assert current.endsWith(name) : current;
+        Stopwatch watch = this.callStack.pop();
+        assert watch.id().endsWith(name) : watch;
 
-        Stopwatch item = this.stopwatches.get(current);
-        if (item == null) {
+        if (watch == null) {
             throw new IllegalArgumentException("Invalid watch name: " + name);
         }
 
         long end = now();
         long wastedTime = end - start;
 
-        item.endTime(end, wastedTime);
+        watch.endTime(end, wastedTime);
 
         return true;
     }
 
     public void clear() {
-        E.checkState(this.callStack.empty(),
-                     "Can't be cleared when the call has not ended yet");
+        String error = "Can't be cleared when the call has not ended yet";
+        com.baidu.hugegraph.util.E.checkState(this.callStack.empty(), error);
+
         this.stopwatches.clear();
+        this.root.clear();
     }
 
     public void profilePackage(String... packages) throws Throwable {
@@ -211,7 +267,7 @@ public final class PerfUtil {
     public String toJson() {
         StringBuilder sb = new StringBuilder(8 + this.stopwatches.size() * 96);
         sb.append('{');
-        for (Map.Entry<String, Stopwatch> w : this.stopwatches.entrySet()) {
+        for (Map.Entry<Path, Stopwatch> w : this.stopwatches.entrySet()) {
             sb.append('"');
             sb.append(w.getKey());
             sb.append('"');
@@ -249,11 +305,11 @@ public final class PerfUtil {
             sb.append(String.format("radius: ['%s%%', '%s%%'],",
                                     radiusFrom, radiusTo));
             sb.append(String.format(
-                    "label: {normal: {position: 'inner', formatter:" +
-                    "function(params) {" +
-                    "  if (params.percent > %s) return params.data.name;" +
-                    "  else return '';" +
-                    "}}},", showFactor));
+                      "label: {normal: {position: 'inner', formatter:" +
+                      "function(params) {" +
+                      "  if (params.percent > %s) return params.data.name;" +
+                      "  else return '';" +
+                      "}}},", showFactor));
             sb.append("data: [");
 
             items.sort((i, j) -> i.id().compareTo(j.id()));
@@ -312,8 +368,7 @@ public final class PerfUtil {
                     return c.parent().equals(parent.id());
                 });
                 // Fill wasted cost
-                long sumWasted = children.mapToLong(c -> c.totalSelfWasted())
-                                         .sum();
+                long sumWasted = children.mapToLong(c -> c.totalWasted()).sum();
                 parent.totalChildrenWasted(sumWasted);
             }
         };
@@ -335,11 +390,11 @@ public final class PerfUtil {
             }
         };
 
-        Map<String, Stopwatch> items = this.stopwatches;
+        Map<Path, Stopwatch> items = this.stopwatches;
         Map<Integer, List<Stopwatch>> levelItems = new HashMap<>();
-        int maxDepth = 1;
-        for (Map.Entry<String, Stopwatch> e : items.entrySet()) {
-            int depth = e.getKey().split("/").length;
+        int maxDepth = 0;
+        for (Map.Entry<Path, Stopwatch> e : items.entrySet()) {
+            int depth = e.getKey().toString().split("/").length;
             List<Stopwatch> levelItem = levelItems.get(depth);
             if (levelItem == null) {
                 levelItem = new LinkedList<>();
@@ -351,7 +406,19 @@ public final class PerfUtil {
             }
         }
 
+        // Fill wasted cost from the outermost to innermost
+        for (int i = maxDepth; i > 0; i--) {
+            assert levelItems.containsKey(i) : i;
+            List<Stopwatch> itemsOfI = levelItems.get(i);
+            List<Stopwatch> itemsOfParent = levelItems.get(i - 1);
+            if (itemsOfParent != null) {
+                // Fill wasted cost
+                fillWasted.accept(itemsOfI, itemsOfParent);
+            }
+        }
+
         StringBuilder sb = new StringBuilder(8 + items.size() * 128);
+        // Output results header
         sb.append("{");
         sb.append("tooltip: {trigger: 'item', " +
             "formatter: function(params) {" +
@@ -366,13 +433,12 @@ public final class PerfUtil {
             "}");
         sb.append("},");
         sb.append("series: [");
-        for (int i = maxDepth; i > 0; i--) {
+        // Output results data
+        for (int i = 1; i <= maxDepth; i++) {
             assert levelItems.containsKey(i) : i;
             List<Stopwatch> itemsOfI = levelItems.get(i);
             List<Stopwatch> itemsOfParent = levelItems.get(i - 1);
             if (itemsOfParent != null) {
-                // Fill wasted cost
-                fillWasted.accept(itemsOfI, itemsOfParent);
                 // Fill other cost for non-root level, ignore root level (i=1)
                 fillOther.accept(itemsOfI, itemsOfParent);
             }
@@ -386,6 +452,157 @@ public final class PerfUtil {
         sb.append("]}");
 
         return sb.toString();
+    }
+
+    public static final class LocalTimer {
+
+        private volatile long time = 0L;
+        private volatile boolean running = false;
+        private Thread thread = null;
+
+        public long now() {
+            return this.time;
+        }
+
+        public void startTimeUpdateLoop() {
+            this.running = true;
+            this.thread = new Thread(() -> {
+                while (this.running) {
+                    this.time = System.nanoTime();
+                }
+            }, "LocalTimer");
+            this.thread.setDaemon(true);
+            this.thread.start();
+        }
+
+        public void stop() throws InterruptedException {
+            this.running = false;
+            if (this.thread != null) {
+                this.thread.join();
+            }
+        }
+    }
+
+    public static final class LocalStack<E> {
+
+        private final Object[] elementData;
+        private int elementCount;
+
+        public LocalStack(int capacity) {
+            this.elementData = new Object[capacity];
+            this.elementCount = 0;
+        }
+
+        int size() {
+            return this.elementCount;
+        }
+
+        boolean empty() {
+            return this.elementCount == 0;
+        }
+
+        public void push(E elem) {
+            this.elementData[this.elementCount++] = elem;
+        }
+
+        public E pop() {
+            if (this.elementCount == 0) {
+                throw new EmptyStackException();
+            }
+            this.elementCount--;
+            @SuppressWarnings("unchecked")
+            E elem = (E) this.elementData[this.elementCount];
+            this.elementData[this.elementCount] = null;
+            return elem;
+        }
+
+        public E peek() {
+            if (this.elementCount == 0) {
+                throw new EmptyStackException();
+            }
+            @SuppressWarnings("unchecked")
+            E elem = (E) this.elementData[this.elementCount - 1];
+            return elem;
+        }
+    }
+
+    public static final class FastMap<K, V> {
+
+        private final Map<K, V> hashMap;
+
+        private K key1;
+        private K key2;
+        private K key3;
+
+        private V val1;
+        private V val2;
+        private V val3;
+
+        public FastMap() {
+            this.hashMap = new HashMap<>();
+        }
+
+        public int size() {
+            return this.hashMap.size();
+        }
+
+        public boolean containsKey(Object key) {
+            return this.hashMap.containsKey(key);
+        }
+
+        public V get(Object key) {
+            if (key == this.key1) {
+                return this.val1;
+            } else if (key == this.key2) {
+                return this.val2;
+            } else if (key == this.key3) {
+                return this.val3;
+            }
+
+            return this.hashMap.get(key);
+        }
+
+        public V put(K key, V value) {
+            if (this.key1 == null) {
+                this.key1 = key;
+                this.val1 = value;
+            } else if (this.key2 == null) {
+                this.key2 = key;
+                this.val2 = value;
+            } else if (this.key3 == null) {
+                this.key3 = key;
+                this.val3 = value;
+            }
+
+            return this.hashMap.put(key, value);
+        }
+
+        public V remove(Object key) {
+            if (key == this.key1) {
+                this.key1 = null;
+                this.val1 = null;
+            } else if (key == this.key2) {
+                this.key2 = null;
+                this.val2 = null;
+            } else if (key == this.key3) {
+                this.key3 = null;
+                this.val3 = null;
+            }
+
+            return this.hashMap.remove(key);
+        }
+
+        public void clear() {
+            this.key1 = null;
+            this.key2 = null;
+            this.key3 = null;
+
+            this.val1 = null;
+            this.val2 = null;
+            this.val3 = null;
+
+            this.hashMap.clear();
+        }
     }
 
     @Retention(RetentionPolicy.RUNTIME)

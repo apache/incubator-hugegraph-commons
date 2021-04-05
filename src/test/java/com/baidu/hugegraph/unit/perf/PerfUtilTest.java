@@ -28,6 +28,7 @@ import com.baidu.hugegraph.perf.PerfUtil;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.unit.perf.testclass.TestClass;
+import com.baidu.hugegraph.unit.perf.testclass.TestClass1;
 import com.baidu.hugegraph.unit.perf.testclass2.TestClass2;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -54,7 +55,22 @@ public class PerfUtilTest extends BaseUnitTest {
         String json = perf.toJson();
 
         assertContains(json, "foo.times", 1);
+        assertContains(json, "foo.name", "foo");
+        assertContains(json, "foo.parent", "");
+        assertContains(json, "foo.total_cost");
+        assertContains(json, "foo.min_cost");
+        assertContains(json, "foo.max_cost");
+        assertContains(json, "foo.total_self_wasted");
+        assertContains(json, "foo.total_children_wasted", -1);
+
         assertContains(json, "foo/bar.times", 1);
+        assertContains(json, "foo/bar.name", "bar");
+        assertContains(json, "foo/bar.parent", "foo");
+        assertContains(json, "foo/bar.total_cost");
+        assertContains(json, "foo/bar.min_cost");
+        assertContains(json, "foo/bar.max_cost");
+        assertContains(json, "foo/bar.total_self_wasted");
+        assertContains(json, "foo/bar.total_children_wasted", -1);
 
         TestClass test = new TestClass();
         test.test();
@@ -157,8 +173,52 @@ public class PerfUtilTest extends BaseUnitTest {
         assertContains(json, "func3.times", 3);
     }
 
+    @Test
+    public void testPerfUtilPerf() throws Throwable {
+        perf.profileClass(prefix + "TestClass1");
+        perf.profileClass(prefix + "TestClass1$Foo");
+        perf.profileClass(prefix + "TestClass1$Bar");
+
+        PerfUtil.profileSingleThread(true);
+        PerfUtil.useLocalTimer(true);
+
+        int times = 10000000;
+        TestClass1 test = new TestClass1();
+        for (int i = 0; i < times; i++) {
+            test.testNew();
+            test.testNewAndCall();
+            test.testCall();
+            test.testCallFooThenSum();
+        }
+        System.out.println(perf.toECharts());
+
+        perf.toString();
+        perf.toECharts();
+        String json = perf.toJson();
+
+        assertContains(json, "testNew.times", times);
+        assertContains(json, "testNewAndCall.times", times);
+        assertContains(json, "testCall.times", times);
+        assertContains(json, "testCallFooThenSum.times", times);
+
+        assertContains(json, "testNewAndCall/sum.times", times);
+        assertContains(json, "testCall/sum.times", times);
+        assertContains(json, "testCallFooThenSum/foo.times", times);
+        assertContains(json, "testCallFooThenSum/foo/sum.times", times);
+    }
+
+    private static void assertContains(String json, String key)
+                                       throws Exception {
+        Assert.assertNotNull("Not exist key " + key, actualValue(json, key));
+    }
+
     private static void assertContains(String json, String key, Object value)
                                        throws Exception {
+        Assert.assertEquals(value, actualValue(json, key));
+    }
+
+    private static Object actualValue(String json, String key)
+                                      throws Exception {
         ObjectMapper mapper = new ObjectMapper();
         Map<?, ?> map = mapper.readValue(json, Map.class);
         String[] keys = key.split("\\.");
@@ -169,6 +229,6 @@ public class PerfUtilTest extends BaseUnitTest {
                 map = (Map<?, ?>) actual;
             }
         }
-        Assert.assertEquals(value, actual);
+        return actual;
     }
 }
