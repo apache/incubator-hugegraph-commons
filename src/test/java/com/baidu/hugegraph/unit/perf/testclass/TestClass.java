@@ -19,6 +19,7 @@
 
 package com.baidu.hugegraph.unit.perf.testclass;
 
+import com.baidu.hugegraph.perf.PerfUtil;
 import com.baidu.hugegraph.perf.PerfUtil.Watched;
 
 public class TestClass {
@@ -48,6 +49,43 @@ public class TestClass {
 
         @Watched
         public void bar() {}
+    }
+
+    public static class ManuallyProfile {
+
+        public void foo() {
+            PerfUtil.instance().start("manu-foo");
+            this.bar();
+            this.bar2();
+            PerfUtil.instance().end("manu-foo");
+        }
+
+        public void bar() {
+            PerfUtil.instance().start("manu-bar");
+            try {
+                Thread.sleep(0);
+            } catch (InterruptedException ignored) {
+                // pass
+            }
+            PerfUtil.instance().end("manu-bar");
+        }
+
+        public void foo2() {
+            PerfUtil.instance().start2("manu-foo2");
+            this.bar();
+            this.bar2();
+            PerfUtil.instance().end("manu-foo2");
+        }
+
+        public void bar2() {
+            PerfUtil.instance().start2("manu-bar2");
+            try {
+                Thread.sleep(0);
+            } catch (InterruptedException ignored) {
+                // pass
+            }
+            PerfUtil.instance().end("manu-bar2");
+        }
     }
 
     public static class Base {
