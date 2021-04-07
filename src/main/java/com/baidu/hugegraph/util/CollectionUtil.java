@@ -108,10 +108,14 @@ public final class CollectionUtil {
      * @return sub-set of original set [from, to)
      */
     public static <T> Set<T> subSet(Set<T> original, int from, int to) {
-        List<T> list = new ArrayList<>(original);
-        if (to == -1) {
+        if (from < 0) {
+            E.checkArgument(from >= 0,
+                            "Invalid from parameter of subSet(): %s", from);
+        }
+        if (to < 0) {
             to = original.size();
         }
+        List<T> list = new ArrayList<>(original);
         return new LinkedHashSet<>(list.subList(from, to));
     }
 
