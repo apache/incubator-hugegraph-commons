@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -189,12 +190,20 @@ public final class PerfUtil {
     public void profilePackage(String... packages) throws Throwable {
         Set<String> loadedClasses = new HashSet<>();
 
+        Function<String, Boolean> inPackage = (cls) -> {
+            for (String pkg : packages) {
+                if (cls.startsWith(pkg)) {
+                    return true;
+                }
+            }
+            return false;
+        };
+
         ThrowableConsumer<String> profileClassIfPresent = (cls) -> {
             if (!loadedClasses.contains(cls)) {
                 // Profile super class
-                String pkg = ReflectionUtil.packageName(cls);
                 for (String s : ReflectionUtil.superClasses(cls)) {
-                    if (!loadedClasses.contains(s) && s.startsWith(pkg)) {
+                    if (!loadedClasses.contains(s) && inPackage.apply(s)) {
                         profileClass(s);
                         loadedClasses.add(s);
                     }
