@@ -65,18 +65,6 @@ public final class Stopwatch implements Cloneable {
         return new Path(parent, name);
     }
 
-//    public static StringSlice id(StringSlice parent, String name) {
-//        if (parent == null || parent.length() == 0) {
-//            return new StringSlice(name);
-//        }
-////        String sss= parent+'/'+name;
-////        return sss;
-//        int len = parent.length() + 1 + name.length();
-//        StringBuilder sb = new StringBuilder(len);
-//        sb.append(parent).append('/').append(name);
-//        return sb;
-//    }
-
     public String name() {
         return this.name;
     }
