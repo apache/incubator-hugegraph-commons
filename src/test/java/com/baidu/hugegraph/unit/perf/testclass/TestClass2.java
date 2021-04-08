@@ -17,55 +17,58 @@
  * under the License.
  */
 
-package com.baidu.hugegraph.unit.perf.testclass2;
+package com.baidu.hugegraph.unit.perf.testclass;
 
 import com.baidu.hugegraph.perf.PerfUtil.Watched;
 
 public class TestClass2 {
 
+    private Foo foo = new Foo();
+
     @Watched
-    public void test() {
-        new Foo().bar();
+    public void test(int times) {
+        for (int i = 0; i < times; i++) {
+            this.testNew();
+            this.testNewAndCall();
+            this.testCall();
+            this.testCallFooThenSum();
+        }
     }
 
-    public static class Foo extends FooBase {
+    @Watched
+    public void testNew() {
+        new Foo();
+    }
+
+    @Watched
+    public void testNewAndCall() {
+        new Foo().sum(1, 2);
+    }
+
+    @Watched
+    public void testCall() {
+        this.foo.sum(1, 2);
+    }
+
+    @Watched
+    public void testCallFooThenSum() {
+        this.foo.foo();
+    }
+
+    public static class Foo {
 
         @Watched
         public void foo() {
-            this.bar();
+            this.sum(1, 2);
         }
 
         @Watched
-        public void bar() {}
-    }
-
-    public static class FooBase {}
-
-    public static class Bar {
-
-        @Watched
-        public void foo() {
-            this.bar();
+        public int sum(int a, int b) {
+            int sum = a;
+            for (int i = 0; i < 100; i++) {
+                sum += i;
+            }
+            return sum + b;
         }
-
-        @Watched
-        public void bar() {}
-    }
-
-    public static class Base {
-
-        @Watched
-        public void func() {}
-    }
-
-    public static class Sub extends Base {
-
-        @Watched
-        public void func1() {}
-
-        public void func2() {}
-
-        @Watched
-        public void func3() {}
     }
 }

@@ -21,6 +21,8 @@ package com.baidu.hugegraph.unit.perf;
 
 import org.junit.Test;
 
+import com.baidu.hugegraph.perf.LightStopwatch;
+import com.baidu.hugegraph.perf.NormalStopwatch;
 import com.baidu.hugegraph.perf.Stopwatch;
 import com.baidu.hugegraph.perf.Stopwatch.Path;
 import com.baidu.hugegraph.testutil.Assert;
@@ -29,13 +31,38 @@ import com.baidu.hugegraph.unit.BaseUnitTest;
 public class StopwatchTest extends BaseUnitTest {
 
     @Test
-    public void testStopwatchChild() {
-        Stopwatch watch1 = new Stopwatch("w1", Path.EMPTY);
+    public void testNormalStopwatchChild() {
+        Stopwatch watch1 = new NormalStopwatch("w1", Path.EMPTY);
 
-        Stopwatch watch2 = new Stopwatch("w2", watch1);
-        Stopwatch watch3 = new Stopwatch("w3", watch1);
-        Stopwatch watch4 = new Stopwatch("w4", watch1);
-        Stopwatch watch5 = new Stopwatch("w5", watch1);
+        Stopwatch watch2 = new NormalStopwatch("w2", watch1);
+        Stopwatch watch3 = new NormalStopwatch("w3", watch1);
+        Stopwatch watch4 = new NormalStopwatch("w4", watch1);
+        Stopwatch watch5 = new NormalStopwatch("w5", watch1);
+
+        Assert.assertEquals(watch2, watch1.child("w2"));
+        Assert.assertEquals(watch3, watch1.child("w3"));
+        Assert.assertEquals(watch4, watch1.child("w4"));
+        Assert.assertEquals(watch5, watch1.child("w5"));
+
+        Assert.assertEquals(watch2, watch1.child("w2", null));
+        Assert.assertEquals(watch3, watch1.child("w3", null));
+        Assert.assertEquals(watch4, watch1.child("w4", null));
+        Assert.assertEquals(watch5, watch1.child("w5", null));
+
+        Assert.assertEquals(null, watch1.child("w2"));
+        Assert.assertEquals(null, watch1.child("w3"));
+        Assert.assertEquals(null, watch1.child("w4"));
+        Assert.assertEquals(null, watch1.child("w5"));
+    }
+
+    @Test
+    public void testLightStopwatchChild() {
+        Stopwatch watch1 = new LightStopwatch("w1", Path.EMPTY);
+
+        Stopwatch watch2 = new LightStopwatch("w2", watch1);
+        Stopwatch watch3 = new LightStopwatch("w3", watch1);
+        Stopwatch watch4 = new LightStopwatch("w4", watch1);
+        Stopwatch watch5 = new LightStopwatch("w5", watch1);
 
         Assert.assertEquals(watch2, watch1.child("w2"));
         Assert.assertEquals(watch3, watch1.child("w3"));

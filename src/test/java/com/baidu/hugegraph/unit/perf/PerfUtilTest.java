@@ -29,7 +29,8 @@ import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.unit.perf.testclass.TestClass;
 import com.baidu.hugegraph.unit.perf.testclass.TestClass1;
-import com.baidu.hugegraph.unit.perf.testclass2.TestClass2;
+import com.baidu.hugegraph.unit.perf.testclass.TestClass2;
+import com.baidu.hugegraph.unit.perf.testclass2.TestClass4Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class PerfUtilTest extends BaseUnitTest {
@@ -136,7 +137,7 @@ public class PerfUtilTest extends BaseUnitTest {
     public void testPerfUtilWithProfilePackage() throws Throwable {
         perf.profilePackage("com.baidu.hugegraph.unit.perf.testclass2");
 
-        TestClass2.Foo obj = new TestClass2.Foo();
+        TestClass4Package.Foo obj = new TestClass4Package.Foo();
         obj.foo();
 
         perf.toString();
@@ -146,7 +147,7 @@ public class PerfUtilTest extends BaseUnitTest {
         assertContains(json, "foo.times", 1);
         assertContains(json, "foo/bar.times", 1);
 
-        TestClass2 test = new TestClass2();
+        TestClass4Package test = new TestClass4Package();
         test.test();
         json = perf.toJson();
         assertContains(json, "test.times", 1);
@@ -272,9 +273,53 @@ public class PerfUtilTest extends BaseUnitTest {
         test.testNew();
         json = perf.toJson();
         assertContains(json, "testNew.times", 2);
-
 //        System.out.println(Stopwatch.wastedStart0+", "+Stopwatch.wastedEnd0);
-        System.out.println(perf.toECharts());
+    }
+
+    @Test
+    public void testPerfUtilPerf4LightStopwatch() throws Throwable {
+        perf.profileClass(prefix + "TestClass2");
+        perf.profileClass(prefix + "TestClass2$Foo");
+
+        PerfUtil.profileSingleThread(true);
+        PerfUtil.useLightStopwatch(true);
+        PerfUtil.useLocalTimer(true);
+
+        int times = 10000000;
+        TestClass2 test = new TestClass2();
+        test.test(times);
+        test.testNew();
+
+        perf.toString();
+        perf.toECharts();
+        String json = perf.toJson();
+
+        assertContains(json, "testNew.times", 1);
+        assertContains(json, "test/testNew.times", times);
+        assertContains(json, "test/testNewAndCall.times", times);
+        assertContains(json, "test/testCall.times", times);
+        assertContains(json, "test/testCallFooThenSum.times", times);
+
+        assertContains(json, "test/testNewAndCall/sum.times", times);
+        assertContains(json, "test/testCall/sum.times", times);
+        assertContains(json, "test/testCallFooThenSum/foo.times", times);
+        assertContains(json, "test/testCallFooThenSum/foo/sum.times", times);
+
+        // Test call multi-times and Reset false
+        PerfUtil.profileSingleThread(true);
+        PerfUtil.profileSingleThread(true);
+        PerfUtil.profileSingleThread(false);
+        PerfUtil.profileSingleThread(false);
+        PerfUtil.useLocalTimer(true);
+        PerfUtil.useLocalTimer(true);
+        PerfUtil.useLocalTimer(false);
+        PerfUtil.useLocalTimer(false);
+        PerfUtil.useLightStopwatch(false);
+        PerfUtil.useLightStopwatch(false);
+
+        test.testNew();
+        json = perf.toJson();
+        assertContains(json, "testNew.times", 2);
     }
 
     private static void assertContains(String json, String key)

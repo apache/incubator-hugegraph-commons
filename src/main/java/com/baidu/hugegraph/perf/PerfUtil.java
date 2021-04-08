@@ -57,9 +57,10 @@ public final class PerfUtil {
     private static final int DEFAUL_CAPATICY = 1024;
 
     private static final ThreadLocal<PerfUtil> INSTANCE = new ThreadLocal<>();
-    private static PerfUtil SINGLE_INSTANCE = null;
 
+    private static PerfUtil SINGLE_INSTANCE = null;
     private static LocalTimer LOCAL_TIMER = null;
+    private static boolean LIGHT_WATCH = false;
 
     private final Map<Path, Stopwatch> stopwatches;
     private final LocalStack<Stopwatch> callStack;
@@ -68,7 +69,7 @@ public final class PerfUtil {
     private PerfUtil() {
         this.stopwatches = new HashMap<>(DEFAUL_CAPATICY);
         this.callStack = new LocalStack<>(DEFAUL_CAPATICY);
-        this.root = new Stopwatch("", Path.EMPTY);
+        this.root = newStopwatch("", Path.EMPTY);
     }
 
     public static PerfUtil instance() {
@@ -101,7 +102,9 @@ public final class PerfUtil {
                 throw new RuntimeException(e);
             }
 
-            Stopwatch.initEachWastedLost();
+            if (!LIGHT_WATCH) {
+                NormalStopwatch.initEachWastedLost();
+            }
         } else {
             if (LOCAL_TIMER == null) {
                 return;
@@ -116,12 +119,26 @@ public final class PerfUtil {
         }
     }
 
+    public static void useLightStopwatch(boolean yes) {
+        LIGHT_WATCH = yes;
+    }
+
     protected static long now() {
         if (LOCAL_TIMER != null) {
             return LOCAL_TIMER.now();
         }
         // System.nanoTime() cost about 40 ns each call
         return System.nanoTime();
+    }
+
+    protected static Stopwatch newStopwatch(String name, Path parent) {
+        return LIGHT_WATCH ? new LightStopwatch(name, parent) :
+                             new NormalStopwatch(name, parent);
+    }
+
+    protected static Stopwatch newStopwatch(String name, Stopwatch parent) {
+        return LIGHT_WATCH ? new LightStopwatch(name, parent) :
+                             new NormalStopwatch(name, parent);
     }
 
     public Stopwatch start(String name) {
@@ -133,7 +150,7 @@ public final class PerfUtil {
         // Get watch by name from local tree
         Stopwatch watch = parent.child(name);
         if (watch == null) {
-            watch = new Stopwatch(name, parent);
+            watch = newStopwatch(name, parent);
             assert !this.stopwatches.containsKey(watch.id()) : watch;
             this.stopwatches.put(watch.id(), watch);
         }
@@ -153,7 +170,7 @@ public final class PerfUtil {
         // Get watch by id from global map
         Stopwatch watch = this.stopwatches.get(id); // cost 170
         if (watch == null) {
-            watch = new Stopwatch(name, parent);
+            watch = newStopwatch(name, parent);
             this.stopwatches.put(watch.id(), watch); // cost 180
         }
         this.callStack.push(watch); // cost 190
@@ -163,8 +180,8 @@ public final class PerfUtil {
         return watch;
     }
 
-    public Stopwatch end(String name) {
-        long start = now();
+    public void end(String name) {
+        long start = LIGHT_WATCH ? 0L : now();
 
         Stopwatch watch = this.callStack.pop();
         assert watch.name() == name : watch;
@@ -174,8 +191,6 @@ public final class PerfUtil {
         }
 
         watch.endTime(start);
-
-        return watch;
     }
 
     public void clear() {
@@ -379,14 +394,8 @@ public final class PerfUtil {
                 List<Stopwatch> children = itemsOfLn.stream().filter(c -> {
                     return c.parent().equals(parent.id());
                 }).collect(Collectors.toList());
-                // Fill total wasted cost of children
-                long sumWasted = children.stream()
-                                         .mapToLong(c -> c.totalWasted()).sum();
-                parent.totalChildrenWasted(sumWasted);
-                // Fill total times of children
-                long sumTimes = children.stream()
-                                        .mapToLong(c -> c.totalTimes()).sum();
-                parent.totalChildrenTimes(sumTimes);
+
+                parent.fillChildrenTotal(children);
             }
         };
 
@@ -400,7 +409,7 @@ public final class PerfUtil {
                 long sumCost = children.mapToLong(c -> c.totalCost()).sum();
                 long otherCost = parent.totalCost() - sumCost;
                 if (otherCost > 0L) {
-                    Stopwatch other = new Stopwatch("~", parent.id());
+                    Stopwatch other = newStopwatch("~", parent.id());
                     other.totalCost(otherCost);
                     itemsOfLn.add(other);
                 }
@@ -508,7 +517,7 @@ public final class PerfUtil {
                 started.countDown();
                 while (this.running) {
                     this.time = System.nanoTime();
-                    // Prevent frequent updates for perf (5.2s => 3,6s for 8kw)
+                    // Prevent frequent updates for perf (5.2s => 3.6s for 8kw)
                     Thread.yield();
                 }
             }, "LocalTimer");
