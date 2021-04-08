@@ -19,9 +19,18 @@
 
 package com.baidu.hugegraph.perf;
 
+import java.util.function.BiFunction;
+
+import org.slf4j.Logger;
+
 import com.baidu.hugegraph.perf.PerfUtil.FastMap;
+import com.baidu.hugegraph.perf.PerfUtil.LocalStack;
+import com.baidu.hugegraph.testutil.Whitebox;
+import com.baidu.hugegraph.util.Log;
 
 public final class Stopwatch implements Cloneable {
+
+    private static final Logger LOG = Log.logger(Stopwatch.class);
 
     private static final String MULTI_THREAD_ACCESS_ERROR =
                          "There may be multi-threaded access, ensure " +
@@ -32,10 +41,11 @@ public final class Stopwatch implements Cloneable {
 
     private long times = 0L;
     private long totalCost = 0L;
-    private long minCost = 0L;
+    private long minCost = Long.MAX_VALUE;
     private long maxCost = 0L;
     private long totalSelfWasted = 0L;
     private long totalChildrenWasted = -1L;
+    private long totalChildrenTimes = -1L;
 
     private final String name;
     private final Path parent;
@@ -73,32 +83,101 @@ public final class Stopwatch implements Cloneable {
         return this.parent;
     }
 
-    public void startTime(long time, long wastedTime) {
+    private static long eachStartWastedLost = 0L;
+    private static long eachEndWastedLost = 0L;
+
+    protected static void initEachWastedLost() {
+        int times = 100000000;
+
+        LocalStack<Stopwatch> callStack = Whitebox.getInternalState(
+                                          PerfUtil.instance(), "callStack");
+
+        long baseStart = PerfUtil.now();
+        for (int i = 0; i < times; i++) {
+            PerfUtil.instance();
+        }
+        long baseCost = PerfUtil.now() - baseStart;
+
+        BiFunction<String, Runnable, Long> testEachCost = (name, test) -> {
+            long start = PerfUtil.now();
+            test.run();
+            long end = PerfUtil.now();
+            long cost = end - start - baseCost;
+            assert cost > 0;
+            long eachCost = cost / times;
+
+            LOG.info("Wasted time test: cost={}ms, base_cost={}ms, {}={}ns",
+                     cost/1000000.0, baseCost/1000000.0, name, eachCost);
+            return eachCost;
+        };
+
+        String startName = "each_start_cost";
+        eachStartWastedLost = testEachCost.apply(startName, () -> {
+            for (int i = 0; i < times; i++) {
+                // Test call start()
+                Stopwatch watch = PerfUtil.instance().start(startName);
+                // Mock end()
+                watch.lastStartTime = -1L;
+                callStack.pop();
+            }
+        });
+
+        String endName = "each_end_cost";
+        eachEndWastedLost = testEachCost.apply(endName, () -> {
+            Stopwatch watch = PerfUtil.instance().start(endName);
+            PerfUtil.instance().end(endName);
+            for (int i = 0; i < times; i++) {
+                // Mock start()
+                callStack.push(watch);
+                watch.lastStartTime = 0L;
+                // Test call start()
+                PerfUtil.instance().end(endName);
+                watch.totalCost = 0L;
+            }
+        });
+    }
+
+    public void startTime(long startTime) {
         assert this.lastStartTime == -1L : MULTI_THREAD_ACCESS_ERROR;
 
-        this.lastStartTime = time;
         this.times++;
+        this.lastStartTime = startTime;
+
+        long endTime = PerfUtil.now();
+        long wastedTime = endTime - startTime;
+        if (wastedTime <= 0L) {
+//            wastedStart0++;
+            wastedTime += eachStartWastedLost;
+        }
+
         this.totalSelfWasted += wastedTime;
     }
 
-    public void endTime(long time, long wastedTime) {
-        assert time >= this.lastStartTime && this.lastStartTime != -1L :
+//    public static int wastedEnd0=0,wastedStart0=0;
+    public void endTime(long startTime) {
+        assert startTime >= this.lastStartTime && this.lastStartTime != -1L :
                MULTI_THREAD_ACCESS_ERROR;
 
-        long cost = time - this.lastStartTime;
-        this.totalCost += cost;
-        this.lastStartTime = -1L;
-        this.totalSelfWasted += wastedTime;
-        this.updateMinMax(cost);
-    }
+        long endTime = PerfUtil.now();
+        // The following code cost about 3ns~4ns
+        long wastedTime = endTime - startTime;
+        if (wastedTime <= 0L) {
+//            wastedEnd0++;
+            wastedTime += eachEndWastedLost;
+        }
 
-    protected void updateMinMax(long cost) {
-        if (this.minCost > cost || this.minCost == 0L) {
+        long cost = endTime - this.lastStartTime;
+
+        if (this.minCost > cost) {
             this.minCost = cost;
         }
         if (this.maxCost < cost) {
             this.maxCost = cost;
         }
+
+        this.totalCost += cost;
+        this.totalSelfWasted += wastedTime;
+        this.lastStartTime = -1L;
     }
 
     protected void totalCost(long totalCost) {
@@ -107,6 +186,10 @@ public final class Stopwatch implements Cloneable {
 
     protected void totalChildrenWasted(long totalChildrenWasted) {
         this.totalChildrenWasted = totalChildrenWasted;
+    }
+
+    protected void totalChildrenTimes(long totalChildrenTimes) {
+        this.totalChildrenTimes = totalChildrenTimes;
     }
 
     public long times() {
@@ -125,8 +208,15 @@ public final class Stopwatch implements Cloneable {
         return this.maxCost;
     }
 
+    public long totalTimes() {
+        if (this.totalChildrenTimes > 0L) {
+            return this.times + this.totalChildrenTimes;
+        }
+        return this.times;
+    }
+
     public long totalWasted() {
-        if (this.totalChildrenWasted >= 0L) {
+        if (this.totalChildrenWasted > 0L) {
             return this.totalSelfWasted + this.totalChildrenWasted;
         }
         return this.totalSelfWasted;
@@ -134,10 +224,6 @@ public final class Stopwatch implements Cloneable {
 
     public long totalSelfWasted() {
         return this.totalSelfWasted;
-    }
-
-    public long totalChildrenWasted() {
-        return this.totalChildrenWasted;
     }
 
     public Stopwatch copy() {
@@ -165,10 +251,12 @@ public final class Stopwatch implements Cloneable {
 
     @Override
     public String toString() {
-        return String.format("{parent:%s,name:%s,times:%s," +
+        return String.format("{parent:%s,name:%s," +
+                             "times:%s,totalChildrenTimes:%s" +
                              "totalCost:%s, minCost:%s, maxCost:%s," +
                              "totalSelfWasted:%s,totalChildrenWasted:%s}",
-                             this.parent, this.name, this.times,
+                             this.parent, this.name,
+                             this.times, this.totalChildrenTimes,
                              this.totalCost, this.minCost, this.maxCost,
                              this.totalSelfWasted, this.totalChildrenWasted);
     }
@@ -180,6 +268,7 @@ public final class Stopwatch implements Cloneable {
         sb.append("\"parent\":\"").append(this.parent).append("\"");
         sb.append(",\"name\":\"").append(this.name).append("\"");
         sb.append(",\"times\":").append(this.times);
+        sb.append(",\"total_children_times\":").append(this.totalChildrenTimes);
         sb.append(",\"total_cost\":").append(this.totalCost);
         sb.append(",\"min_cost\":").append(this.minCost);
         sb.append(",\"max_cost\":").append(this.maxCost);

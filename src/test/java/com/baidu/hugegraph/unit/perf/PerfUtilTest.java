@@ -62,6 +62,7 @@ public class PerfUtilTest extends BaseUnitTest {
         assertContains(json, "foo.max_cost");
         assertContains(json, "foo.total_self_wasted");
         assertContains(json, "foo.total_children_wasted", -1);
+        assertContains(json, "foo.total_children_times", -1);
 
         assertContains(json, "foo/bar.times", 1);
         assertContains(json, "foo/bar.name", "bar");
@@ -71,6 +72,7 @@ public class PerfUtilTest extends BaseUnitTest {
         assertContains(json, "foo/bar.max_cost");
         assertContains(json, "foo/bar.total_self_wasted");
         assertContains(json, "foo/bar.total_children_wasted", -1);
+        assertContains(json, "foo/bar.total_children_times", -1);
 
         TestClass test = new TestClass();
         test.test();
@@ -233,33 +235,29 @@ public class PerfUtilTest extends BaseUnitTest {
     public void testPerfUtilPerf() throws Throwable {
         perf.profileClass(prefix + "TestClass1");
         perf.profileClass(prefix + "TestClass1$Foo");
-        perf.profileClass(prefix + "TestClass1$Bar");
 
         PerfUtil.profileSingleThread(true);
         PerfUtil.useLocalTimer(true);
 
-        int times = 1000000;
+        int times = 10000000;
         TestClass1 test = new TestClass1();
-        for (int i = 0; i < times; i++) {
-            test.testNew();
-            test.testNewAndCall();
-            test.testCall();
-            test.testCallFooThenSum();
-        }
+        test.test(times);
+        test.testNew();
 
         perf.toString();
         perf.toECharts();
         String json = perf.toJson();
 
-        assertContains(json, "testNew.times", times);
-        assertContains(json, "testNewAndCall.times", times);
-        assertContains(json, "testCall.times", times);
-        assertContains(json, "testCallFooThenSum.times", times);
+        assertContains(json, "testNew.times", 1);
+        assertContains(json, "test/testNew.times", times);
+        assertContains(json, "test/testNewAndCall.times", times);
+        assertContains(json, "test/testCall.times", times);
+        assertContains(json, "test/testCallFooThenSum.times", times);
 
-        assertContains(json, "testNewAndCall/sum.times", times);
-        assertContains(json, "testCall/sum.times", times);
-        assertContains(json, "testCallFooThenSum/foo.times", times);
-        assertContains(json, "testCallFooThenSum/foo/sum.times", times);
+        assertContains(json, "test/testNewAndCall/sum.times", times);
+        assertContains(json, "test/testCall/sum.times", times);
+        assertContains(json, "test/testCallFooThenSum/foo.times", times);
+        assertContains(json, "test/testCallFooThenSum/foo/sum.times", times);
 
         // Test call multi-times and Reset false
         PerfUtil.profileSingleThread(true);
@@ -273,7 +271,10 @@ public class PerfUtilTest extends BaseUnitTest {
 
         test.testNew();
         json = perf.toJson();
-        assertContains(json, "testNew.times", times + 1);
+        assertContains(json, "testNew.times", 2);
+
+//        System.out.println(Stopwatch.wastedStart0+", "+Stopwatch.wastedEnd0);
+        System.out.println(perf.toECharts());
     }
 
     private static void assertContains(String json, String key)

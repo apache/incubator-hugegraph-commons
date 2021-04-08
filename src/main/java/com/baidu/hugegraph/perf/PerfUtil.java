@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -93,7 +94,13 @@ public final class PerfUtil {
                 return;
             }
             LOCAL_TIMER = new LocalTimer();
-            LOCAL_TIMER.startTimeUpdateLoop();
+            try {
+                LOCAL_TIMER.startTimeUpdateLoop();
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+
+            Stopwatch.initEachWastedLost();
         } else {
             if (LOCAL_TIMER == null) {
                 return;
@@ -108,7 +115,7 @@ public final class PerfUtil {
         }
     }
 
-    private static long now() {
+    protected static long now() {
         if (LOCAL_TIMER != null) {
             return LOCAL_TIMER.now();
         }
@@ -116,7 +123,7 @@ public final class PerfUtil {
         return System.nanoTime();
     }
 
-    public boolean start(String name) {
+    public Stopwatch start(String name) {
         long start = now();
 
         Stopwatch parent = this.callStack.empty() ?
@@ -131,15 +138,12 @@ public final class PerfUtil {
         }
         this.callStack.push(watch);
 
-        long end = now();
-        long wastedTime = end - start;
+        watch.startTime(start);
 
-        watch.startTime(start, wastedTime);
-
-        return true; // just for assert
+        return watch;
     }
 
-    public boolean start2(String name) {
+    public Stopwatch start2(String name) {
         long start = now(); // cost 70 ns with System.nanoTime()
 
         Path parent = this.callStack.empty() ?
@@ -153,30 +157,24 @@ public final class PerfUtil {
         }
         this.callStack.push(watch); // cost 190
 
-        long end = now();
-        long wastedTime = end - start;
+        watch.startTime(start);
 
-        watch.startTime(start, wastedTime);
-
-        return true; // just for assert
+        return watch;
     }
 
-    public boolean end(String name) {
+    public Stopwatch end(String name) {
         long start = now();
 
         Stopwatch watch = this.callStack.pop();
-        assert watch.id().endsWith(name) : watch;
+        assert watch.name() == name : watch;
 
         if (watch == null) {
             throw new IllegalArgumentException("Invalid watch name: " + name);
         }
 
-        long end = now();
-        long wastedTime = end - start;
+        watch.endTime(start);
 
-        watch.endTime(end, wastedTime);
-
-        return true;
+        return watch;
     }
 
     public void clear() {
@@ -359,6 +357,10 @@ public final class PerfUtil {
 
                 sb.append("times:");
                 sb.append(w.times());
+                sb.append(',');
+
+                sb.append("totalTimes:");
+                sb.append(w.totalTimes());
 
                 sb.append('}');
                 sb.append(',');
@@ -370,15 +372,20 @@ public final class PerfUtil {
             return sb.toString();
         };
 
-        BiConsumer<List<Stopwatch>, List<Stopwatch>> fillWasted =
+        BiConsumer<List<Stopwatch>, List<Stopwatch>> fillChildrenTotal =
                                     (itemsOfLn, itemsOfLnParent) -> {
             for (Stopwatch parent : itemsOfLnParent) {
-                Stream<Stopwatch> children = itemsOfLn.stream().filter(c -> {
+                List<Stopwatch> children = itemsOfLn.stream().filter(c -> {
                     return c.parent().equals(parent.id());
-                });
-                // Fill wasted cost
-                long sumWasted = children.mapToLong(c -> c.totalWasted()).sum();
+                }).collect(Collectors.toList());
+                // Fill total wasted cost of children
+                long sumWasted = children.stream()
+                                         .mapToLong(c -> c.totalWasted()).sum();
                 parent.totalChildrenWasted(sumWasted);
+                // Fill total times of children
+                long sumTimes = children.stream()
+                                        .mapToLong(c -> c.totalTimes()).sum();
+                parent.totalChildrenTimes(sumTimes);
             }
         };
 
@@ -421,8 +428,8 @@ public final class PerfUtil {
             List<Stopwatch> itemsOfI = levelItems.get(i);
             List<Stopwatch> itemsOfParent = levelItems.get(i - 1);
             if (itemsOfParent != null) {
-                // Fill wasted cost
-                fillWasted.accept(itemsOfI, itemsOfParent);
+                // Fill total value of children
+                fillChildrenTotal.accept(itemsOfI, itemsOfParent);
             }
         }
 
@@ -438,6 +445,7 @@ public final class PerfUtil {
             "    + 'wasted: ' + params.data.wasted + ' (ms) <br/>'" +
             "    + 'self wasted: ' + params.data.selfWasted + ' (ms) <br/>'" +
             "    + 'times: ' + params.data.times + '<br/>'" +
+            "    + 'total times: ' + params.data.totalTimes + '<br/>'" +
             "    + 'path: ' + params.data.id + '<br/>';" +
             "}");
         sb.append("},");

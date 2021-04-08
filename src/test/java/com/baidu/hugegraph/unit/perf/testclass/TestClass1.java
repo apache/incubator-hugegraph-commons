@@ -26,6 +26,16 @@ public class TestClass1 {
     private Foo foo = new Foo();
 
     @Watched
+    public void test(int times) {
+        for (int i = 0; i < times; i++) {
+            this.testNew();
+            this.testNewAndCall();
+            this.testCall();
+            this.testCallFooThenSum();
+        }
+    }
+
+    @Watched
     public void testNew() {
         new Foo();
     }
@@ -45,11 +55,6 @@ public class TestClass1 {
         this.foo.foo();
     }
 
-    @Watched
-    public void test() {
-        new Foo().sum(1, 2);
-    }
-
     public static class Foo {
 
         @Watched
@@ -65,16 +70,5 @@ public class TestClass1 {
             }
             return sum + b;
         }
-    }
-
-    public static class Bar {
-
-        @Watched
-        public void foo() {
-            this.bar();
-        }
-
-        @Watched
-        public void bar() {}
     }
 }
