@@ -273,7 +273,6 @@ public class PerfUtilTest extends BaseUnitTest {
         test.testNew();
         json = perf.toJson();
         assertContains(json, "testNew.times", 2);
-//        System.out.println(Stopwatch.wastedStart0+", "+Stopwatch.wastedEnd0);
     }
 
     @Test

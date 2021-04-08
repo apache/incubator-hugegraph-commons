@@ -95,14 +95,12 @@ public final class NormalStopwatch implements Stopwatch {
         long endTime = PerfUtil.now();
         long wastedTime = endTime - startTime;
         if (wastedTime <= 0L) {
-//            wastedStart0++;
             wastedTime += eachStartWastedLost;
         }
 
         this.totalSelfWasted += wastedTime;
     }
 
-//    public static int wastedEnd0=0,wastedStart0=0;
     @Override
     public void endTime(long startTime) {
         assert startTime >= this.lastStartTime && this.lastStartTime != -1L :
@@ -112,7 +110,6 @@ public final class NormalStopwatch implements Stopwatch {
         // The following code cost about 3ns~4ns
         long wastedTime = endTime - startTime;
         if (wastedTime <= 0L) {
-//            wastedEnd0++;
             wastedTime += eachEndWastedLost;
         }
 
