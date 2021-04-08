@@ -31,6 +31,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -473,7 +474,24 @@ public final class PerfUtil {
 
     public static final class LocalTimer {
 
+        // Header: 4 bytes classptr + 8 bytes markword
+        private volatile long padding11 = 0L;
+        private volatile long padding12 = 0L;
+        private volatile long padding13 = 0L;
+        private volatile long padding14 = 0L;
+        private volatile long padding15 = 0L;
+        private volatile long padding16 = 0L; // the 1st 64 bytes
+
         private volatile long time = 0L;
+
+        private volatile long padding21 = 0L;
+        private volatile long padding22 = 0L;
+        private volatile long padding23 = 0L;
+        private volatile long padding24 = 0L;
+        private volatile long padding25 = 0L;
+        private volatile long padding26 = 0L;
+        private volatile long padding27 = 0L; // the 2nd 64 bytes
+
         private volatile boolean running = false;
         private Thread thread = null;
 
@@ -481,15 +499,22 @@ public final class PerfUtil {
             return this.time;
         }
 
-        public void startTimeUpdateLoop() {
+        public void startTimeUpdateLoop() throws InterruptedException {
+            assert this.thread == null;
+            assert this.preventOptimizePadding() == 0L;
             this.running = true;
+            CountDownLatch started = new CountDownLatch(1);
             this.thread = new Thread(() -> {
+                started.countDown();
                 while (this.running) {
                     this.time = System.nanoTime();
+                    // Prevent frequent updates for perf (5.2s => 3,6s for 8kw)
+                    Thread.yield();
                 }
             }, "LocalTimer");
             this.thread.setDaemon(true);
             this.thread.start();
+            started.await();
         }
 
         public void stop() throws InterruptedException {
@@ -497,6 +522,15 @@ public final class PerfUtil {
             if (this.thread != null) {
                 this.thread.join();
             }
+        }
+
+        public long preventOptimizePadding() {
+            long p1 = this.padding11 + this.padding12 + this.padding13 +
+                      this.padding14 + this.padding15 + this.padding16;
+            long p2 = this.padding21 + this.padding22 + this.padding23 +
+                      this.padding24 + this.padding25 + this.padding26 +
+                      this.padding27;
+            return p1 + p2;
         }
     }
 
