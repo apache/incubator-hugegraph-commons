@@ -272,7 +272,7 @@ public final class NormalStopwatch implements Stopwatch {
             long eachCost = cost / times;
 
             LOG.info("Wasted time test: cost={}ms, base_cost={}ms, {}={}ns",
-                     cost/1000000.0, baseCost/1000000.0, name, eachCost);
+                     cost / 1000000.0, baseCost / 1000000.0, name, eachCost);
             return eachCost;
         };
 
