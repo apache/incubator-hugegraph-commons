@@ -193,9 +193,7 @@ public final class PerfUtil {
         long start = LIGHT_WATCH ? 0L : now();
 
         Stopwatch watch = this.callStack.pop();
-        assert watch.name() == name : watch;
-
-        if (watch == null) {
+        if (watch == null || watch.name() != name) {
             throw new IllegalArgumentException("Invalid watch name: " + name);
         }
 
