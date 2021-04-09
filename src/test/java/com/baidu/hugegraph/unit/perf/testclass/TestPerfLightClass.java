@@ -21,7 +21,7 @@ package com.baidu.hugegraph.unit.perf.testclass;
 
 import com.baidu.hugegraph.perf.PerfUtil.Watched;
 
-public class TestClass1 {
+public class TestPerfLightClass {
 
     private Foo foo = new Foo();
 

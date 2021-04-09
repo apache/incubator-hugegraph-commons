@@ -53,6 +53,7 @@ public interface Stopwatch extends Cloneable {
     public Stopwatch child(String name);
     public Stopwatch child(String name, Stopwatch watch);
 
+    public boolean empty();
     public void clear();
 
     public default String toJson() {
@@ -75,7 +76,7 @@ public interface Stopwatch extends Cloneable {
     }
 
     public static Path id(Path parent, String name) {
-        if (parent == Path.EMPTY && name.isEmpty()) {
+        if (parent == Path.EMPTY && name == Path.ROOT_NAME) {
             return Path.EMPTY;
         }
         return new Path(parent, name);
@@ -83,6 +84,7 @@ public interface Stopwatch extends Cloneable {
 
     public static final class Path implements Comparable<Path> {
 
+        public static final String ROOT_NAME = "root";
         public static final Path EMPTY = new Path("");
 
         private final String path;

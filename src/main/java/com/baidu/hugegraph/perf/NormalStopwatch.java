@@ -216,7 +216,23 @@ public final class NormalStopwatch implements Stopwatch {
     }
 
     @Override
+    public boolean empty() {
+        return this.children.size() == 0;
+    }
+
+    @Override
     public void clear() {
+        this.lastStartTime = -1L;
+
+        this.times = 0L;
+        this.totalCost = 0L;
+
+        this.minCost = Long.MAX_VALUE;
+        this.maxCost = 0L;
+        this.totalSelfWasted = 0L;
+        this.totalChildrenWasted = -1L;
+        this.totalChildrenTimes = -1L;
+
         this.children.clear();
     }
 

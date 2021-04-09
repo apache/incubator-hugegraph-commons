@@ -31,23 +31,23 @@ public class TestClass {
 
     public static class Foo {
 
-        @Watched
+        @Watched(prefix="foo")
         public void foo() {
             this.bar();
         }
 
-        @Watched
+        @Watched(prefix="foo")
         public void bar() {}
     }
 
     public static class Bar {
 
-        @Watched
+        @Watched("bar_foo")
         public void foo() {
             this.bar();
         }
 
-        @Watched
+        @Watched("bar_bar")
         public void bar() {}
     }
 

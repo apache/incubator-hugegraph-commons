@@ -69,7 +69,7 @@ public final class PerfUtil {
     private PerfUtil() {
         this.stopwatches = new HashMap<>(DEFAUL_CAPATICY);
         this.callStack = new LocalStack<>(DEFAUL_CAPATICY);
-        this.root = newStopwatch("", Path.EMPTY);
+        this.root = newStopwatch(Path.ROOT_NAME, Path.EMPTY);
     }
 
     public static PerfUtil instance() {
@@ -120,6 +120,12 @@ public final class PerfUtil {
     }
 
     public static void useLightStopwatch(boolean yes) {
+        if (yes != LIGHT_WATCH) {
+            boolean empty = PerfUtil.instance().empty();
+            String message = "Please call clear() before switching " +
+                             "light-stopwatch due to there is dirty watch";
+            com.baidu.hugegraph.util.E.checkArgument(empty, message);
+        }
         LIGHT_WATCH = yes;
     }
 
@@ -191,6 +197,10 @@ public final class PerfUtil {
         }
 
         watch.endTime(start);
+    }
+
+    public boolean empty() {
+        return this.stopwatches.isEmpty() && this.root.empty();
     }
 
     public void clear() {

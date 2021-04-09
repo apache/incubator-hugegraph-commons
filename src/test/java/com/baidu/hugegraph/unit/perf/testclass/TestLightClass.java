@@ -21,54 +21,32 @@ package com.baidu.hugegraph.unit.perf.testclass;
 
 import com.baidu.hugegraph.perf.PerfUtil.Watched;
 
-public class TestClass2 {
-
-    private Foo foo = new Foo();
+public class TestLightClass {
 
     @Watched
-    public void test(int times) {
-        for (int i = 0; i < times; i++) {
-            this.testNew();
-            this.testNewAndCall();
-            this.testCall();
-            this.testCallFooThenSum();
-        }
-    }
-
-    @Watched
-    public void testNew() {
-        new Foo();
-    }
-
-    @Watched
-    public void testNewAndCall() {
-        new Foo().sum(1, 2);
-    }
-
-    @Watched
-    public void testCall() {
-        this.foo.sum(1, 2);
-    }
-
-    @Watched
-    public void testCallFooThenSum() {
-        this.foo.foo();
+    public void test() {
+        new Foo().bar();
     }
 
     public static class Foo {
 
-        @Watched
+        @Watched(prefix="foo")
         public void foo() {
-            this.sum(1, 2);
+            this.bar();
         }
 
-        @Watched
-        public int sum(int a, int b) {
-            int sum = a;
-            for (int i = 0; i < 100; i++) {
-                sum += i;
-            }
-            return sum + b;
+        @Watched(prefix="foo")
+        public void bar() {}
+    }
+
+    public static class Bar {
+
+        @Watched(prefix="bar")
+        public void foo() {
+            this.bar();
         }
+
+        @Watched(prefix="bar")
+        public void bar() {}
     }
 }

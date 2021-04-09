@@ -124,7 +124,7 @@ public final class LightStopwatch implements Stopwatch {
 
     @Override
     public long totalSelfWasted() {
-        return -1L;
+        return 0L;
     }
 
     @Override
@@ -162,7 +162,18 @@ public final class LightStopwatch implements Stopwatch {
     }
 
     @Override
+    public boolean empty() {
+        return this.children.size() == 0;
+    }
+
+    @Override
     public void clear() {
+        this.lastStartTime = -1L;
+
+        this.times = 0L;
+        this.totalCost = 0L;
+        this.totalChildrenTimes = -1L;
+
         this.children.clear();
     }
 
