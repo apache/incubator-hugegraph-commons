@@ -59,6 +59,7 @@ public final class PerfUtil {
     private static final ThreadLocal<PerfUtil> INSTANCE = new ThreadLocal<>();
 
     private static PerfUtil SINGLE_INSTANCE = null;
+    private static Thread SINGLE_THREAD = null;
     private static LocalTimer LOCAL_TIMER = null;
     private static boolean LIGHT_WATCH = false;
 
@@ -73,7 +74,8 @@ public final class PerfUtil {
     }
 
     public static PerfUtil instance() {
-        if (SINGLE_INSTANCE != null) {
+        if (SINGLE_INSTANCE != null &&
+            SINGLE_THREAD == Thread.currentThread()) {
             // Return the only one instance for single thread, for performance
             return SINGLE_INSTANCE;
         }
@@ -88,6 +90,7 @@ public final class PerfUtil {
 
     public static void profileSingleThread(boolean yes) {
         SINGLE_INSTANCE = yes ? PerfUtil.instance() : null;
+        SINGLE_THREAD = yes ? Thread.currentThread() : null;
     }
 
     public static void useLocalTimer(boolean yes) {
