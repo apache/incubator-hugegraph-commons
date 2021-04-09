@@ -124,7 +124,8 @@ public final class PerfUtil {
 
     public static void useLightStopwatch(boolean yes) {
         if (yes != LIGHT_WATCH) {
-            boolean empty = PerfUtil.instance().empty();
+            PerfUtil instance = INSTANCE.get();
+            boolean empty = instance == null || instance.empty();
             String message = "Please call clear() before switching " +
                              "light-stopwatch due to there is dirty watch";
             com.baidu.hugegraph.util.E.checkArgument(empty, message);
