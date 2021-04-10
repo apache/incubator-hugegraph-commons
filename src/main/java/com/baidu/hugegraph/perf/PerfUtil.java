@@ -517,6 +517,7 @@ public final class PerfUtil {
         private Thread thread = null;
 
         public long now() {
+            // Read current ns time (be called frequently)
             return this.time;
         }
 
