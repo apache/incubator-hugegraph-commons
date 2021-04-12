@@ -239,8 +239,8 @@ public final class NormalStopwatch implements Stopwatch {
     @Override
     public String toString() {
         return String.format("{parent:%s,name:%s," +
-                             "times:%s,totalChildrenTimes:%s" +
-                             "totalCost:%s, minCost:%s, maxCost:%s," +
+                             "times:%s,totalChildrenTimes:%s," +
+                             "totalCost:%s,minCost:%s,maxCost:%s," +
                              "totalSelfWasted:%s,totalChildrenWasted:%s}",
                              this.parent, this.name,
                              this.times, this.totalChildrenTimes,
