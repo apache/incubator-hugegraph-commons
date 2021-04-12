@@ -118,6 +118,9 @@ public final class CollectionUtil {
                         "Invalid from parameter of subSet(): %s", from);
         if (to < 0) {
             to = original.size();
+        } else {
+            E.checkArgument(to >= from,
+                            "Invalid to parameter of subSet(): %s", to);
         }
         List<T> list = new ArrayList<>(original);
         return new LinkedHashSet<>(list.subList(from, to));

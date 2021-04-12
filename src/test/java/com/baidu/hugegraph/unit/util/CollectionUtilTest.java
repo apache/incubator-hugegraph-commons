@@ -174,6 +174,12 @@ public class CollectionUtilTest extends BaseUnitTest {
         Assert.assertEquals(ImmutableSet.of(3, 4, 5), subSet);
 
         Assert.assertThrows(IllegalArgumentException.class, () -> {
+            CollectionUtil.subSet(originSet, 2, 1);
+        }, e -> {
+            Assert.assertContains("Invalid to parameter ", e.getMessage());
+        });
+
+        Assert.assertThrows(IllegalArgumentException.class, () -> {
             CollectionUtil.subSet(originSet, -1, 2);
         }, e -> {
             Assert.assertContains("Invalid from parameter ", e.getMessage());
