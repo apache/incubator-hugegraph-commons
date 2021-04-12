@@ -96,7 +96,13 @@ public final class CollectionUtil {
     }
 
     public static boolean allUnique(Collection<?> collection) {
-        return collection.stream().allMatch(new HashSet<>()::add);
+        HashSet<Object> set = new HashSet<>(collection.size());
+        for (Object elem : collection) {
+            if (!set.add(elem)) {
+                return false;
+            }
+        }
+        return true;
     }
 
     /**
@@ -108,10 +114,8 @@ public final class CollectionUtil {
      * @return sub-set of original set [from, to)
      */
     public static <T> Set<T> subSet(Set<T> original, int from, int to) {
-        if (from < 0) {
-            E.checkArgument(from >= 0,
-                            "Invalid from parameter of subSet(): %s", from);
-        }
+        E.checkArgument(from >= 0,
+                        "Invalid from parameter of subSet(): %s", from);
         if (to < 0) {
             to = original.size();
         }
