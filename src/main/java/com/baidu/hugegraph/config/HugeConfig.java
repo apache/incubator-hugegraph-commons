@@ -43,9 +43,6 @@ public class HugeConfig extends PropertiesConfiguration {
         if (config == null) {
             throw new ConfigException("The config object is null");
         }
-        if (config instanceof MapConfiguration) {
-            ((MapConfiguration) config).setDelimiterParsingDisabled(true);
-        }
         this.reloadIfNeed(config);
         this.setLayoutIfNeeded(config);
 
@@ -62,10 +59,12 @@ public class HugeConfig extends PropertiesConfiguration {
     }
 
     private void reloadIfNeed(Configuration conf) {
+        if (conf instanceof MapConfiguration) {
+            ((MapConfiguration) conf).setDelimiterParsingDisabled(true);
+        }
         if (!(conf instanceof AbstractFileConfiguration)) {
             return;
         }
-
         AbstractFileConfiguration fileConfig = (AbstractFileConfiguration) conf;
 
         File file = fileConfig.getFile();
