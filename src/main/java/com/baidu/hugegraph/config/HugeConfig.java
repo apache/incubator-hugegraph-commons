@@ -28,6 +28,7 @@ import java.util.Map;
 import org.apache.commons.configuration.AbstractFileConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.slf4j.Logger;
 
@@ -42,7 +43,9 @@ public class HugeConfig extends PropertiesConfiguration {
         if (config == null) {
             throw new ConfigException("The config object is null");
         }
-
+        if (config instanceof MapConfiguration) {
+            ((MapConfiguration) config).setDelimiterParsingDisabled(true);
+        }
         this.reloadIfNeed(config);
         this.setLayoutIfNeeded(config);
 
