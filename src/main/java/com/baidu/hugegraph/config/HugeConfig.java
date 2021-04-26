@@ -25,10 +25,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.configuration.AbstractConfiguration;
 import org.apache.commons.configuration.AbstractFileConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.slf4j.Logger;
 
@@ -59,10 +59,11 @@ public class HugeConfig extends PropertiesConfiguration {
     }
 
     private void reloadIfNeed(Configuration conf) {
-        if (conf instanceof MapConfiguration) {
-            ((MapConfiguration) conf).setDelimiterParsingDisabled(true);
-        }
         if (!(conf instanceof AbstractFileConfiguration)) {
+            if (conf instanceof AbstractConfiguration) {
+                ((AbstractConfiguration) conf).setDelimiterParsingDisabled(
+                                               true);
+            }
             return;
         }
         AbstractFileConfiguration fileConfig = (AbstractFileConfiguration) conf;
