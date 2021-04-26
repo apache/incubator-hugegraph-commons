@@ -61,8 +61,8 @@ public class HugeConfig extends PropertiesConfiguration {
     private void reloadIfNeed(Configuration conf) {
         if (!(conf instanceof AbstractFileConfiguration)) {
             if (conf instanceof AbstractConfiguration) {
-                AbstractConfiguration astConf = (AbstractConfiguration) conf;
-                astConf.setDelimiterParsingDisabled(true);
+                AbstractConfiguration config = (AbstractConfiguration) conf;
+                config.setDelimiterParsingDisabled(true);
             }
             return;
         }
