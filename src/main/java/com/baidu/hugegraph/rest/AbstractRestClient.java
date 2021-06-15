@@ -266,7 +266,7 @@ public abstract class AbstractRestClient implements RestClient {
             WebTarget webTarget = target.get();
             Builder builder = id == null ? webTarget.path(path).request() :
                               webTarget.path(path).path(encode(id)).request();
-            this.buildAuthToRequest(builder);
+            this.attachAuthToRequest(builder);
             return builder.get();
         });
 
@@ -295,7 +295,7 @@ public abstract class AbstractRestClient implements RestClient {
             WebTarget webTarget = target.get();
             Builder builder = id == null ? webTarget.path(path).request() :
                               webTarget.path(path).path(encode(id)).request();
-            this.buildAuthToRequest(builder);
+            this.attachAuthToRequest(builder);
             return builder.delete();
         });
 
@@ -328,7 +328,7 @@ public abstract class AbstractRestClient implements RestClient {
         return this.authContext.get();
     }
 
-    private void buildAuthToRequest(Builder builder) {
+    private void attachAuthToRequest(Builder builder) {
         // Add auth header
         String auth = getAuthContext();
         if (StringUtils.isNotEmpty(auth)) {
@@ -357,7 +357,7 @@ public abstract class AbstractRestClient implements RestClient {
             encoding = (String) headers.getFirst("Content-Encoding");
         }
         // Add auth header
-        this.buildAuthToRequest(builder);
+        this.attachAuthToRequest(builder);
 
         /*
          * We should specify the encoding of the entity object manually,
