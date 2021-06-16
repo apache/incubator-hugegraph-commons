@@ -330,7 +330,7 @@ public abstract class AbstractRestClient implements RestClient {
 
     private void attachAuthToRequest(Builder builder) {
         // Add auth header
-        String auth = getAuthContext();
+        String auth = this.getAuthContext();
         if (StringUtils.isNotEmpty(auth)) {
             builder.header(HttpHeaders.AUTHORIZATION, auth);
         }
