@@ -21,7 +21,9 @@ package com.baidu.hugegraph.unit.rest;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -36,6 +38,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.HttpClientConnection;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -403,5 +406,18 @@ public class RestClientTest {
         cleanExecutor = Whitebox.getInternalState(client, "cleanExecutor");
         Assert.assertNotNull(cleanExecutor);
         Assert.assertTrue(cleanExecutor.isShutdown());
+    }
+
+    @Test
+    public void testAuthContext() {
+        RestClientImpl client = new RestClientImpl("/test", 1000, 10, 5, 200);
+        Assert.assertNull(client.getAuthContext());
+
+        String token = UUID.randomUUID().toString();
+        client.setAuthContext(token);
+        Assert.assertEquals(token, client.getAuthContext());
+
+        client.resetAuthContext();
+        Assert.assertNull(client.getAuthContext());
     }
 }
