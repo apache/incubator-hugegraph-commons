@@ -21,7 +21,6 @@ package com.baidu.hugegraph.unit.rest;
 
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
@@ -33,12 +32,13 @@ import java.util.function.BiFunction;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionContext;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.HttpClientConnection;
-import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
@@ -419,5 +419,60 @@ public class RestClientTest {
 
         client.resetAuthContext();
         Assert.assertNull(client.getAuthContext());
+    }
+
+    private static class MockRestClientImpl extends AbstractRestClient {
+
+        public MockRestClientImpl(String url, int timeout) {
+            super(url, timeout);
+        }
+
+        @Override
+        protected void checkStatus(Response response,
+                                   Response.Status... statuses) {
+            // pass
+        }
+    }
+
+    @Test
+    public void testRequest() {
+        RestClient client = new MockRestClientImpl("test", 1000);
+
+        WebTarget target = Mockito.mock(WebTarget.class);
+        Builder builder = Mockito.mock(Builder.class);
+
+        Mockito.when(target.path("test")).thenReturn(target);
+        Mockito.when(target.path("test")
+                           .path(AbstractRestClient.encode("id")))
+               .thenReturn(target);
+        Mockito.when(target.path("test").request()).thenReturn(builder);
+        Mockito.when(target.path("test")
+                           .path(AbstractRestClient.encode("id"))
+                           .request())
+               .thenReturn(builder);
+
+        Response response = Mockito.mock(Response.class);
+        Mockito.when(response.getStatus()).thenReturn(200);
+        Mockito.when(response.getHeaders())
+               .thenReturn(new MultivaluedHashMap<>());
+        Mockito.when(response.readEntity(String.class)).thenReturn("content");
+        Mockito.when(builder.delete()).thenReturn(response);
+        Mockito.when(builder.get()).thenReturn(response);
+
+        Whitebox.setInternalState(client, "target", target);
+
+        RestResult result;
+
+        result = client.delete("test", ImmutableMap.of());
+        Assert.assertEquals(200, result.status());
+
+        result = client.delete("test", "id");
+        Assert.assertEquals(200, result.status());
+
+        result = client.get("test", ImmutableMap.of());
+        Assert.assertEquals(200, result.status());
+
+        result = client.get("test", "id");
+        Assert.assertEquals(200, result.status());
     }
 }
