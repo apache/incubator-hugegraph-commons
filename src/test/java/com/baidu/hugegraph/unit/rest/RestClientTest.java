@@ -32,6 +32,7 @@ import java.util.function.BiFunction;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionContext;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.client.Invocation.Builder;
 import javax.ws.rs.core.MultivaluedHashMap;
@@ -39,10 +40,12 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 
 import org.apache.http.HttpClientConnection;
+import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
+import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -436,7 +439,7 @@ public class RestClientTest {
 
     @Test
     public void testRequest() {
-        RestClient client = new MockRestClientImpl("test", 1000);
+        MockRestClientImpl client = new MockRestClientImpl("test", 1000);
 
         WebTarget target = Mockito.mock(WebTarget.class);
         Builder builder = Mockito.mock(Builder.class);
@@ -456,23 +459,111 @@ public class RestClientTest {
         Mockito.when(response.getHeaders())
                .thenReturn(new MultivaluedHashMap<>());
         Mockito.when(response.readEntity(String.class)).thenReturn("content");
+
         Mockito.when(builder.delete()).thenReturn(response);
         Mockito.when(builder.get()).thenReturn(response);
+        Mockito.when(builder.put(Mockito.any())).thenReturn(response);
+        Mockito.when(builder.post(Mockito.any())).thenReturn(response);
 
         Whitebox.setInternalState(client, "target", target);
 
         RestResult result;
 
+        // Test delete
+        client.setAuthContext("token1");
         result = client.delete("test", ImmutableMap.of());
         Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token1");
+        client.resetAuthContext();
 
+        client.setAuthContext("token2");
         result = client.delete("test", "id");
         Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token2");
+        client.resetAuthContext();
 
+        // Test get
+        client.setAuthContext("token3");
+        result = client.get("test");
+        Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token3");
+        client.resetAuthContext();
+
+        client.setAuthContext("token4");
         result = client.get("test", ImmutableMap.of());
         Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token4");
+        client.resetAuthContext();
 
+        client.setAuthContext("token5");
         result = client.get("test", "id");
         Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token5");
+        client.resetAuthContext();
+
+        // Test put
+        client.setAuthContext("token6");
+        result = client.post("test", new Object());
+        Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token6");
+        client.resetAuthContext();
+
+        client.setAuthContext("token7");
+        result = client.post("test", new Object(), new MultivaluedHashMap<>());
+        Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token7");
+        client.resetAuthContext();
+
+        client.setAuthContext("token8");
+        result = client.post("test", new Object(), ImmutableMap.of());
+        Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token8");
+        client.resetAuthContext();
+
+        client.setAuthContext("token9");
+        result = client.post("test", new Object(), new MultivaluedHashMap<>(),
+                             ImmutableMap.of());
+        Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token9");
+        client.resetAuthContext();
+
+        // Test post
+        client.setAuthContext("token10");
+        result = client.post("test", new Object());
+        Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token10");
+        client.resetAuthContext();
+
+        client.setAuthContext("token11");
+        result = client.post("test", new Object(), new MultivaluedHashMap<>());
+        Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token11");
+        client.resetAuthContext();
+
+        client.setAuthContext("token12");
+        result = client.post("test", new Object(), ImmutableMap.of());
+        Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token12");
+        client.resetAuthContext();
+
+        client.setAuthContext("token13");
+        result = client.post("test", new Object(), new MultivaluedHashMap<>(),
+                             ImmutableMap.of());
+        Assert.assertEquals(200, result.status());
+        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+                                       "token13");
+        client.resetAuthContext();
     }
 }
