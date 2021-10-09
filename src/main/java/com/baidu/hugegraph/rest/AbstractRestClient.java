@@ -81,6 +81,8 @@ public abstract class AbstractRestClient implements RestClient {
     // Time unit: ms
     private static final long IDLE_TIME = 40L * 1000L;
 
+    private static final String HUGEGRAPH_TOKEN_KEY = "HUGEGRAPH_TOKEN_KEY";
+
     private final Client client;
     private final WebTarget target;
 
@@ -549,7 +551,7 @@ public abstract class AbstractRestClient implements RestClient {
         }
 
         public ConfigBuilder configRequestFilter(String token) {
-            BearerRequestFilter.setToken(token);
+            this.config.property(HUGEGRAPH_TOKEN_KEY, token);
             this.config.register(BearerRequestFilter.class);
             return this;
         }
@@ -584,15 +586,10 @@ public abstract class AbstractRestClient implements RestClient {
     }
 
     public static class BearerRequestFilter implements ClientRequestFilter {
-
-        private static String token = null;
-
-        public static void setToken(String token) {
-            BearerRequestFilter.token = token;
-        }
-
         @Override
         public void filter(ClientRequestContext context) throws IOException {
+            String token = context.getClient().getConfiguration()
+                                  .getProperty(HUGEGRAPH_TOKEN_KEY).toString();
             context.getHeaders().add(HttpHeaders.AUTHORIZATION,
                                      "Bearer " + token);
         }
