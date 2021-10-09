@@ -137,14 +137,14 @@ public abstract class AbstractRestClient implements RestClient {
 
     public AbstractRestClient(String url, String token, int timeout) {
         this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configRequestFilter(token)
+                                     .configToken(token)
                                      .build());
     }
 
     public AbstractRestClient(String url, String token, int timeout,
                               int maxTotal, int maxPerRoute) {
         this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configRequestFilter(token)
+                                     .configToken(token)
                                      .configPool(maxTotal, maxPerRoute)
                                      .build());
     }
@@ -154,7 +154,7 @@ public abstract class AbstractRestClient implements RestClient {
                               String trustStoreFile,
                               String trustStorePassword) {
         this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configRequestFilter(token)
+                                     .configToken(token)
                                      .configPool(maxTotal, maxPerRoute)
                                      .configSSL(trustStoreFile,
                                                 trustStorePassword)
@@ -550,7 +550,7 @@ public abstract class AbstractRestClient implements RestClient {
             return this;
         }
 
-        public ConfigBuilder configRequestFilter(String token) {
+        public ConfigBuilder configToken(String token) {
             this.config.property(HUGEGRAPH_TOKEN_KEY, token);
             this.config.register(BearerRequestFilter.class);
             return this;
