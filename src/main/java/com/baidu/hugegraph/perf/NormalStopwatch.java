@@ -268,8 +268,8 @@ public final class NormalStopwatch implements Stopwatch {
             test.run();
             long end = PerfUtil.now();
             long cost = end - start - baseCost;
-            if (cost < 0) {
-                cost = 0;
+            if (cost < 0L) {
+                cost = 0L;
             }
             long eachCost = cost / times;
 
