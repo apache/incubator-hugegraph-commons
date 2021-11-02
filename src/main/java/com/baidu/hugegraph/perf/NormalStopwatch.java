@@ -268,7 +268,9 @@ public final class NormalStopwatch implements Stopwatch {
             test.run();
             long end = PerfUtil.now();
             long cost = end - start - baseCost;
-            assert cost > 0 : cost;
+            if (cost < 0) {
+                cost = 0;
+            }
             long eachCost = cost / times;
 
             LOG.info("Wasted time test: cost={}ms, base_cost={}ms, {}={}ns",
