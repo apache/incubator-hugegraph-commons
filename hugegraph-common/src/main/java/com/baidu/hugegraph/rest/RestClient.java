@@ -19,9 +19,10 @@
 
 package com.baidu.hugegraph.rest;
 
+import jakarta.ws.rs.core.MultivaluedMap;
+
 import java.util.Map;
 
-import javax.ws.rs.core.MultivaluedMap;
 
 public interface RestClient {
 

@@ -19,21 +19,25 @@
 
 package com.baidu.hugegraph.config;
 
-import java.io.File;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-
-import org.apache.commons.configuration.AbstractConfiguration;
-import org.apache.commons.configuration.AbstractFileConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.slf4j.Logger;
-
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
+import org.apache.commons.configuration2.BaseConfiguration;
+import org.apache.commons.configuration2.Configuration;
+import org.apache.commons.configuration2.ConfigurationUtils;
+import org.apache.commons.configuration2.FileBasedConfiguration;
+import org.apache.commons.configuration2.PropertiesConfiguration;
+import org.apache.commons.configuration2.YAMLConfiguration;
+import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
+import org.apache.commons.configuration2.builder.fluent.Configurations;
+import org.apache.commons.configuration2.builder.fluent.Parameters;
+import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.configuration2.io.FileHandler;
+import org.slf4j.Logger;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class HugeConfig extends PropertiesConfiguration {
 
@@ -46,11 +50,7 @@ public class HugeConfig extends PropertiesConfiguration {
         this.reloadIfNeed(config);
         this.setLayoutIfNeeded(config);
 
-        Iterator<String> keys = config.getKeys();
-        while (keys.hasNext()) {
-            String key = keys.next();
-            this.addProperty(key, config.getProperty(key));
-        }
+        this.append(config);
         this.checkRequiredOptions();
     }
 
@@ -59,35 +59,7 @@ public class HugeConfig extends PropertiesConfiguration {
     }
 
     private void reloadIfNeed(Configuration conf) {
-        if (!(conf instanceof AbstractFileConfiguration)) {
-            if (conf instanceof AbstractConfiguration) {
-                AbstractConfiguration config = (AbstractConfiguration) conf;
-                config.setDelimiterParsingDisabled(true);
-            }
-            return;
-        }
-        AbstractFileConfiguration fileConfig = (AbstractFileConfiguration) conf;
-
-        File file = fileConfig.getFile();
-        if (file != null) {
-            // May need to use the original file
-            this.setFile(file);
-        }
-
-        if (!fileConfig.isDelimiterParsingDisabled()) {
-            /*
-             * PropertiesConfiguration will parse the containing comma
-             * config options into list directly, but we want to do
-             * this work by ourselves, so reload it and parse into `String`
-             */
-            fileConfig.setDelimiterParsingDisabled(true);
-            try {
-                fileConfig.refresh();
-            } catch (ConfigurationException e) {
-                throw new ConfigException("Unable to load config file: %s",
-                                          e, file);
-            }
-        }
+        //TODO impl reload
     }
 
     private void setLayoutIfNeeded(Configuration conf) {
@@ -98,24 +70,13 @@ public class HugeConfig extends PropertiesConfiguration {
         this.setLayout(propConf.getLayout());
     }
 
-    private static PropertiesConfiguration loadConfigFile(String path) {
+    private static Configuration loadConfigFile(String path) {
         E.checkNotNull(path, "config path");
         E.checkArgument(!path.isEmpty(),
                         "The config path can't be empty");
 
         File file = new File(path);
-        E.checkArgument(file.exists() && file.isFile() && file.canRead(),
-                        "Need to specify a readable config, but got: %s",
-                        file.toString());
-
-        PropertiesConfiguration config = new PropertiesConfiguration();
-        config.setDelimiterParsingDisabled(true);
-        try {
-            config.load(file);
-        } catch (ConfigurationException e) {
-            throw new ConfigException("Unable to load config: %s", e, path);
-        }
-        return config;
+        return getConfiguration(file);
     }
 
     @SuppressWarnings("unchecked")
@@ -138,7 +99,7 @@ public class HugeConfig extends PropertiesConfiguration {
     }
 
     @Override
-    public void addProperty(String key, Object value) {
+    public void addPropertyDirect(String key, Object value) {
         if (!OptionSpace.containKey(key)) {
             LOG.warn("The config option '{}' is redundant, " +
                      "please ensure it has been registered", key);
@@ -159,5 +120,52 @@ public class HugeConfig extends PropertiesConfiguration {
 
     private void checkRequiredOptions() {
         // TODO: Check required options must be contained in this map
+    }
+
+    public void save(File copiedFile) throws ConfigurationException {
+        FileHandler fileHandler = new FileHandler(this);
+        fileHandler.save(copiedFile);
+    }
+
+    private static Configuration getConfiguration(File configurationFile) {
+        E.checkArgument(configurationFile.exists() &&
+                        configurationFile.isFile() &&
+                        configurationFile.canRead(),
+                        "Please specify a proper config file rather than: %s",
+                        configurationFile.toString());
+
+        try {
+            final String fileName = configurationFile.getName();
+            final String fileExtension =
+                  fileName.substring(fileName.lastIndexOf('.') + 1);
+
+            final Configuration conf;
+            final Configurations configs = new Configurations();
+
+            switch (fileExtension) {
+                case "yml":
+                case "yaml":
+                    final Parameters params = new Parameters();
+                    final FileBasedConfigurationBuilder<FileBasedConfiguration>
+                          builder = new FileBasedConfigurationBuilder(
+                                        YAMLConfiguration.class).
+                                        configure(params.fileBased()
+                                        .setFile(configurationFile));
+
+                    final Configuration copy = new BaseConfiguration();
+                    ConfigurationUtils.copy(builder.getConfiguration(), copy);
+                    conf = copy;
+                    break;
+                case "xml":
+                    conf = configs.xml(configurationFile);
+                    break;
+                default:
+                    conf = configs.properties(configurationFile);
+            }
+            return conf;
+        } catch (ConfigurationException e) {
+            throw new ConfigException("Unable to load config: %s",
+                                      configurationFile, e);
+        }
     }
 }
