@@ -32,20 +32,18 @@ import java.util.function.BiFunction;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionContext;
-import javax.ws.rs.client.Entity;
-import javax.ws.rs.client.WebTarget;
-import javax.ws.rs.client.Invocation.Builder;
-import javax.ws.rs.core.MultivaluedHashMap;
-import javax.ws.rs.core.MultivaluedMap;
-import javax.ws.rs.core.Response;
 
+import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.WebTarget;
+import jakarta.ws.rs.core.MultivaluedHashMap;
+import jakarta.ws.rs.core.MultivaluedMap;
+import jakarta.ws.rs.core.Response;
 import org.apache.http.HttpClientConnection;
 import org.apache.http.HttpHeaders;
 import org.apache.http.HttpHost;
 import org.apache.http.conn.routing.HttpRoute;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.pool.PoolStats;
-import org.glassfish.jersey.client.ClientRequest;
 import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -495,7 +493,7 @@ public class RestClientTest {
         MockRestClientImpl client = new MockRestClientImpl("test", 1000);
 
         WebTarget target = Mockito.mock(WebTarget.class);
-        Builder builder = Mockito.mock(Builder.class);
+        Invocation.Builder builder = Mockito.mock(Invocation.Builder.class);
 
         Mockito.when(target.path("test")).thenReturn(target);
         Mockito.when(target.path("test")

@@ -100,14 +100,25 @@ public class HugeConfig extends PropertiesConfiguration {
 
     @Override
     public void addPropertyDirect(String key, Object value) {
-        if (!OptionSpace.containKey(key)) {
-            LOG.warn("The config option '{}' is redundant, " +
-                     "please ensure it has been registered", key);
-        } else {
-            // The input value is String(parsed by PropertiesConfiguration)
-            value = this.validateOption(key, value);
+        try {
+            TypedOption<?, ?> option = OptionSpace.get(key);
+            if (option == null) {
+                LOG.warn("The config option '{}' is redundant, " +
+                        "please ensure it has been registered", key);
+            } else {
+                // The input value is String(parsed by PropertiesConfiguration)
+                value = this.validateOption(key, value);
+            }
+            if (this.containsKey(key) && value instanceof List) {
+                for (Object item : (List)value) {
+                    super.addPropertyDirect(key, item);
+                }
+            } else {
+                super.addPropertyDirect(key, value);
+            }
+        } catch (Throwable ex) {
+            throw ex;
         }
-        super.addPropertyDirect(key, value);
     }
 
     private Object validateOption(String key, Object value) {
