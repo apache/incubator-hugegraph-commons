@@ -92,7 +92,11 @@ public class HugeConfig extends PropertiesConfiguration {
             return (R) value;
         }
 
-        return option.parseConvert((String) value);
+        if (value instanceof String) {
+            return option.parseConvert((String) value);
+        }
+
+        return (R) value;
     }
 
     public Map<String, String> getMap(ConfigListOption<String> option) {
