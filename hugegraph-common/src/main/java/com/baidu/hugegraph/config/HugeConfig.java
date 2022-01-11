@@ -37,11 +37,16 @@ import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
+import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
+
+import javax.annotation.Nullable;
 
 public class HugeConfig extends PropertiesConfiguration {
 
     private static final Logger LOG = Log.logger(HugeConfig.class);
+
+    private String path;
 
     public HugeConfig(Configuration config) {
         if (config == null) {
@@ -56,6 +61,7 @@ public class HugeConfig extends PropertiesConfiguration {
 
     public HugeConfig(String configFile) {
         this(loadConfigFile(configFile));
+        this.path = configFile;
     }
 
     private void reloadIfNeed(Configuration conf) {
@@ -146,6 +152,15 @@ public class HugeConfig extends PropertiesConfiguration {
     public void save(File copiedFile) throws ConfigurationException {
         FileHandler fileHandler = new FileHandler(this);
         fileHandler.save(copiedFile);
+    }
+
+    @Nullable
+    public File getFile() {
+        if (StringUtils.isEmpty(this.path)) {
+            return null;
+        }
+
+        return new File(this.path);
     }
 
     private static Configuration loadConfigFile(File configurationFile) {
