@@ -35,7 +35,7 @@ import jakarta.ws.rs.client.Client;
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -223,7 +223,7 @@ public abstract class AbstractRestClient implements RestClient {
     public RestResult post(String path, Object object,
                            MultivaluedMap<String, Object> headers,
                            Map<String, Object> params) {
-        Pair<Invocation.Builder, Entity<?>> pair =
+        Pair<Builder, Entity<?>> pair =
         this.buildRequest(path, null, object, headers, params);
         Response response = this.request(() -> {
             // pair.getLeft() is builder, pair.getRight() is entity (http body)
@@ -256,7 +256,7 @@ public abstract class AbstractRestClient implements RestClient {
     public RestResult put(String path, String id, Object object,
                           MultivaluedMap<String, Object> headers,
                           Map<String, Object> params) {
-        Pair<Invocation.Builder, Entity<?>> pair =
+        Pair<Builder, Entity<?>> pair =
         this.buildRequest(path, id, object, headers, params);
         Response response = this.request(() -> {
             // pair.getLeft() is builder, pair.getRight() is entity (http body)
@@ -297,7 +297,7 @@ public abstract class AbstractRestClient implements RestClient {
 
         Response response = this.request(() -> {
             WebTarget webTarget = target.get();
-            Invocation.Builder builder = id == null ?
+            Builder builder = id == null ?
             webTarget.path(path).request() :
             webTarget.path(path).path(encode(id)).request();
             this.attachAuthToRequest(builder);
@@ -327,7 +327,7 @@ public abstract class AbstractRestClient implements RestClient {
 
         Response response = this.request(() -> {
             WebTarget webTarget = target.get();
-            Invocation.Builder builder = id == null ?
+            Builder builder = id == null ?
             webTarget.path(path).request() :
             webTarget.path(path).path(encode(id)).request();
             this.attachAuthToRequest(builder);
@@ -363,7 +363,7 @@ public abstract class AbstractRestClient implements RestClient {
         return this.authContext.get();
     }
 
-    private void attachAuthToRequest(Invocation.Builder builder) {
+    private void attachAuthToRequest(Builder builder) {
         // Add auth header
         String auth = this.getAuthContext();
         if (StringUtils.isNotEmpty(auth)) {
@@ -371,7 +371,7 @@ public abstract class AbstractRestClient implements RestClient {
         }
     }
 
-    private Pair<Invocation.Builder, Entity<?>> buildRequest(
+    private Pair<Builder, Entity<?>> buildRequest(
                                      String path, String id, Object object,
                                      MultivaluedMap<String, Object> headers,
                                      Map<String, Object> params) {
@@ -382,7 +382,7 @@ public abstract class AbstractRestClient implements RestClient {
             }
         }
 
-        Invocation.Builder builder = id == null ? target.path(path).request() :
+        Builder builder = id == null ? target.path(path).request() :
                           target.path(path).path(encode(id)).request();
 
         String encoding = null;

@@ -19,6 +19,11 @@
 
 package com.baidu.hugegraph.config;
 
+import java.io.File;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 import org.apache.commons.configuration2.BaseConfiguration;
@@ -33,11 +38,6 @@ import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
 import org.slf4j.Logger;
-
-import java.io.File;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 public class HugeConfig extends PropertiesConfiguration {
 
@@ -76,13 +76,23 @@ public class HugeConfig extends PropertiesConfiguration {
                         "The config path can't be empty");
 
         File file = new File(path);
-        return getConfiguration(file);
+        return loadConfigFile(file);
     }
 
     @SuppressWarnings("unchecked")
     public <T, R> R get(TypedOption<T, R> option) {
         Object value = this.getProperty(option.name());
-        return value != null ? (R) value : option.defaultValue();
+        if (value == null) {
+            return option.defaultValue();
+        }
+
+
+        Class dataType = option.dataType();
+        if (dataType.isInstance(value)) {
+            return (R) value;
+        }
+
+        return option.parseConvert((String) value);
     }
 
     public Map<String, String> getMap(ConfigListOption<String> option) {
@@ -100,24 +110,20 @@ public class HugeConfig extends PropertiesConfiguration {
 
     @Override
     public void addPropertyDirect(String key, Object value) {
-        try {
-            TypedOption<?, ?> option = OptionSpace.get(key);
-            if (option == null) {
-                LOG.warn("The config option '{}' is redundant, " +
-                        "please ensure it has been registered", key);
-            } else {
-                // The input value is String(parsed by PropertiesConfiguration)
-                value = this.validateOption(key, value);
+        TypedOption<?, ?> option = OptionSpace.get(key);
+        if (option == null) {
+            LOG.warn("The config option '{}' is redundant, " +
+                    "please ensure it has been registered", key);
+        } else {
+            // The input value is String(parsed by PropertiesConfiguration)
+            value = this.validateOption(key, value);
+        }
+        if (this.containsKey(key) && value instanceof List) {
+            for (Object item : (List)value) {
+                super.addPropertyDirect(key, item);
             }
-            if (this.containsKey(key) && value instanceof List) {
-                for (Object item : (List)value) {
-                    super.addPropertyDirect(key, item);
-                }
-            } else {
-                super.addPropertyDirect(key, value);
-            }
-        } catch (Throwable ex) {
-            throw ex;
+        } else {
+            super.addPropertyDirect(key, value);
         }
     }
 
@@ -138,7 +144,7 @@ public class HugeConfig extends PropertiesConfiguration {
         fileHandler.save(copiedFile);
     }
 
-    private static Configuration getConfiguration(File configurationFile) {
+    private static Configuration loadConfigFile(File configurationFile) {
         E.checkArgument(configurationFile.exists() &&
                         configurationFile.isFile() &&
                         configurationFile.canRead(),

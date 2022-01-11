@@ -33,7 +33,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionContext;
 
-import jakarta.ws.rs.client.Invocation;
+import jakarta.ws.rs.client.Invocation.Builder;
 import jakarta.ws.rs.client.WebTarget;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
@@ -493,7 +493,7 @@ public class RestClientTest {
         MockRestClientImpl client = new MockRestClientImpl("test", 1000);
 
         WebTarget target = Mockito.mock(WebTarget.class);
-        Invocation.Builder builder = Mockito.mock(Invocation.Builder.class);
+        Builder builder = Mockito.mock(Builder.class);
 
         Mockito.when(target.path("test")).thenReturn(target);
         Mockito.when(target.path("test")
