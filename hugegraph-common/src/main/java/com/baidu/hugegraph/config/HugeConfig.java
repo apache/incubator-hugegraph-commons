@@ -85,17 +85,6 @@ public class HugeConfig extends PropertiesConfiguration {
         if (value == null) {
             return option.defaultValue();
         }
-
-
-        Class dataType = option.dataType();
-        if (dataType.isInstance(value)) {
-            return (R) value;
-        }
-
-        if (value instanceof String) {
-            return option.parseConvert((String) value);
-        }
-
         return (R) value;
     }
 
@@ -131,12 +120,25 @@ public class HugeConfig extends PropertiesConfiguration {
         }
     }
 
-    private Object validateOption(String key, Object value) {
-        E.checkArgument(value instanceof String,
-                        "Invalid value for key '%s': %s", key, value);
+    @Override
+    protected void addPropertyInternal(String key, Object value) {
+        this.addPropertyDirect(key, value);
+    }
 
+    private Object validateOption(String key, Object value) {
         TypedOption<?, ?> option = OptionSpace.get(key);
-        return option.parseConvert((String) value);
+
+        if (value instanceof String) {
+            return option.parseConvert((String) value);
+        }
+
+        Class dataType = option.dataType();
+        if (dataType.isInstance(value)) {
+            return value;
+        }
+
+        throw new IllegalArgumentException(
+              String.format("Invalid value for key '%s': '%s'", key, value));
     }
 
     private void checkRequiredOptions() {
