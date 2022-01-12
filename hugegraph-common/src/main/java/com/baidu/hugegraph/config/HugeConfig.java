@@ -50,7 +50,6 @@ public class HugeConfig extends PropertiesConfiguration {
         if (config == null) {
             throw new ConfigException("The config object is null");
         }
-        this.reloadIfNeed(config);
         this.setLayoutIfNeeded(config);
 
         this.append(config);
@@ -60,10 +59,6 @@ public class HugeConfig extends PropertiesConfiguration {
     public HugeConfig(String configFile) {
         this(configFile(configFile));
         this.path = configFile;
-    }
-
-    private void reloadIfNeed(Configuration conf) {
-        //TODO impl reload
     }
 
     private void setLayoutIfNeeded(Configuration conf) {
