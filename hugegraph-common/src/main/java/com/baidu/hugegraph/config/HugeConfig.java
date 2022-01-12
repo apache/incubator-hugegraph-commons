@@ -35,6 +35,7 @@ import org.apache.commons.configuration2.builder.fluent.Configurations;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.configuration2.io.FileHandler;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 
@@ -57,7 +58,7 @@ public class HugeConfig extends PropertiesConfiguration {
     }
 
     public HugeConfig(String configFile) {
-        this(configFile(configFile));
+        this(loadConfigFile(configFile));
         this.path = configFile;
     }
 
@@ -69,13 +70,13 @@ public class HugeConfig extends PropertiesConfiguration {
         this.setLayout(propConf.getLayout());
     }
 
-    private static Configuration configFile(String path) {
+    private static Configuration loadConfigFile(String path) {
         E.checkNotNull(path, "config path");
         E.checkArgument(!path.isEmpty(),
                         "The config path can't be empty");
 
         File file = new File(path);
-        return configFile(file);
+        return loadConfigFile(file);
     }
 
     @SuppressWarnings("unchecked")
@@ -156,17 +157,16 @@ public class HugeConfig extends PropertiesConfiguration {
         return new File(this.path);
     }
 
-    private static Configuration configFile(File configurationFile) {
-        E.checkArgument(configurationFile.exists() &&
-                        configurationFile.isFile() &&
-                        configurationFile.canRead(),
-                        "Please specify a proper config file rather than: %s",
-                        configurationFile.toString());
+    private static Configuration loadConfigFile(File configFile) {
+        E.checkArgument(configFile.exists() &&
+                        configFile.isFile() &&
+                        configFile.canRead(),
+                        "Please specify a proper config file rather than: '%s'",
+                        configFile.toString());
 
         try {
-            final String fileName = configurationFile.getName();
-            final String fileExtension =
-                  fileName.substring(fileName.lastIndexOf('.') + 1);
+            String fileName = configFile.getName();
+            String fileExtension = FilenameUtils.getExtension(fileName);
 
             Configuration config;
             Configurations configs = new Configurations();
@@ -179,19 +179,19 @@ public class HugeConfig extends PropertiesConfiguration {
                     builder = new FileBasedConfigurationBuilder(
                                   YAMLConfiguration.class)
                                   .configure(params.fileBased()
-                                  .setFile(configurationFile));
+                                  .setFile(configFile));
                     config = builder.getConfiguration();
                     break;
                 case "xml":
-                    config = configs.xml(configurationFile);
+                    config = configs.xml(configFile);
                     break;
                 default:
-                    config = configs.properties(configurationFile);
+                    config = configs.properties(configFile);
             }
             return config;
         } catch (ConfigurationException e) {
-            throw new ConfigException("Unable to load config: %s",
-                                      configurationFile, e);
+            throw new ConfigException("Unable to load config: '%s'",
+                                      e, configFile);
         }
     }
 }
