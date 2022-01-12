@@ -74,7 +74,6 @@ import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
-
 public abstract class AbstractRestClient implements RestClient {
 
     // Time unit: hours
@@ -223,8 +222,8 @@ public abstract class AbstractRestClient implements RestClient {
     public RestResult post(String path, Object object,
                            MultivaluedMap<String, Object> headers,
                            Map<String, Object> params) {
-        Pair<Builder, Entity<?>> pair =
-        this.buildRequest(path, null, object, headers, params);
+        Pair<Builder, Entity<?>> pair = this.buildRequest(path, null, object,
+                                                          headers, params);
         Response response = this.request(() -> {
             // pair.getLeft() is builder, pair.getRight() is entity (http body)
             return pair.getLeft().post(pair.getRight());
@@ -256,8 +255,8 @@ public abstract class AbstractRestClient implements RestClient {
     public RestResult put(String path, String id, Object object,
                           MultivaluedMap<String, Object> headers,
                           Map<String, Object> params) {
-        Pair<Builder, Entity<?>> pair =
-        this.buildRequest(path, id, object, headers, params);
+        Pair<Builder, Entity<?>> pair = this.buildRequest(path, id, object,
+                                                          headers, params);
         Response response = this.request(() -> {
             // pair.getLeft() is builder, pair.getRight() is entity (http body)
             return pair.getLeft().put(pair.getRight());
@@ -297,9 +296,8 @@ public abstract class AbstractRestClient implements RestClient {
 
         Response response = this.request(() -> {
             WebTarget webTarget = target.get();
-            Builder builder = id == null ?
-            webTarget.path(path).request() :
-            webTarget.path(path).path(encode(id)).request();
+            Builder builder = id == null ? webTarget.path(path).request() :
+                              webTarget.path(path).path(encode(id)).request();
             this.attachAuthToRequest(builder);
             return builder.get();
         });
@@ -327,9 +325,8 @@ public abstract class AbstractRestClient implements RestClient {
 
         Response response = this.request(() -> {
             WebTarget webTarget = target.get();
-            Builder builder = id == null ?
-            webTarget.path(path).request() :
-            webTarget.path(path).path(encode(id)).request();
+            Builder builder = id == null ? webTarget.path(path).request() :
+                              webTarget.path(path).path(encode(id)).request();
             this.attachAuthToRequest(builder);
             return builder.delete();
         });

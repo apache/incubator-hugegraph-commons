@@ -26,9 +26,7 @@ import java.util.Map;
 
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
-import org.apache.commons.configuration2.BaseConfiguration;
 import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.ConfigurationUtils;
 import org.apache.commons.configuration2.FileBasedConfiguration;
 import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.YAMLConfiguration;
@@ -60,7 +58,7 @@ public class HugeConfig extends PropertiesConfiguration {
     }
 
     public HugeConfig(String configFile) {
-        this(loadConfigFile(configFile));
+        this(configFile(configFile));
         this.path = configFile;
     }
 
@@ -76,13 +74,13 @@ public class HugeConfig extends PropertiesConfiguration {
         this.setLayout(propConf.getLayout());
     }
 
-    private static Configuration loadConfigFile(String path) {
+    private static Configuration configFile(String path) {
         E.checkNotNull(path, "config path");
         E.checkArgument(!path.isEmpty(),
                         "The config path can't be empty");
 
         File file = new File(path);
-        return loadConfigFile(file);
+        return configFile(file);
     }
 
     @SuppressWarnings("unchecked")
@@ -123,7 +121,7 @@ public class HugeConfig extends PropertiesConfiguration {
         TypedOption<?, ?> option = OptionSpace.get(key);
         if (option == null) {
             LOG.warn("The config option '{}' is redundant, " +
-                    "please ensure it has been registered", key);
+                     "please ensure it has been registered", key);
         } else {
             // The input value is String(parsed by PropertiesConfiguration)
             value = this.validateOption(key, value);
@@ -163,7 +161,7 @@ public class HugeConfig extends PropertiesConfiguration {
         return new File(this.path);
     }
 
-    private static Configuration loadConfigFile(File configurationFile) {
+    private static Configuration configFile(File configurationFile) {
         E.checkArgument(configurationFile.exists() &&
                         configurationFile.isFile() &&
                         configurationFile.canRead(),
@@ -175,30 +173,27 @@ public class HugeConfig extends PropertiesConfiguration {
             final String fileExtension =
                   fileName.substring(fileName.lastIndexOf('.') + 1);
 
-            final Configuration conf;
-            final Configurations configs = new Configurations();
+            Configuration config;
+            Configurations configs = new Configurations();
 
             switch (fileExtension) {
                 case "yml":
                 case "yaml":
-                    final Parameters params = new Parameters();
-                    final FileBasedConfigurationBuilder<FileBasedConfiguration>
-                          builder = new FileBasedConfigurationBuilder(
-                                        YAMLConfiguration.class).
-                                        configure(params.fileBased()
-                                        .setFile(configurationFile));
-
-                    final Configuration copy = new BaseConfiguration();
-                    ConfigurationUtils.copy(builder.getConfiguration(), copy);
-                    conf = copy;
+                    Parameters params = new Parameters();
+                    FileBasedConfigurationBuilder<FileBasedConfiguration>
+                    builder = new FileBasedConfigurationBuilder(
+                                  YAMLConfiguration.class)
+                                  .configure(params.fileBased()
+                                  .setFile(configurationFile));
+                    config = builder.getConfiguration();
                     break;
                 case "xml":
-                    conf = configs.xml(configurationFile);
+                    config = configs.xml(configurationFile);
                     break;
                 default:
-                    conf = configs.properties(configurationFile);
+                    config = configs.properties(configurationFile);
             }
-            return conf;
+            return config;
         } catch (ConfigurationException e) {
             throw new ConfigException("Unable to load config: %s",
                                       configurationFile, e);

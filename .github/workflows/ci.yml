@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        JAVA_VERSION: [ '8', '11']
+        JAVA_VERSION: ['8', '11']
 
     steps:
       - name: Install JDK ${{ matrix.JAVA_VERSION }}
