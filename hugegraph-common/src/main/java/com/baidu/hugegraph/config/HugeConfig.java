@@ -45,9 +45,19 @@ public class HugeConfig extends PropertiesConfiguration {
 
     private static final Logger LOG = Log.logger(HugeConfig.class);
 
-    private String path;
+    private final String path;
 
     public HugeConfig(Configuration config) {
+        loadConfig(config);
+        this.path = null;
+    }
+
+    public HugeConfig(String configFile) {
+        loadConfig(loadConfigFile(configFile));
+        this.path = configFile;
+    }
+
+    private void loadConfig(Configuration config) {
         if (config == null) {
             throw new ConfigException("The config object is null");
         }
@@ -55,11 +65,6 @@ public class HugeConfig extends PropertiesConfiguration {
 
         this.append(config);
         this.checkRequiredOptions();
-    }
-
-    public HugeConfig(String configFile) {
-        this(loadConfigFile(configFile));
-        this.path = configFile;
     }
 
     private void setLayoutIfNeeded(Configuration conf) {
@@ -112,7 +117,7 @@ public class HugeConfig extends PropertiesConfiguration {
             value = this.validateOption(key, value);
         }
         if (this.containsKey(key) && value instanceof List) {
-            for (Object item : (List)value) {
+            for (Object item : (List<Object>) value) {
                 super.addPropertyDirect(key, item);
             }
         } else {
@@ -189,6 +194,7 @@ public class HugeConfig extends PropertiesConfiguration {
                     break;
                 default:
                     config = configs.properties(configFile);
+                    break;
             }
             return config;
         } catch (ConfigurationException e) {
