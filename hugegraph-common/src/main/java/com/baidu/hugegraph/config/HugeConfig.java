@@ -45,7 +45,7 @@ public class HugeConfig extends PropertiesConfiguration {
 
     private static final Logger LOG = Log.logger(HugeConfig.class);
 
-    private final String path;
+    private String path;
 
     public HugeConfig(Configuration config) {
         loadConfig(config);
@@ -156,12 +156,16 @@ public class HugeConfig extends PropertiesConfiguration {
     }
 
     @Nullable
-    public File getFile() {
+    public File file() {
         if (StringUtils.isEmpty(this.path)) {
             return null;
         }
 
         return new File(this.path);
+    }
+
+    public void file(String path) {
+        this.path = path;
     }
 
     private static Configuration loadConfigFile(File configFile) {
