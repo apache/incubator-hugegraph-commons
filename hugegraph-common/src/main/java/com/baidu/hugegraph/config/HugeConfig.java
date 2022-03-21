@@ -45,16 +45,16 @@ public class HugeConfig extends PropertiesConfiguration {
 
     private static final Logger LOG = Log.logger(HugeConfig.class);
 
-    private String configFile;
+    private String configPath;
 
     public HugeConfig(Configuration config) {
         loadConfig(config);
-        this.configFile = null;
+        this.configPath = null;
     }
 
     public HugeConfig(String configFile) {
         loadConfig(loadConfigFile(configFile));
-        this.configFile = configFile;
+        this.configPath = configFile;
     }
 
     private void loadConfig(Configuration config) {
@@ -148,21 +148,21 @@ public class HugeConfig extends PropertiesConfiguration {
 
     @Nullable
     public File file() {
-        if (StringUtils.isEmpty(this.configFile)) {
+        if (StringUtils.isEmpty(this.configPath)) {
             return null;
         }
 
-        return new File(this.configFile);
+        return new File(this.configPath);
     }
 
     public void file(String path) {
-        this.configFile = path;
+        this.configPath = path;
     }
 
     private static Configuration loadConfigFile(String path) {
         E.checkNotNull(path, "config path");
         E.checkArgument(!path.isEmpty(),
-                "The config path can't be empty");
+                        "The config path can't be empty");
 
         File file = new File(path);
         return loadConfigFile(file);
