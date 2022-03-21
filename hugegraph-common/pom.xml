@@ -247,7 +247,7 @@
                         <manifestEntries>
                             <!-- Must be on one line, otherwise the automatic
                                  upgrade script cannot replace the version number -->
-                            <Implementation-Version>2.1.0.0</Implementation-Version>
+                            <Implementation-Version>2.1.1.0</Implementation-Version>
                         </manifestEntries>
                     </archive>
                 </configuration>
