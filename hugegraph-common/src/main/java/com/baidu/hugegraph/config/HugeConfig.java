@@ -45,16 +45,16 @@ public class HugeConfig extends PropertiesConfiguration {
 
     private static final Logger LOG = Log.logger(HugeConfig.class);
 
-    private String path;
+    private String configFile;
 
     public HugeConfig(Configuration config) {
         loadConfig(config);
-        this.path = null;
+        this.configFile = null;
     }
 
     public HugeConfig(String configFile) {
         loadConfig(loadConfigFile(configFile));
-        this.path = configFile;
+        this.configFile = configFile;
     }
 
     private void loadConfig(Configuration config) {
@@ -73,15 +73,6 @@ public class HugeConfig extends PropertiesConfiguration {
         }
         PropertiesConfiguration propConf = (PropertiesConfiguration) conf;
         this.setLayout(propConf.getLayout());
-    }
-
-    private static Configuration loadConfigFile(String path) {
-        E.checkNotNull(path, "config path");
-        E.checkArgument(!path.isEmpty(),
-                        "The config path can't be empty");
-
-        File file = new File(path);
-        return loadConfigFile(file);
     }
 
     @SuppressWarnings("unchecked")
@@ -157,15 +148,24 @@ public class HugeConfig extends PropertiesConfiguration {
 
     @Nullable
     public File file() {
-        if (StringUtils.isEmpty(this.path)) {
+        if (StringUtils.isEmpty(this.configFile)) {
             return null;
         }
 
-        return new File(this.path);
+        return new File(this.configFile);
     }
 
     public void file(String path) {
-        this.path = path;
+        this.configFile = path;
+    }
+
+    private static Configuration loadConfigFile(String path) {
+        E.checkNotNull(path, "config path");
+        E.checkArgument(!path.isEmpty(),
+                "The config path can't be empty");
+
+        File file = new File(path);
+        return loadConfigFile(file);
     }
 
     private static Configuration loadConfigFile(File configFile) {
