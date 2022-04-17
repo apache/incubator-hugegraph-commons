@@ -110,9 +110,7 @@
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <linkXRef>false</linkXRef>
-                    <excludes>
-                        **/generated/**/*
-                    </excludes>
+                    <excludes>**/generated/**/*,**/test/**/*</excludes>
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                 </configuration>
                 <executions>
