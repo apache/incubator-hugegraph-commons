@@ -75,6 +75,7 @@
         <mockito.version>4.1.0</mockito.version>
         <jakarta.xml.version>4.0.0-RC2</jakarta.xml.version>
         <sun.xml.version>3.0.2</sun.xml.version>
+        <checkstyle.version>3.1.2</checkstyle.version>
     </properties>
 
     <modules>
@@ -101,13 +102,16 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-checkstyle-plugin</artifactId>
-                <version>3.1.0</version>
+                <version>${checkstyle.version}</version>
                 <configuration>
-                    <configLocation>checkstyle.xml</configLocation>
+                    <configLocation>style/checkstyle.xml</configLocation>
                     <encoding>UTF-8</encoding>
                     <consoleOutput>true</consoleOutput>
                     <failsOnError>true</failsOnError>
                     <linkXRef>false</linkXRef>
+                    <excludes>
+                        **/generated/**/*
+                    </excludes>
                     <includeTestSourceDirectory>false</includeTestSourceDirectory>
                 </configuration>
                 <executions>
