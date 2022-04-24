@@ -75,6 +75,7 @@ public class WhiteboxTest {
 
         Whitebox.setInternalState(test1, "ivalue", 11);
         Assert.assertEquals(11, Whitebox.getInternalState(test1, "ivalue"));
+        Assert.assertEquals(11, test1.ivalue);
 
         Whitebox.setInternalState(test1, "test2.fvalue", 22f);
         Assert.assertEquals(22f, Whitebox.getInternalState(test1,
@@ -94,6 +95,52 @@ public class WhiteboxTest {
 
         Assert.assertThrows(RuntimeException.class, () -> {
             Whitebox.setInternalState(test1, "test2.fvalue", 22d);
+        });
+    }
+
+    @Test
+    public void testSetInternalFinalState() {
+        Test1 test1 = newTest();
+        Assert.assertEquals(1, test1.ivalueFinal);
+
+        Whitebox.setInternalState(test1, "ivalueFinal", 2);
+        Assert.assertEquals(2, Whitebox.getInternalState(test1, "ivalueFinal"));
+        // FIXME: seems don't take effect!!!
+        Assert.assertEquals(1, test1.ivalueFinal);
+
+        Whitebox.setInternalFinalState(test1, "ivalueFinal", 3);
+        Assert.assertEquals(3, Whitebox.getInternalState(test1, "ivalueFinal"));
+        // FIXME: seems don't take effect!!!
+        Assert.assertEquals(1, test1.ivalueFinal);
+    }
+
+    @Test
+    public void testSetInternalStaticFinalState() {
+//        Assert.assertThrows(RuntimeException.class, () -> {
+//            Whitebox.setInternalState(Test4.class, "staticFinalValue", 11);
+//        }, e -> {
+//            Assert.assertContains("Can't set value of 'staticFinalValue'",
+//                                  e.getMessage());
+//        });
+
+        Assert.assertEquals(1, Test4.staticFinalValue);
+        // Can only call at the first reflect time
+        Whitebox.setInternalFinalState(Test4.class, "staticFinalValue", 11);
+        Assert.assertEquals(11, Whitebox.getInternalState(Test4.class,
+                                                          "staticFinalValue"));
+
+        Whitebox.setInternalFinalState(Test4.class, "staticFinalValue", 12);
+        Assert.assertEquals(12, Whitebox.getInternalState(Test4.class,
+                                                          "staticFinalValue"));
+
+        // FIXME: seems don't take effect!!!
+        Assert.assertEquals(1, Test4.staticFinalValue);
+
+        Assert.assertThrows(RuntimeException.class, () -> {
+            Whitebox.setInternalState(Test4.class, "staticFinalValue", 1);
+        }, e -> {
+            Assert.assertContains("Can't set value of 'staticFinalValue'",
+                                  e.getMessage());
         });
     }
 
@@ -159,7 +206,10 @@ public class WhiteboxTest {
     private static class Test1 {
 
         private static int staticValue = 1;
+
         private int ivalue = 1;
+        private final int ivalueFinal = 1;
+
         private Test2 test2;
         private TestSubClass test4;
 
@@ -216,6 +266,11 @@ public class WhiteboxTest {
         private String value() {
             return this.str;
         }
+    }
+
+    private static class Test4 {
+
+        private static final int staticFinalValue = 1;
     }
 
     @SuppressWarnings("unused")

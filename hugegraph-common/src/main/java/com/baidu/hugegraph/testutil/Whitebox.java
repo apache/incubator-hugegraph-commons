@@ -22,6 +22,7 @@ package com.baidu.hugegraph.testutil;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Objects;
 
@@ -32,13 +33,18 @@ public class Whitebox {
 
     public static final char SEPARATOR = '.';
 
-    public static void setInternalState(Object target, String fieldName,
-                                        Object value) {
+    public static void setInternalState(Object target,
+                                        String fieldName, Object value) {
         assert target != null;
         assert fieldName != null;
         int sep = fieldName.lastIndexOf(SEPARATOR);
         if (sep > 0) {
-            target = getInternalState(target, fieldName.substring(0, sep));
+            String prefix = fieldName.substring(0, sep);
+            Object result = getInternalState(target, prefix);
+            E.checkArgument(result != null,
+                            "Can't set value on null field: `%s.%s`",
+                            target, prefix);
+            target = result;
             fieldName = fieldName.substring(sep + 1);
         }
 
@@ -76,6 +82,42 @@ public class Whitebox {
         } catch (Exception e) {
             throw new RuntimeException(String.format(
                       "Unable to get internal state on field '%s' of %s",
+                      fieldName, target), e);
+        }
+    }
+
+    public static void setInternalFinalState(Object target,
+                                             String fieldName, Object value) {
+        Class<?> c = target instanceof Class<?> ?
+                     (Class<?>) target : target.getClass();
+        try {
+            Field field = c.getDeclaredField(fieldName);
+
+            // Remove final like FieldUtils.removeFinalModifier()
+            Field modifiersField = Field.class.getDeclaredField("modifiers");
+            modifiersField.setAccessible(true);
+            int oldModifiers = field.getModifiers();
+            int nonFinal = oldModifiers & ~Modifier.FINAL;
+            modifiersField.setInt(field, nonFinal);
+
+            // Reset overrideFieldAccessor
+            Field overrideFAField = Field.class.getDeclaredField("overrideFieldAccessor");
+            overrideFAField.setAccessible(true);
+            if (overrideFAField.get(field) != null) {
+                setInternalState(field, "overrideFieldAccessor", null);
+            }
+
+            try {
+                field.setAccessible(true);
+                field.set(target, value);
+            } finally {
+                // Resume old modifiers (final)
+                modifiersField.setInt(field, oldModifiers);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException(String.format(
+                      "Can't set value of '%s' against object '%s'",
                       fieldName, target), e);
         }
     }
