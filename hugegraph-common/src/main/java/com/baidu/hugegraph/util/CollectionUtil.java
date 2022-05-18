@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Function;
 
 public final class CollectionUtil {
 
@@ -235,5 +236,76 @@ public final class CollectionUtil {
             result.put(entry.getKey(), entry.getValue());
         }
         return result;
+    }
+
+    /**
+     * Traverse C(m, n) combinations of a list to find first matched
+     * result combination and call back with the result.
+     * @param all list to contain all items for combination
+     * @param m m of C(m, n)
+     * @param n n of C(m, n)
+     * @return true if matched any kind of items combination else false, the
+     * callback can always return false if want to traverse all combinations
+     */
+    public static <T> boolean cmn(List<T> all, int m, int n,
+                                  Function<List<T>, Boolean> callback) {
+        return cmn(all, m, n, 0, null, callback);
+    }
+
+    /**
+     * Traverse C(m, n) combinations of a list to find first matched
+     * result combination and call back with the result.
+     * @param all list to contain all items for combination
+     * @param m m of C(m, n)
+     * @param n n of C(m, n)
+     * @param current current position in list
+     * @param result list to contains selected items
+     * @return true if matched any kind of items combination else false, the
+     * callback can always return false if want to traverse all combinations
+     */
+    private static <T> boolean cmn(List<T> all, int m, int n,
+                                   int current, List<T> result,
+                                   Function<List<T>, Boolean> callback) {
+        assert m <= all.size();
+        assert n <= m;
+        assert current <= all.size();
+        if (result == null) {
+            result = new ArrayList<>(n);
+        }
+
+        if (n == 0) {
+            assert result.size() > 0 : result;
+            // All n items are selected
+            List<T> tmpResult = Collections.unmodifiableList(result);
+            return callback.apply(tmpResult);
+        }
+        if (m == n) {
+            // No choice, select all n items, we don't update the `result` here
+            List<T> tmpResult = new ArrayList<>(result);
+            tmpResult.addAll(all.subList(current, all.size()));
+            return callback.apply(tmpResult);
+        }
+
+        if (current >= all.size()) {
+            // Reach the end of items
+            return false;
+        }
+
+        // Select current item, continue to select C(m-1, n-1)
+        int index = result.size();
+        result.add(all.get(current));
+        ++current;
+        if (cmn(all, m - 1, n - 1, current, result, callback)) {
+            // NOTE: we can pop the tailing items if want to keep result clear
+            return true;
+        }
+        // Not select current item, pop it and continue to select C(m-1, n)
+        result.remove(index);
+        assert result.size() == index : result;
+        if (cmn(all, m - 1, n, current, result, callback)) {
+            return true;
+        }
+
+        return false;
     }
 }

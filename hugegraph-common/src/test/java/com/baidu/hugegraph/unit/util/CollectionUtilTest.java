@@ -417,4 +417,54 @@ public class CollectionUtilTest extends BaseUnitTest {
         Assert.assertEquals(ImmutableList.of("E", "D", "C", "B", "A"),
                             ImmutableList.copyOf(decrOrdered.values()));
     }
+
+    @Test
+    public void testCmn() {
+        List<Integer> list = ImmutableList.of(1, 2, 3, 4, 5);
+
+        // Test C(5, 2) with all combinations
+        List<List<Integer>> tuples = new ArrayList<>();
+        boolean found;
+        found = CollectionUtil.cmn(list, list.size(), 2, tuple -> {
+            tuples.add(new ArrayList<>(tuple));
+            return false;
+        });
+        Assert.assertFalse(found);
+        Assert.assertEquals(10, tuples.size());
+
+        // Test C(5, 2) with one combination
+        tuples .clear();
+        found = CollectionUtil.cmn(list, list.size(), 2, tuple -> {
+            if (tuple.equals(ImmutableList.of(2, 3))) {
+                tuples.add(new ArrayList<>(tuple));
+                return true;
+            }
+            return false;
+        });
+        Assert.assertTrue(found);
+        Assert.assertEquals(1, tuples.size());
+        Assert.assertEquals(ImmutableList.of(2, 3), tuples.get(0));
+
+        // Test C(5, 3) with all combinations
+        List<List<Integer>> triples = new ArrayList<>();
+        found = CollectionUtil.cmn(list, list.size(), 3, triple -> {
+            triples.add(new ArrayList<>(triple));
+            return false;
+        });
+        Assert.assertFalse(found);
+        Assert.assertEquals(10, triples.size());
+
+        // Test C(5, 3) with one combination
+        triples.clear();
+        found = CollectionUtil.cmn(list, list.size(), 3, triple -> {
+            if (triple.equals(ImmutableList.of(2, 3, 5))) {
+                triples.add(new ArrayList<>(triple));
+                return true;
+            }
+            return false;
+        });
+        Assert.assertTrue(found);
+        Assert.assertEquals(1, triples.size());
+        Assert.assertEquals(ImmutableList.of(2, 3, 5), triples.get(0));
+    }
 }
