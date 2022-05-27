@@ -419,22 +419,64 @@ public class CollectionUtilTest extends BaseUnitTest {
     }
 
     @Test
-    public void testCmn() {
+    public void testCrossCombineParts() {
+        List<List<Object>> parts;
+
+        parts = ImmutableList.of(ImmutableList.of("a", "b"),
+                                 ImmutableList.of(1, 2),
+                                 ImmutableList.of('x', 'y'));
+        List<List<Object>> combs = CollectionUtil.crossCombineParts(parts);
+        Assert.assertEquals(8, combs.size());
+        Assert.assertEquals(ImmutableList.of(
+                            ImmutableList.of("a", "b", 1, 2, 'x', 'y'),
+                            ImmutableList.of("a", "b", 1, 2, 'y', 'x'),
+                            ImmutableList.of("a", "b", 2, 1, 'x', 'y'),
+                            ImmutableList.of("a", "b", 2, 1, 'y', 'x'),
+                            ImmutableList.of("b", "a", 1, 2, 'x', 'y'),
+                            ImmutableList.of("b", "a", 1, 2, 'y', 'x'),
+                            ImmutableList.of("b", "a", 2, 1, 'x', 'y'),
+                            ImmutableList.of("b", "a", 2, 1, 'y', 'x')),
+                            combs);
+
+        parts = ImmutableList.of(ImmutableList.of("a", "b", "c"),
+                                 ImmutableList.of(1, 2),
+                                 ImmutableList.of('x', 'y'));
+        Assert.assertEquals(24,
+                            CollectionUtil.crossCombineParts(parts).size());
+
+        parts = ImmutableList.of(ImmutableList.of("a", "b", "c"),
+                                 ImmutableList.of(1, 2, 3),
+                                 ImmutableList.of('x', 'y'));
+        Assert.assertEquals(72,
+                            CollectionUtil.crossCombineParts(parts).size());
+
+        parts = ImmutableList.of(ImmutableList.of("a", "b", "c"),
+                                 ImmutableList.of(1, 2, 3),
+                                 ImmutableList.of('x', 'y', 'z'));
+        Assert.assertEquals(216,
+                            CollectionUtil.crossCombineParts(parts).size());
+    }
+
+    @Test
+    public void testCnm() {
         List<Integer> list = ImmutableList.of(1, 2, 3, 4, 5);
 
         // Test C(5, 2) with all combinations
         List<List<Integer>> tuples = new ArrayList<>();
         boolean found;
-        found = CollectionUtil.cmn(list, list.size(), 2, tuple -> {
+        found = CollectionUtil.cnm(list, list.size(), 2, tuple -> {
             tuples.add(new ArrayList<>(tuple));
             return false;
         });
         Assert.assertFalse(found);
         Assert.assertEquals(10, tuples.size());
 
+        Assert.assertEquals(10,
+                            CollectionUtil.cnm(list, list.size(), 2).size());
+
         // Test C(5, 2) with one combination
-        tuples .clear();
-        found = CollectionUtil.cmn(list, list.size(), 2, tuple -> {
+        tuples.clear();
+        found = CollectionUtil.cnm(list, list.size(), 2, tuple -> {
             if (tuple.equals(ImmutableList.of(2, 3))) {
                 tuples.add(new ArrayList<>(tuple));
                 return true;
@@ -447,16 +489,78 @@ public class CollectionUtilTest extends BaseUnitTest {
 
         // Test C(5, 3) with all combinations
         List<List<Integer>> triples = new ArrayList<>();
-        found = CollectionUtil.cmn(list, list.size(), 3, triple -> {
+        found = CollectionUtil.cnm(list, list.size(), 3, triple -> {
             triples.add(new ArrayList<>(triple));
             return false;
         });
         Assert.assertFalse(found);
         Assert.assertEquals(10, triples.size());
 
+        Assert.assertEquals(10,
+                            CollectionUtil.cnm(list, list.size(), 3).size());
+
         // Test C(5, 3) with one combination
         triples.clear();
-        found = CollectionUtil.cmn(list, list.size(), 3, triple -> {
+        found = CollectionUtil.cnm(list, list.size(), 3, triple -> {
+            if (triple.equals(ImmutableList.of(2, 3, 5))) {
+                triples.add(new ArrayList<>(triple));
+                return true;
+            }
+            return false;
+        });
+        Assert.assertTrue(found);
+        Assert.assertEquals(1, triples.size());
+        Assert.assertEquals(ImmutableList.of(2, 3, 5), triples.get(0));
+    }
+
+    @Test
+    public void testAnm() {
+        List<Integer> list = ImmutableList.of(1, 2, 3, 4, 5);
+
+        // Test A(5, 5) with all combinations
+        Assert.assertEquals(120, CollectionUtil.anm(list).size());
+
+        // Test A(5, 2) with all combinations
+        List<List<Integer>> tuples = new ArrayList<>();
+        boolean found;
+        found = CollectionUtil.anm(list, list.size(), 2, tuple -> {
+            tuples.add(new ArrayList<>(tuple));
+            return false;
+        });
+        Assert.assertFalse(found);
+        Assert.assertEquals(20, tuples.size());
+
+        Assert.assertEquals(20,
+                            CollectionUtil.anm(list, list.size(), 2).size());
+
+        // Test A(5, 2) with one combination
+        tuples.clear();
+        found = CollectionUtil.anm(list, list.size(), 2, tuple -> {
+            if (tuple.equals(ImmutableList.of(2, 3))) {
+                tuples.add(new ArrayList<>(tuple));
+                return true;
+            }
+            return false;
+        });
+        Assert.assertTrue(found);
+        Assert.assertEquals(1, tuples.size());
+        Assert.assertEquals(ImmutableList.of(2, 3), tuples.get(0));
+
+        // Test A(5, 3) with all combinations
+        List<List<Integer>> triples = new ArrayList<>();
+        found = CollectionUtil.anm(list, list.size(), 3, triple -> {
+            triples.add(new ArrayList<>(triple));
+            return false;
+        });
+        Assert.assertFalse(found);
+        Assert.assertEquals(60, triples.size());
+
+        Assert.assertEquals(60,
+                            CollectionUtil.anm(list, list.size(), 3).size());
+
+        // Test A(5, 3) with one combination
+        triples.clear();
+        found = CollectionUtil.anm(list, list.size(), 3, triple -> {
             if (triple.equals(ImmutableList.of(2, 3, 5))) {
                 triples.add(new ArrayList<>(triple));
                 return true;
