@@ -24,14 +24,14 @@ github:
     # Enable projects for project management boards
     projects: false
   description: HugeGraph Commons - include common library & RPC module
-  homepage: https://apache.github.io/incubator-hugegraph-doc/
+  homepage: https://hugegraph.apache.org/
   del_branch_on_merge: true
   #labels:
 
   enabled_merge_buttons:
-    merge:  true
+    merge:  false
     squash: true
-    rebase: true
+    rebase: false
   protected_branches:
     master:
       required_status_checks:
