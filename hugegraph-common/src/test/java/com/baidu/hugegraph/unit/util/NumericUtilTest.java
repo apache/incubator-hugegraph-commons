@@ -19,15 +19,14 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import java.math.BigDecimal;
-import java.util.Date;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.util.Bytes;
 import com.baidu.hugegraph.util.NumericUtil;
+import org.junit.Test;
+
+import java.math.BigDecimal;
+import java.util.Date;
 
 public class NumericUtilTest extends BaseUnitTest {
 

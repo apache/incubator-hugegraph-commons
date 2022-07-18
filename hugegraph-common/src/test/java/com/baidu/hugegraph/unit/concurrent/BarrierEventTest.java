@@ -1,15 +1,14 @@
 package com.baidu.hugegraph.unit.concurrent;
 
+import com.baidu.hugegraph.concurrent.BarrierEvent;
+import com.baidu.hugegraph.testutil.Assert;
+import org.junit.Test;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.junit.Test;
-
-import com.baidu.hugegraph.concurrent.BarrierEvent;
-import com.baidu.hugegraph.testutil.Assert;
 
 public class BarrierEventTest {
     

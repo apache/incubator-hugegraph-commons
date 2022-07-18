@@ -19,14 +19,14 @@
 
 package com.baidu.hugegraph.testutil;
 
+import com.baidu.hugegraph.util.E;
+import com.google.common.primitives.Primitives;
+
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Objects;
-
-import com.baidu.hugegraph.util.E;
-import com.google.common.primitives.Primitives;
 
 public class Whitebox {
 

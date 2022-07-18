@@ -19,11 +19,11 @@
 
 package com.baidu.hugegraph.rpc;
 
-import java.util.Map;
-
 import com.alipay.sofa.rpc.common.RpcConfigs;
 import com.baidu.hugegraph.config.HugeConfig;
 import com.baidu.hugegraph.config.RpcOptions;
+
+import java.util.Map;
 
 public class RpcCommonConfig {
 

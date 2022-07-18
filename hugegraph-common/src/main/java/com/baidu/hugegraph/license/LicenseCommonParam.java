@@ -19,13 +19,12 @@
 
 package com.baidu.hugegraph.license;
 
-import java.util.Date;
-import java.util.List;
-
-import org.apache.commons.lang3.time.DateUtils;
-
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.apache.commons.lang3.time.DateUtils;
+
+import java.util.Date;
+import java.util.List;
 
 public class LicenseCommonParam {
 

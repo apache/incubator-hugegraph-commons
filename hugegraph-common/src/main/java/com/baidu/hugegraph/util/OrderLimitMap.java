@@ -19,12 +19,12 @@
 
 package com.baidu.hugegraph.util;
 
+import com.google.common.base.Functions;
+import com.google.common.collect.Ordering;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
-
-import com.google.common.base.Functions;
-import com.google.common.collect.Ordering;
 
 /**
  * Reference: https://stackoverflow.com/questions/109383/sort-a-mapkey-value-by-values

@@ -19,11 +19,11 @@
 
 package com.baidu.hugegraph.iterator;
 
+import com.baidu.hugegraph.util.E;
+
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedDeque;
-
-import com.baidu.hugegraph.util.E;
 
 public class ExtendableIterator<T> extends WrappedIterator<T> {
 

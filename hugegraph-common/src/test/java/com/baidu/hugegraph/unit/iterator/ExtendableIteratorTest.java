@@ -19,17 +19,16 @@
 
 package com.baidu.hugegraph.unit.iterator;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.NoSuchElementException;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.iterator.ExtendableIterator;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.google.common.collect.ImmutableList;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
+import java.util.NoSuchElementException;
 
 @SuppressWarnings("resource")
 public class ExtendableIteratorTest extends BaseUnitTest {

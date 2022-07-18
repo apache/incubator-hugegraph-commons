@@ -19,20 +19,15 @@
 
 package com.baidu.hugegraph.unit.event;
 
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.junit.After;
-import org.junit.AfterClass;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
-
 import com.baidu.hugegraph.event.Event;
 import com.baidu.hugegraph.event.EventHub;
 import com.baidu.hugegraph.event.EventListener;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.google.common.collect.ImmutableList;
+import org.junit.*;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class EventHubTest extends BaseUnitTest {
 

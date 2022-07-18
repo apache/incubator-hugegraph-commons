@@ -19,17 +19,16 @@
 
 package com.baidu.hugegraph.unit.util;
 
+import com.baidu.hugegraph.testutil.Assert;
+import com.baidu.hugegraph.unit.BaseUnitTest;
+import com.baidu.hugegraph.util.DateUtil;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import org.junit.Test;
-
-import com.baidu.hugegraph.testutil.Assert;
-import com.baidu.hugegraph.unit.BaseUnitTest;
-import com.baidu.hugegraph.util.DateUtil;
 
 public class DateUtilTest extends BaseUnitTest {
 

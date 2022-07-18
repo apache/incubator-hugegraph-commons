@@ -19,9 +19,9 @@
 
 package com.baidu.hugegraph.perf;
 
-import java.util.List;
-
 import com.baidu.hugegraph.perf.PerfUtil.FastMap;
+
+import java.util.List;
 
 public final class LightStopwatch implements Stopwatch {
 

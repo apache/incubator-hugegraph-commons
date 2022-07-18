@@ -19,15 +19,13 @@
 
 package com.baidu.hugegraph.config;
 
+import com.google.common.base.Predicate;
+import org.apache.commons.lang3.StringUtils;
+
+import javax.annotation.Nullable;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.List;
-
-import javax.annotation.Nullable;
-
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.base.Predicate;
 
 public final class OptionChecker {
 

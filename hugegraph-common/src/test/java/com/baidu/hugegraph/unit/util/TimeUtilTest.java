@@ -19,13 +19,12 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import java.util.Date;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.util.TimeUtil;
+import org.junit.Test;
+
+import java.util.Date;
 
 public class TimeUtilTest extends BaseUnitTest {
 

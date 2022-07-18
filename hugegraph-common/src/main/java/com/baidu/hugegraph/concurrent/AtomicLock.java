@@ -19,11 +19,10 @@
 
 package com.baidu.hugegraph.concurrent;
 
-import java.util.concurrent.atomic.AtomicReference;
-
+import com.baidu.hugegraph.util.Log;
 import org.slf4j.Logger;
 
-import com.baidu.hugegraph.util.Log;
+import java.util.concurrent.atomic.AtomicReference;
 
 public class AtomicLock {
 

@@ -19,20 +19,19 @@
 
 package com.baidu.hugegraph.unit.util;
 
+import com.baidu.hugegraph.testutil.Assert;
+import com.baidu.hugegraph.unit.BaseUnitTest;
+import com.baidu.hugegraph.util.Bytes;
+import com.baidu.hugegraph.util.LongEncoding;
+import com.baidu.hugegraph.util.NumericUtil;
+import org.junit.Test;
+
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Random;
 import java.util.TimeZone;
-
-import org.junit.Test;
-
-import com.baidu.hugegraph.testutil.Assert;
-import com.baidu.hugegraph.unit.BaseUnitTest;
-import com.baidu.hugegraph.util.Bytes;
-import com.baidu.hugegraph.util.LongEncoding;
-import com.baidu.hugegraph.util.NumericUtil;
 
 public class LongEncodingTest extends BaseUnitTest {
 

@@ -19,8 +19,11 @@
 
 package com.baidu.hugegraph.unit.rest;
 
-import java.util.Map;
-
+import com.baidu.hugegraph.rest.RestResult;
+import com.baidu.hugegraph.rest.SerializeException;
+import com.baidu.hugegraph.testutil.Assert;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import jakarta.ws.rs.core.MultivaluedHashMap;
 import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
@@ -28,11 +31,7 @@ import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import com.baidu.hugegraph.rest.RestResult;
-import com.baidu.hugegraph.rest.SerializeException;
-import com.baidu.hugegraph.testutil.Assert;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import java.util.Map;
 
 public class RestResultTest {
 

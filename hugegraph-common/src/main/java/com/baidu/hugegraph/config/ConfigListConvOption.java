@@ -19,13 +19,13 @@
 
 package com.baidu.hugegraph.config;
 
+import com.baidu.hugegraph.util.E;
+import com.google.common.base.Predicate;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
-
-import com.baidu.hugegraph.util.E;
-import com.google.common.base.Predicate;
 
 public class ConfigListConvOption<T, R> extends TypedOption<List<T>, List<R>> {
 

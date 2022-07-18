@@ -19,26 +19,20 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import java.io.IOException;
-import java.lang.reflect.Method;
-import java.util.List;
-
-import org.apache.commons.collections.IteratorUtils;
-import org.junit.Test;
-
 import com.baidu.hugegraph.perf.PerfUtil.Watched;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.unit.perf.testclass.TestClass;
-import com.baidu.hugegraph.unit.perf.testclass.TestClass.Bar;
-import com.baidu.hugegraph.unit.perf.testclass.TestClass.Base;
-import com.baidu.hugegraph.unit.perf.testclass.TestClass.Foo;
-import com.baidu.hugegraph.unit.perf.testclass.TestClass.ManuallyProfile;
-import com.baidu.hugegraph.unit.perf.testclass.TestClass.Sub;
+import com.baidu.hugegraph.unit.perf.testclass.TestClass.*;
 import com.baidu.hugegraph.util.ReflectionUtil;
 import com.google.common.reflect.ClassPath.ClassInfo;
-
 import javassist.NotFoundException;
+import org.apache.commons.collections.IteratorUtils;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.lang.reflect.Method;
+import java.util.List;
 
 public class ReflectionUtilTest extends BaseUnitTest {
 

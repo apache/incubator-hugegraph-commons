@@ -19,19 +19,18 @@
 
 package com.baidu.hugegraph.unit.concurrent;
 
-import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReadWriteLock;
-import java.util.concurrent.locks.ReentrantLock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.concurrent.AtomicLock;
 import com.baidu.hugegraph.concurrent.KeyLock;
 import com.baidu.hugegraph.concurrent.LockGroup;
 import com.baidu.hugegraph.concurrent.RowLock;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
+import org.junit.Test;
+
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 public class LockGroupTest extends BaseUnitTest {
 

@@ -19,13 +19,12 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import java.util.Map;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.util.OrderLimitMap;
 import com.google.common.collect.ImmutableList;
+import org.junit.Test;
+
+import java.util.Map;
 
 public class OrderLimitMapTest {
 

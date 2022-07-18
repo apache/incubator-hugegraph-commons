@@ -19,14 +19,13 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import java.net.MalformedURLException;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.util.VersionUtil;
 import com.baidu.hugegraph.util.VersionUtil.Version;
+import org.junit.Test;
+
+import java.net.MalformedURLException;
 
 public class VersionUtilTest extends BaseUnitTest {
 

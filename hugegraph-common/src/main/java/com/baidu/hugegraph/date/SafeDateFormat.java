@@ -19,12 +19,12 @@
 
 package com.baidu.hugegraph.date;
 
-import java.util.Date;
-import java.util.TimeZone;
-
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
+
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * The SafeDateFormat actually is a proxy for joda DateTimeFormatter

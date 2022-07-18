@@ -19,12 +19,12 @@
 
 package com.baidu.hugegraph.iterator;
 
+import com.baidu.hugegraph.util.InsertionOrderUtil;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
-
-import com.baidu.hugegraph.util.InsertionOrderUtil;
 
 public class ListIterator<T> extends WrappedIterator<T> {
 

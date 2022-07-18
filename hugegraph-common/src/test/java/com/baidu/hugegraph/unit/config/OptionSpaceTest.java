@@ -19,10 +19,6 @@
 
 package com.baidu.hugegraph.unit.config;
 
-import static com.baidu.hugegraph.config.OptionChecker.disallowEmpty;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.config.ConfigException;
 import com.baidu.hugegraph.config.ConfigOption;
 import com.baidu.hugegraph.config.OptionHolder;
@@ -30,6 +26,9 @@ import com.baidu.hugegraph.config.OptionSpace;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.google.common.base.Predicate;
+import org.junit.Test;
+
+import static com.baidu.hugegraph.config.OptionChecker.disallowEmpty;
 
 public class OptionSpaceTest extends BaseUnitTest {
 

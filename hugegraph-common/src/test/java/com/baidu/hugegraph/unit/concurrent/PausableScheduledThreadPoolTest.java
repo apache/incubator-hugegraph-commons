@@ -19,14 +19,13 @@
 
 package com.baidu.hugegraph.unit.concurrent;
 
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
-
+import com.baidu.hugegraph.concurrent.PausableScheduledThreadPool;
+import com.baidu.hugegraph.util.ExecutorUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
-import com.baidu.hugegraph.concurrent.PausableScheduledThreadPool;
-import com.baidu.hugegraph.util.ExecutorUtil;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class PausableScheduledThreadPoolTest {
 

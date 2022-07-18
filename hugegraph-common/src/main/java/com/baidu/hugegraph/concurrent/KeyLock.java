@@ -19,14 +19,14 @@
 
 package com.baidu.hugegraph.concurrent;
 
+import com.baidu.hugegraph.util.E;
+import com.google.common.collect.ImmutableList;
+import com.google.common.util.concurrent.Striped;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.locks.Lock;
-
-import com.baidu.hugegraph.util.E;
-import com.google.common.collect.ImmutableList;
-import com.google.common.util.concurrent.Striped;
 
 /**
  * KeyLock provide an interface of segment lock

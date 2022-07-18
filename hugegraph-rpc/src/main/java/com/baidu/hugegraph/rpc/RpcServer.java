@@ -19,11 +19,6 @@
 
 package com.baidu.hugegraph.rpc;
 
-import java.util.Map;
-
-import org.apache.commons.collections.MapUtils;
-import org.slf4j.Logger;
-
 import com.alipay.remoting.RemotingServer;
 import com.alipay.sofa.rpc.common.utils.StringUtils;
 import com.alipay.sofa.rpc.config.ProviderConfig;
@@ -35,6 +30,10 @@ import com.baidu.hugegraph.config.RpcOptions;
 import com.baidu.hugegraph.testutil.Whitebox;
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
+import org.apache.commons.collections.MapUtils;
+import org.slf4j.Logger;
+
+import java.util.Map;
 
 public class RpcServer {
 

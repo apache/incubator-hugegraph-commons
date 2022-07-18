@@ -19,10 +19,10 @@
 
 package com.baidu.hugegraph.iterator;
 
+import com.baidu.hugegraph.util.E;
+
 import java.util.Iterator;
 import java.util.function.Function;
-
-import com.baidu.hugegraph.util.E;
 
 public class FlatMapperIterator<T, R> extends WrappedIterator<R> {
 

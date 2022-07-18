@@ -19,9 +19,8 @@
 
 package com.baidu.hugegraph.testutil;
 
-import org.junit.Test;
-
 import com.baidu.hugegraph.unit.BaseUnitTest;
+import org.junit.Test;
 
 public class AssertTest extends BaseUnitTest {
 

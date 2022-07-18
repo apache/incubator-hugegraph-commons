@@ -19,13 +19,12 @@
 
 package com.baidu.hugegraph.unit.license;
 
-import java.io.IOException;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.license.LicenseInstallParam;
 import com.baidu.hugegraph.testutil.Assert;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Test;
+
+import java.io.IOException;
 
 public class LicenseInstallParamTest {
 

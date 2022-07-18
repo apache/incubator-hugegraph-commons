@@ -19,6 +19,10 @@
 
 package com.baidu.hugegraph.config;
 
+import com.baidu.hugegraph.util.E;
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
+
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -26,11 +30,6 @@ import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-
-import org.slf4j.Logger;
-
-import com.baidu.hugegraph.util.E;
-import com.baidu.hugegraph.util.Log;
 
 public final class OptionSpace {
 

@@ -19,11 +19,6 @@
 
 package com.baidu.hugegraph.unit.perf;
 
-import java.util.Map;
-
-import org.junit.After;
-import org.junit.Test;
-
 import com.baidu.hugegraph.perf.PerfUtil;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
@@ -33,6 +28,10 @@ import com.baidu.hugegraph.unit.perf.testclass.TestPerfClass;
 import com.baidu.hugegraph.unit.perf.testclass.TestPerfLightClass;
 import com.baidu.hugegraph.unit.perf.testclass2.TestClass4Package;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.After;
+import org.junit.Test;
+
+import java.util.Map;
 
 public class PerfUtilTest extends BaseUnitTest {
 

@@ -19,16 +19,15 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.util.InsertionOrderUtil;
 import com.google.common.collect.ImmutableList;
+import org.junit.Test;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class InsertionOrderUtilTest extends BaseUnitTest {
 

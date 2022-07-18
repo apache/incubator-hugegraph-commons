@@ -19,9 +19,7 @@
 
 package com.baidu.hugegraph.config;
 
-import static com.baidu.hugegraph.config.OptionChecker.allowValues;
-import static com.baidu.hugegraph.config.OptionChecker.disallowEmpty;
-import static com.baidu.hugegraph.config.OptionChecker.rangeInt;
+import static com.baidu.hugegraph.config.OptionChecker.*;
 
 public class RpcOptions extends OptionHolder {
 

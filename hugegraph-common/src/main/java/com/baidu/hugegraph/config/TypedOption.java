@@ -19,18 +19,17 @@
 
 package com.baidu.hugegraph.config;
 
-import java.lang.reflect.Method;
-import java.util.List;
-import java.util.Set;
-
-import org.apache.commons.configuration.PropertyConverter;
-import org.slf4j.Logger;
-
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.Log;
 import com.google.common.base.Joiner;
 import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
+import org.apache.commons.configuration.PropertyConverter;
+import org.slf4j.Logger;
+
+import java.lang.reflect.Method;
+import java.util.List;
+import java.util.Set;
 
 public class TypedOption<T, R> {
 

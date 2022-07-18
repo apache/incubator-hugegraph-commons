@@ -19,14 +19,13 @@
 
 package com.baidu.hugegraph.util;
 
+import com.baidu.hugegraph.concurrent.PausableScheduledThreadPool;
+import org.apache.commons.lang3.concurrent.BasicThreadFactory;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ThreadFactory;
-
-import org.apache.commons.lang3.concurrent.BasicThreadFactory;
-
-import com.baidu.hugegraph.concurrent.PausableScheduledThreadPool;
 
 public final class ExecutorUtil {
 

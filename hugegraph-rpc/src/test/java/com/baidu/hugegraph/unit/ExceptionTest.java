@@ -19,10 +19,9 @@
 
 package com.baidu.hugegraph.unit;
 
-import org.junit.Test;
-
 import com.baidu.hugegraph.rpc.RpcException;
 import com.baidu.hugegraph.testutil.Assert;
+import org.junit.Test;
 
 public class ExceptionTest {
 

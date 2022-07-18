@@ -19,11 +19,11 @@
 
 package com.baidu.hugegraph.rpc;
 
-import java.util.Map;
-
 import com.alipay.sofa.rpc.config.ProviderConfig;
 import com.baidu.hugegraph.util.E;
 import com.google.common.collect.Maps;
+
+import java.util.Map;
 
 public class RpcProviderConfig implements RpcServiceConfig4Server {
 

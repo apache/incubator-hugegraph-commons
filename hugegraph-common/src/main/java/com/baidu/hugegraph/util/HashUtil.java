@@ -19,10 +19,10 @@
 
 package com.baidu.hugegraph.util;
 
-import java.nio.charset.Charset;
-
 import com.google.common.base.Charsets;
 import com.google.common.hash.Hashing;
+
+import java.nio.charset.Charset;
 
 public final class HashUtil {
 

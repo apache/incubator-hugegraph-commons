@@ -19,10 +19,10 @@
 
 package com.baidu.hugegraph.config;
 
-import java.util.function.Function;
-
 import com.baidu.hugegraph.util.E;
 import com.google.common.base.Predicate;
+
+import java.util.function.Function;
 
 public class ConfigConvOption<T, R> extends TypedOption<T, R> {
 

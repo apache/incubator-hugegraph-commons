@@ -19,13 +19,12 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import org.junit.Test;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.util.E;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import org.junit.Test;
 
 public class EcheckTest extends BaseUnitTest {
 

@@ -19,14 +19,13 @@
 
 package com.baidu.hugegraph.unit.perf;
 
-import org.junit.Test;
-
 import com.baidu.hugegraph.perf.LightStopwatch;
 import com.baidu.hugegraph.perf.NormalStopwatch;
 import com.baidu.hugegraph.perf.Stopwatch;
 import com.baidu.hugegraph.perf.Stopwatch.Path;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
+import org.junit.Test;
 
 public class StopwatchTest extends BaseUnitTest {
 

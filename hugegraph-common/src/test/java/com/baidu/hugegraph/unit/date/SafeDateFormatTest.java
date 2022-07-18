@@ -19,6 +19,11 @@
 
 package com.baidu.hugegraph.unit.date;
 
+import com.baidu.hugegraph.date.SafeDateFormat;
+import com.baidu.hugegraph.testutil.Assert;
+import com.google.common.collect.ImmutableList;
+import org.junit.Test;
+
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -27,12 +32,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 import java.util.concurrent.CountDownLatch;
-
-import org.junit.Test;
-
-import com.baidu.hugegraph.date.SafeDateFormat;
-import com.baidu.hugegraph.testutil.Assert;
-import com.google.common.collect.ImmutableList;
 
 public class SafeDateFormatTest {
 

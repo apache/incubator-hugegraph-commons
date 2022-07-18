@@ -19,11 +19,10 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import org.junit.Test;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.util.Bytes;
 import com.baidu.hugegraph.util.UnitUtil;
+import org.junit.Test;
 
 public class UnitUtilTest {
 

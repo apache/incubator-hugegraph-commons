@@ -19,18 +19,13 @@
 
 package com.baidu.hugegraph.unit.concurrent;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Random;
-import java.util.Set;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.concurrent.RowLock;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.google.common.collect.ImmutableSet;
+import org.junit.Test;
+
+import java.util.*;
 
 public class RowLockTest extends BaseUnitTest {
 

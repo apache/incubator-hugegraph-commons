@@ -19,21 +19,12 @@
 
 package com.baidu.hugegraph.unit.config;
 
-import static com.baidu.hugegraph.config.OptionChecker.allowValues;
-import static com.baidu.hugegraph.config.OptionChecker.disallowEmpty;
-import static com.baidu.hugegraph.config.OptionChecker.inValues;
-import static com.baidu.hugegraph.config.OptionChecker.nonNegativeInt;
-import static com.baidu.hugegraph.config.OptionChecker.positiveInt;
-import static com.baidu.hugegraph.config.OptionChecker.rangeDouble;
-import static com.baidu.hugegraph.config.OptionChecker.rangeInt;
-
-import java.io.File;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
+import com.baidu.hugegraph.config.*;
+import com.baidu.hugegraph.testutil.Assert;
+import com.baidu.hugegraph.unit.BaseUnitTest;
+import com.google.common.base.Predicate;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import org.apache.commons.collections.IteratorUtils;
 import org.apache.commons.configuration2.AbstractConfiguration;
 import org.apache.commons.configuration2.Configuration;
@@ -46,20 +37,14 @@ import org.apache.commons.io.FileUtils;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
-import com.baidu.hugegraph.config.ConfigConvOption;
-import com.baidu.hugegraph.config.ConfigException;
-import com.baidu.hugegraph.config.ConfigListConvOption;
-import com.baidu.hugegraph.config.ConfigListOption;
-import com.baidu.hugegraph.config.ConfigOption;
-import com.baidu.hugegraph.config.HugeConfig;
-import com.baidu.hugegraph.config.OptionHolder;
-import com.baidu.hugegraph.config.OptionSpace;
-import com.baidu.hugegraph.testutil.Assert;
-import com.baidu.hugegraph.testutil.Whitebox;
-import com.baidu.hugegraph.unit.BaseUnitTest;
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
+import java.io.File;
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static com.baidu.hugegraph.config.OptionChecker.*;
 
 public class HugeConfigTest extends BaseUnitTest {
 

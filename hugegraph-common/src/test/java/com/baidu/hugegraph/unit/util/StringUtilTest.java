@@ -19,15 +19,14 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import java.util.ArrayList;
-import java.util.List;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.util.StringUtil;
 import com.baidu.hugegraph.util.StringUtil.Chars;
 import com.google.common.base.Splitter;
+import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class StringUtilTest {
 

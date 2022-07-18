@@ -19,11 +19,10 @@
 
 package com.baidu.hugegraph.unit;
 
-import org.junit.Test;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.util.VersionUtil;
 import com.baidu.hugegraph.version.RpcVersion;
+import org.junit.Test;
 
 public class VersionTest {
 

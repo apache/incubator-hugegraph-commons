@@ -19,13 +19,12 @@
 
 package com.baidu.hugegraph.concurrent;
 
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
+
 import java.util.List;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.ThreadFactory;
-
-import org.slf4j.Logger;
-
-import com.baidu.hugegraph.util.Log;
 
 public class PausableScheduledThreadPool extends ScheduledThreadPoolExecutor {
 

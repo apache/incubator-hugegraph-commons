@@ -19,20 +19,19 @@
 
 package com.baidu.hugegraph.unit.iterator;
 
+import com.baidu.hugegraph.iterator.FilterIterator;
+import com.baidu.hugegraph.testutil.Assert;
+import com.baidu.hugegraph.unit.BaseUnitTest;
+import com.baidu.hugegraph.unit.iterator.ExtendableIteratorTest.CloseableItor;
+import com.google.common.collect.ImmutableList;
+import org.junit.Test;
+
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
-
-import org.junit.Test;
-
-import com.baidu.hugegraph.iterator.FilterIterator;
-import com.baidu.hugegraph.testutil.Assert;
-import com.baidu.hugegraph.unit.BaseUnitTest;
-import com.baidu.hugegraph.unit.iterator.ExtendableIteratorTest.CloseableItor;
-import com.google.common.collect.ImmutableList;
 
 @SuppressWarnings("resource")
 public class FilterIteratorTest extends BaseUnitTest {

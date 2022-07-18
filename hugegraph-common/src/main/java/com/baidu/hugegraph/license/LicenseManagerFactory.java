@@ -19,9 +19,8 @@
 
 package com.baidu.hugegraph.license;
 
-import org.apache.commons.lang.NotImplementedException;
-
 import com.baidu.hugegraph.license.LicenseManager.VerifyCallback;
+import org.apache.commons.lang.NotImplementedException;
 
 public class LicenseManagerFactory {
 

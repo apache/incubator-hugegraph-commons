@@ -19,13 +19,12 @@
 
 package com.baidu.hugegraph.util;
 
-import java.util.Arrays;
-import java.util.Comparator;
-
+import com.google.common.primitives.UnsignedBytes;
 import org.apache.commons.codec.DecoderException;
 import org.apache.commons.codec.binary.Hex;
 
-import com.google.common.primitives.UnsignedBytes;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * TODO: extends com.google.common.primitives.Bytes

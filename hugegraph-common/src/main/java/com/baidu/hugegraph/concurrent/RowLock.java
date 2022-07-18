@@ -19,17 +19,12 @@
 
 package com.baidu.hugegraph.concurrent;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import com.baidu.hugegraph.util.E;
+
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
-
-import com.baidu.hugegraph.util.E;
 
 public class RowLock<K extends Comparable<K>> {
 

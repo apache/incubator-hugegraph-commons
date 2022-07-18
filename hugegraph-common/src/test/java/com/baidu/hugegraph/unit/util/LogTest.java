@@ -19,12 +19,11 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import org.junit.Test;
-import org.slf4j.Logger;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.util.Log;
+import org.junit.Test;
+import org.slf4j.Logger;
 
 public class LogTest extends BaseUnitTest {
 

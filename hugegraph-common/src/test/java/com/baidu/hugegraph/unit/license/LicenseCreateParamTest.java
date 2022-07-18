@@ -19,15 +19,14 @@
 
 package com.baidu.hugegraph.unit.license;
 
-import java.io.IOException;
-import java.text.ParseException;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.date.SafeDateFormat;
 import com.baidu.hugegraph.license.LicenseCreateParam;
 import com.baidu.hugegraph.testutil.Assert;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.junit.Test;
+
+import java.io.IOException;
+import java.text.ParseException;
 
 public class LicenseCreateParamTest {
 

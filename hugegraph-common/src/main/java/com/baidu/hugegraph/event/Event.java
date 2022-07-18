@@ -19,10 +19,10 @@
 
 package com.baidu.hugegraph.event;
 
+import com.baidu.hugegraph.util.E;
+
 import java.util.Arrays;
 import java.util.Collections;
-
-import com.baidu.hugegraph.util.E;
 
 public class Event extends java.util.EventObject {
 

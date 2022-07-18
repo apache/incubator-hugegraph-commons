@@ -19,15 +19,14 @@
 
 package com.baidu.hugegraph.perf;
 
-import java.util.List;
-import java.util.function.BiFunction;
-
-import org.slf4j.Logger;
-
 import com.baidu.hugegraph.perf.PerfUtil.FastMap;
 import com.baidu.hugegraph.perf.PerfUtil.LocalStack;
 import com.baidu.hugegraph.testutil.Whitebox;
 import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
+
+import java.util.List;
+import java.util.function.BiFunction;
 
 public final class NormalStopwatch implements Stopwatch {
 

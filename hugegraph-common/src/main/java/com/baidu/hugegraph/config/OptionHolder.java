@@ -19,14 +19,13 @@
 
 package com.baidu.hugegraph.config;
 
+import com.baidu.hugegraph.util.Log;
+import org.slf4j.Logger;
+
 import java.lang.reflect.Field;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-
-import org.slf4j.Logger;
-
-import com.baidu.hugegraph.util.Log;
 
 public class OptionHolder {
 

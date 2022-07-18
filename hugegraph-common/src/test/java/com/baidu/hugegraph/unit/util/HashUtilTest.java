@@ -19,12 +19,11 @@
 
 package com.baidu.hugegraph.unit.util;
 
-import org.junit.Test;
-
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.util.Bytes;
 import com.baidu.hugegraph.util.HashUtil;
+import org.junit.Test;
 
 public class HashUtilTest extends BaseUnitTest {
 

@@ -19,13 +19,12 @@
 
 package com.baidu.hugegraph.unit;
 
-import java.net.URL;
-
-import org.junit.BeforeClass;
-
 import com.baidu.hugegraph.config.HugeConfig;
 import com.baidu.hugegraph.config.OptionSpace;
 import com.baidu.hugegraph.rpc.RpcServer;
+import org.junit.BeforeClass;
+
+import java.net.URL;
 
 public class BaseUnitTest {
 

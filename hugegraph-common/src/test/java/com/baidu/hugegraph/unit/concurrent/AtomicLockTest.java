@@ -19,11 +19,10 @@
 
 package com.baidu.hugegraph.unit.concurrent;
 
-import org.junit.Test;
-
 import com.baidu.hugegraph.concurrent.AtomicLock;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
+import org.junit.Test;
 
 public class AtomicLockTest extends BaseUnitTest {
 

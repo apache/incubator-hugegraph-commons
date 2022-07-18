@@ -19,22 +19,17 @@
 
 package com.baidu.hugegraph.unit.iterator;
 
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.NoSuchElementException;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-
-import org.junit.Test;
-
 import com.baidu.hugegraph.iterator.FlatMapperFilterIterator;
 import com.baidu.hugegraph.testutil.Assert;
 import com.baidu.hugegraph.unit.BaseUnitTest;
 import com.baidu.hugegraph.unit.iterator.ExtendableIteratorTest.CloseableItor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import org.junit.Test;
+
+import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 @SuppressWarnings("resource")
 public class FlatMapperFilterIteratorTest extends BaseUnitTest {

@@ -19,15 +19,14 @@
 
 package com.baidu.hugegraph.unit.license;
 
+import com.baidu.hugegraph.license.MachineInfo;
+import com.baidu.hugegraph.testutil.Assert;
+import org.junit.Test;
+
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.List;
 import java.util.regex.Pattern;
-
-import org.junit.Test;
-
-import com.baidu.hugegraph.license.MachineInfo;
-import com.baidu.hugegraph.testutil.Assert;
 
 public class MachineInfoTest {
 

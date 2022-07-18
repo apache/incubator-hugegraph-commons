@@ -19,13 +19,13 @@
 
 package com.baidu.hugegraph.iterator;
 
-import java.util.Iterator;
-import java.util.List;
-import java.util.function.Function;
-
 import com.baidu.hugegraph.util.E;
 import com.baidu.hugegraph.util.InsertionOrderUtil;
 import com.google.common.collect.ImmutableList;
+
+import java.util.Iterator;
+import java.util.List;
+import java.util.function.Function;
 
 public class BatchMapperIterator<T, R> extends WrappedIterator<R> {
 
