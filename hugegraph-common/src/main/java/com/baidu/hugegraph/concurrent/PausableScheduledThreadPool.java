@@ -29,8 +29,7 @@ import com.baidu.hugegraph.util.Log;
 
 public class PausableScheduledThreadPool extends ScheduledThreadPoolExecutor {
 
-    private static final Logger LOG = Log.logger(
-                                      PausableScheduledThreadPool.class);
+    private static final Logger LOG = Log.logger(PausableScheduledThreadPool.class);
 
     private volatile boolean paused = false;
 

@@ -20,5 +20,6 @@
 package com.baidu.hugegraph.func;
 
 public interface TriFunction <T1, T2, T3, R> {
-    public R apply(T1 v1, T2 v2, T3 v3);
+
+    R apply(T1 v1, T2 v2, T3 v3);
 }
