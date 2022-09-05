@@ -24,30 +24,44 @@ import java.util.Map;
 import jakarta.ws.rs.core.MultivaluedMap;
 
 public interface RestClient {
-
+    /**
+     * Post method
+     */
     RestResult post(String path, Object object);
-    RestResult post(String path, Object object,
-                           MultivaluedMap<String, Object> headers);
-    RestResult post(String path, Object object,
-                           Map<String, Object> params);
-    RestResult post(String path, Object object,
-                           MultivaluedMap<String, Object> headers,
-                           Map<String, Object> params);
 
+    RestResult post(String path, Object object, MultivaluedMap<String, Object> headers);
+
+    RestResult post(String path, Object object, Map<String, Object> params);
+
+    RestResult post(String path, Object object, MultivaluedMap<String, Object> headers,
+                    Map<String, Object> params);
+
+    /**
+     * Put method
+     */
     RestResult put(String path, String id, Object object);
-    RestResult put(String path, String id, Object object,
-                          MultivaluedMap<String, Object> headers);
-    RestResult put(String path, String id, Object object,
-                          Map<String, Object> params);
-    RestResult put(String path, String id, Object object,
-                          MultivaluedMap<String, Object> headers,
-                          Map<String, Object> params);
 
+    RestResult put(String path, String id, Object object, MultivaluedMap<String, Object> headers);
+
+    RestResult put(String path, String id, Object object, Map<String, Object> params);
+
+    RestResult put(String path, String id, Object object, MultivaluedMap<String, Object> headers,
+                   Map<String, Object> params);
+
+    /**
+     * Get method
+     */
     RestResult get(String path);
+
     RestResult get(String path, Map<String, Object> params);
+
     RestResult get(String path, String id);
 
+    /**
+     * Delete method
+     */
     RestResult delete(String path, Map<String, Object> params);
+
     RestResult delete(String path, String id);
 
     void close();
