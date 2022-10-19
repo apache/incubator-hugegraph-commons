@@ -27,7 +27,7 @@
     </parent>
 
     <artifactId>hugegraph-rpc</artifactId>
-    <name>${project.artifactId}</name>
+    <name>${artifactId}</name>
     <description>HugeGraph RPC component</description>
 
     <properties>
