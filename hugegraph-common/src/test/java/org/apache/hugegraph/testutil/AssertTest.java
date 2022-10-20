@@ -192,9 +192,7 @@ public class AssertTest extends BaseUnitTest {
             });
             Assert.fail("Expect error");
         } catch (AssertionError e) {
-            Assert.assertEquals("No exception was thrown" +
-                                "(expected java.lang.NullPointerException)",
-                                e.getMessage());
+            Assert.assertContains("java.lang.NullPointerException", e.getMessage());
         }
 
         try {
@@ -203,10 +201,8 @@ public class AssertTest extends BaseUnitTest {
             });
             Assert.fail("Expect error");
         } catch (AssertionError e) {
-            Assert.assertEquals("Bad exception type " +
-                                "java.lang.RuntimeException" +
-                                "(expected java.lang.NullPointerException)",
-                                e.getMessage());
+            Assert.assertContains("java.lang.NullPointerException", e.getMessage());
+            Assert.assertContains("java.lang.RuntimeException", e.getMessage());
         }
     }
 
