@@ -126,7 +126,7 @@ public class AssertTest extends BaseUnitTest {
         });
 
         Assert.assertThrows(AssertionError.class, () -> {
-            Assert.assertEquals(1, (Long) 1l);
+            Assert.assertEquals(1, (Long) 1L);
         }, e -> {
             Assert.assertContains("expected: java.lang.Integer",
                                   e.getMessage());
@@ -250,7 +250,7 @@ public class AssertTest extends BaseUnitTest {
         });
 
         Assert.assertThrows(AssertionError.class, () -> {
-            Assert.assertGt(1, Character.valueOf('2'));
+            Assert.assertGt(1, '2');
         }, e -> {
             Assert.assertContains("Expected: an instance of java.lang.Integer",
                                   e.getMessage());
@@ -308,7 +308,7 @@ public class AssertTest extends BaseUnitTest {
         });
 
         Assert.assertThrows(AssertionError.class, () -> {
-            Assert.assertGte(1, Character.valueOf('2'));
+            Assert.assertGte(1, '2');
         }, e -> {
             Assert.assertContains("Expected: an instance of java.lang.Integer",
                                   e.getMessage());
@@ -338,7 +338,7 @@ public class AssertTest extends BaseUnitTest {
         });
 
         Assert.assertThrows(AssertionError.class, () -> {
-            Assert.assertGt(1, Character.valueOf('0'));
+            Assert.assertGt(1, '0');
         }, e -> {
             Assert.assertContains("Expected: an instance of java.lang.Integer",
                                   e.getMessage());
@@ -375,7 +375,7 @@ public class AssertTest extends BaseUnitTest {
         });
 
         Assert.assertThrows(AssertionError.class, () -> {
-            Assert.assertLte(1, Character.valueOf('0'));
+            Assert.assertLte(1, '0');
         }, e -> {
             Assert.assertContains("Expected: an instance of java.lang.Integer",
                                   e.getMessage());
