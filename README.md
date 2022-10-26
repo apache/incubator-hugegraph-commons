@@ -23,14 +23,14 @@ numeric or collection util classes to simplify the development of HugeGraph and 
 The [doc page](https://hugegraph.apache.org/docs/) contains more information about hugegraph modules.
 
 And here are links of other repositories:
-1. [hugegraph-server](https://github.com/apache/incubator-hugegraph) (graph's core component - OLTP server)
-2. [hugegraph-toolchain](https://github.com/apache/incubator-hugegraph-toolchain) (include loader/dashboard/tool/client)
-3. [hugegraph-computer](https://github.com/apache/incubator-hugegraph-computer) (graph processing system - OLAP)
-4. [hugegraph-website/doc](https://github.com/apache/incubator-hugegraph-doc) (include doc & website code)
+1. [hugegraph-server](https://github.com/apache/hugegraph) (graph's core component - OLTP server)
+2. [hugegraph-toolchain](https://github.com/apache/hugegraph-toolchain) (include loader/dashboard/tool/client)
+3. [hugegraph-computer](https://github.com/apache/hugegraph-computer) (graph processing system - OLAP)
+4. [hugegraph-website/doc](https://github.com/apache/hugegraph-doc) (include doc & website code)
 
 ## Contributing
 
-Welcome to contribute, please see [`How to Contribute`](https://github.com/apache/incubator-hugegraph/blob/master/CONTRIBUTING.md) for more information
+Welcome to contribute, please see [`How to Contribute`](https://github.com/apache/hugegraph/blob/master/CONTRIBUTING.md) for more information
 
 Note: It's recommended to use [GitHub Desktop](https://desktop.github.com/) to **greatly simplify** the PR and commit process.
 
