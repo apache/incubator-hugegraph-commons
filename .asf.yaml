@@ -35,7 +35,7 @@ github:
   protected_branches:
     master:
       required_status_checks:
-        # strict means "Require branches to be up to date before merging".
+        # strict means "Require branches to be up-to-date before merging".
         strict: true
         # contexts are the names of checks that must pass
         contexts:
@@ -47,5 +47,5 @@ github:
         required_approving_review_count: 2
 
 notifications:
-  issues: dev@hugegraph.apache.org
-  pullrequests: commits@hugegraph.apache.org
+  # issues: dev@hugegraph.apache.org
+  pullrequests: dev@hugegraph.apache.org
