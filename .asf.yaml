@@ -47,5 +47,7 @@ github:
         required_approving_review_count: 2
 
 notifications:
-  # issues: dev@hugegraph.apache.org
-  pullrequests: dev@hugegraph.apache.org
+  issues: issues@hugegraph.apache.org
+  discussions:  issues@hugegraph.apache.org
+  pullrequests_status: dev@hugegraph.apache.org
+  #pullrequests_comment: issues@foo.apache.org
