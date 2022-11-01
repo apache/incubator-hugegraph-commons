@@ -415,14 +415,12 @@ public abstract class AbstractRestClient implements RestClient {
      * @param headers
      * @return
      */
-    private MediaType parseCustomContentType(MultivaluedMap<String, Object> headers) {
+    public static MediaType parseCustomContentType(MultivaluedMap<String, Object> headers) {
         String customContentType = null;
         if (MapUtils.isNotEmpty(headers) && headers.get("Content-Type") != null) {
             Object contentTypeObj = headers.get("Content-Type");
             if (contentTypeObj instanceof List) {
-                customContentType = ((List) contentTypeObj).get(0).toString();
-            } else if (contentTypeObj instanceof String) {
-                customContentType = contentTypeObj.toString();
+                customContentType = ((List<?>) contentTypeObj).get(0).toString();
             }
             return MediaType.valueOf(customContentType);
         }
