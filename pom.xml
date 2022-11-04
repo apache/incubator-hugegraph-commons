@@ -22,7 +22,7 @@
 
     <groupId>org.apache.hugegraph</groupId>
     <artifactId>hugegraph-commons</artifactId>
-    <version>${revision}</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
 
     <name>${project.artifactId}</name>
