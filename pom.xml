@@ -1,4 +1,20 @@
 <?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+  -->
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
@@ -10,7 +26,7 @@
     <packaging>pom</packaging>
 
     <name>${project.artifactId}</name>
-    <url>https://github.com/apache/incubator-hugegraph-commons</url>
+    <url>https://github.com/apache/hugegraph-commons</url>
     <description>
         hugegraph-commons is a common module for HugeGraph-Common and HugeGraph-Rpc with their peripheral components.
         It includes rpc frame, locks, configurations, events, iterators, rest and some
@@ -18,9 +34,9 @@
     </description>
 
     <parent>
-        <groupId>org.sonatype.oss</groupId>
-        <artifactId>oss-parent</artifactId>
-        <version>7</version>
+        <groupId>org.apache</groupId>
+        <artifactId>apache</artifactId>
+        <version>23</version>
     </parent>
 
     <licenses>
@@ -31,39 +47,39 @@
         </license>
     </licenses>
 
+   <!-- TODO: update url to upload in maven repo  -->
     <scm>
-        <url>https://github.com/hugegraph/hugegraph-commons</url>
-        <connection>https://github.com/hugegraph/hugegraph-commons</connection>
-        <developerConnection>https://github.com/hugegraph/hugegraph-commons</developerConnection>
+        <url>https://github.com/apache/hugegraph-commons</url>
+        <connection>https://github.com/apache/hugegraph-commons</connection>
+        <developerConnection>https://github.com/apache/hugegraph-commons</developerConnection>
     </scm>
 
     <properties>
-        <revision>2.1.2</revision>
+        <revision>1.0.0</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <top.level.dir>${project.basedir}/..</top.level.dir>
         <compiler.source>1.8</compiler.source>
         <compiler.target>1.8</compiler.target>
-        <log4j2.version>2.17.0</log4j2.version>
+        <log4j2.version>2.18.0</log4j2.version>
         <commons.configuration.version>1.10</commons.configuration.version>
-        <commons.configuration2.version>2.3</commons.configuration2.version>
+        <commons.configuration2.version>2.8.0</commons.configuration2.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.io.version>2.7</commons.io.version>
-        <commons.codec.version>1.11</commons.codec.version>
-        <guava.version>25.1-jre</guava.version>
+        <commons.codec.version>1.13</commons.codec.version>
+        <guava.version>30.0-jre</guava.version>
         <javax.json.version>1.0</javax.json.version>
         <jsr305.version>3.0.1</jsr305.version>
         <javassist.version>3.28.0-GA</javassist.version>
         <jersey.version>3.0.3</jersey.version>
         <jersey.hk2.version>3.0.3</jersey.hk2.version>
-        <jackson.version>2.12.1</jackson.version>
-        <junit.version>4.12</junit.version>
+        <jackson.version>2.14.0-rc1</jackson.version>
+        <junit.version>4.13.1</junit.version>
         <mockito.version>4.1.0</mockito.version>
         <jakarta.xml.version>4.0.0-RC2</jakarta.xml.version>
         <sun.xml.version>3.0.2</sun.xml.version>
         <checkstyle.plugin.version>3.1.2</checkstyle.plugin.version>
         <checkstyle.version>8.45</checkstyle.version>
-        <implementation.version>2.1.2.0</implementation.version>
     </properties>
 
     <modules>
@@ -75,7 +91,6 @@
         <plugins>
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.1</version>
                 <configuration>
                     <source>${compiler.source}</source>
                     <target>${compiler.target}</target>
@@ -119,7 +134,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>2.6</version>
                 <configuration>
                     <archive>
                         <index>true</index>
@@ -134,7 +148,7 @@
                         <manifestEntries>
                             <!-- Must be on one line, otherwise the automatic
                                  upgrade script cannot replace the version number -->
-                            <Implementation-Version>${implementation.version}</Implementation-Version>
+                            <Implementation-Version>${project.version}</Implementation-Version>
                         </manifestEntries>
                     </archive>
                 </configuration>
@@ -163,6 +177,70 @@
                     </execution>
                 </executions>
             </plugin>
+            <!-- Apache RAT for license check -->
+            <plugin>
+                <groupId>org.apache.rat</groupId>
+                <artifactId>apache-rat-plugin</artifactId>
+                <configuration>
+                    <excludes>
+                        <exclude>**/*.versionsBackup</exclude>
+                        <exclude>**/*.log</exclude>
+                        <exclude>**/*.txt</exclude>
+                        <exclude>**/*.json</exclude>
+                        <exclude>**/*.conf</exclude>
+                        <exclude>**/*.properties</exclude>
+                        <exclude>dist/**/*</exclude>
+                        <exclude>docs/**/*</exclude>
+                        <exclude>scripts/dev/reviewers</exclude>
+                        <exclude>**/*.md</exclude>
+                        <exclude>**/dependency-reduced-pom.xml</exclude>
+                        <exclude>**/.flattened-pom.xml</exclude>
+                        <exclude>**/logs/*.log</exclude>
+                        <exclude>**/target/*</exclude>
+                        <exclude>style/*</exclude>
+                        <exclude>ChangeLog</exclude>
+                        <exclude>CONFIG.ini</exclude>
+                        <exclude>GROUPS</exclude>
+                        <exclude>OWNERS</exclude>
+                        <!-- GitHub -->
+                        <exclude>.github/**/*</exclude>
+                        <!-- Intellij -->
+                        <exclude>**/*.iml</exclude>
+                        <exclude>**/*.iws</exclude>
+                        <exclude>**/*.ipr</exclude>
+                        <exclude>**/META-INF/MANIFEST.MF</exclude>
+                        <!-- Maven -->
+                        <exclude>.repository/**</exclude>
+                    </excludes>
+                    <consoleOutput>true</consoleOutput>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>flatten-maven-plugin</artifactId>
+                <version>1.3.0</version>
+                <configuration>
+                    <updatePomFile>true</updatePomFile>
+                    <flattenMode>resolveCiFriendliesOnly</flattenMode>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>flatten</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>flatten</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>flatten.clean</id>
+                        <phase>clean</phase>
+                        <goals>
+                            <goal>clean</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
     </build>
 
@@ -174,7 +252,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-source-plugin</artifactId>
-                        <version>2.2.1</version>
                         <executions>
                             <execution>
                                 <id>attach-sources</id>
@@ -187,7 +264,6 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-javadoc-plugin</artifactId>
-                        <version>2.9.1</version>
                         <executions>
                             <execution>
                                 <id>attach-javadocs</id>
@@ -196,11 +272,15 @@
                                 </goals>
                             </execution>
                         </executions>
+                        <configuration>
+                            <additionalOptions>
+                                <additionalOption>-Xdoclint:none</additionalOption>
+                            </additionalOptions>
+                        </configuration>
                     </plugin>
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-gpg-plugin</artifactId>
-                        <version>1.5</version>
                         <executions>
                             <execution>
                                 <id>sign-artifacts</id>
