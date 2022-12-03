@@ -4,3 +4,5 @@
 .gitignore export-ignore
 .asf.yaml export-ignore
 apache-release.sh export-ignore
+
+hugegraph-dist/scripts export-ignore
