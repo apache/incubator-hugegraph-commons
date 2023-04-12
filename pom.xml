@@ -89,6 +89,7 @@
     </scm>
 
     <properties>
+        <!--need to keep pace with CommonVersion.java & RpcVersion.java-->
         <revision>1.0.1</revision>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <top.level.dir>${project.basedir}/..</top.level.dir>
