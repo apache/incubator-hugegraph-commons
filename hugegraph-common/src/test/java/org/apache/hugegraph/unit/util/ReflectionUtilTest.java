@@ -103,7 +103,7 @@ public class ReflectionUtilTest extends BaseUnitTest {
         Assert.assertEquals("org.apache.hugegraph.util.CollectionUtil",
                             classes.get(2).getName());
         Assert.assertEquals("org.apache.hugegraph.util.VersionUtil",
-                            classes.get(16).getName());
+                            classes.get(17).getName());
     }
 
     @Test
