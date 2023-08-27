@@ -17,9 +17,9 @@
 
 package org.apache.hugegraph.rest;
 
-import java.util.Map;
+import okhttp3.Headers;
 
-import jakarta.ws.rs.core.MultivaluedMap;
+import java.util.Map;
 
 public interface RestClient {
     /**
@@ -27,24 +27,22 @@ public interface RestClient {
      */
     RestResult post(String path, Object object);
 
-    RestResult post(String path, Object object, MultivaluedMap<String, Object> headers);
-
+    RestResult post(String path, Object object, Headers headers);
     RestResult post(String path, Object object, Map<String, Object> params);
 
-    RestResult post(String path, Object object, MultivaluedMap<String, Object> headers,
-                    Map<String, Object> params);
+    RestResult post(String path, Object object, Headers headers,
+                          Map<String, Object> params);
 
     /**
      * Put method
      */
     RestResult put(String path, String id, Object object);
-
-    RestResult put(String path, String id, Object object, MultivaluedMap<String, Object> headers);
+    RestResult put(String path, String id, Object object, Headers headers);
 
     RestResult put(String path, String id, Object object, Map<String, Object> params);
 
-    RestResult put(String path, String id, Object object, MultivaluedMap<String, Object> headers,
-                   Map<String, Object> params);
+    RestResult put(String path, String id, Object object, Headers headers,
+                         Map<String, Object> params);
 
     /**
      * Get method

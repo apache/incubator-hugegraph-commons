@@ -17,188 +17,175 @@
 
 package org.apache.hugegraph.rest;
 
+import com.google.common.collect.ImmutableMap;
+import lombok.SneakyThrows;
+import okhttp3.*;
+import okio.BufferedSink;
+import okio.GzipSink;
+import okio.Okio;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.hugegraph.util.JsonUtil;
+import org.jetbrains.annotations.NotNull;
+
+import javax.net.ssl.*;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.net.URI;
-import java.security.KeyManagementException;
-import java.security.SecureRandom;
-import java.security.cert.CertificateException;
-import java.security.cert.X509Certificate;
+import java.security.KeyStore;
+import java.util.Arrays;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.X509TrustManager;
-
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.http.HttpHeaders;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.conn.socket.ConnectionSocketFactory;
-import org.apache.http.conn.socket.PlainConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.pool.PoolStats;
-import org.apache.hugegraph.util.E;
-import org.apache.hugegraph.util.ExecutorUtil;
-import org.glassfish.jersey.SslConfigurator;
-import org.glassfish.jersey.apache.connector.ApacheClientProperties;
-import org.glassfish.jersey.apache.connector.ApacheConnectorProvider;
-import org.glassfish.jersey.client.ClientConfig;
-import org.glassfish.jersey.client.ClientProperties;
-import org.glassfish.jersey.client.JerseyClientBuilder;
-import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
-import org.glassfish.jersey.internal.util.collection.Ref;
-import org.glassfish.jersey.internal.util.collection.Refs;
-import org.glassfish.jersey.message.GZipEncoder;
-import org.glassfish.jersey.uri.UriComponent;
-
-import com.google.common.collect.ImmutableMap;
-
-import jakarta.ws.rs.client.Client;
-import jakarta.ws.rs.client.ClientRequestContext;
-import jakarta.ws.rs.client.ClientRequestFilter;
-import jakarta.ws.rs.client.Entity;
-import jakarta.ws.rs.client.Invocation.Builder;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MediaType;
-import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Response;
-import jakarta.ws.rs.core.Variant;
 
 public abstract class AbstractRestClient implements RestClient {
 
-    // Time unit: hours
-    private static final long TTL = 24L;
-    // Time unit: ms
-    private static final long IDLE_TIME = 40L * 1000L;
+    private OkHttpClient client;
 
-    private static final String TOKEN_KEY = "tokenKey";
+    private String baseUrl;
 
-    private final Client client;
-    private final WebTarget target;
-
-    private PoolingHttpClientConnectionManager pool;
-    private ScheduledExecutorService cleanExecutor;
+    private Request.Builder requestBuilder = new Request.Builder();
 
     public AbstractRestClient(String url, int timeout) {
-        this(url, new ConfigBuilder().configTimeout(timeout).build());
+        this(url, OkhttpConfig.builder()
+                .timeout(timeout)
+                .build());
     }
 
     public AbstractRestClient(String url, String user, String password,
-                              int timeout) {
-        this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configUser(user, password)
-                                     .build());
+                                    Integer timeout) {
+        this(url, OkhttpConfig.builder()
+                .user(user).password(password)
+                .timeout(timeout)
+                .build());
     }
 
     public AbstractRestClient(String url, int timeout,
-                              int maxTotal, int maxPerRoute) {
-        this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configPool(maxTotal, maxPerRoute)
-                                     .build());
+                                    int maxTotal, int maxPerRoute) {
+        this(url, null, null, timeout, maxTotal, maxPerRoute);
     }
 
     public AbstractRestClient(String url, int timeout, int idleTime,
-                              int maxTotal, int maxPerRoute) {
-        this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configIdleTime(idleTime)
-                                     .configPool(maxTotal, maxPerRoute)
-                                     .build());
+                                    int maxTotal, int maxPerRoute) {
+        this(url, OkhttpConfig.builder()
+                .idleTime(idleTime)
+                .timeout(timeout)
+                .maxTotal(maxTotal)
+                .maxPerRoute(maxPerRoute)
+                .build());
     }
 
     public AbstractRestClient(String url, String user, String password,
-                              int timeout, int maxTotal, int maxPerRoute) {
-        this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configUser(user, password)
-                                     .configPool(maxTotal, maxPerRoute)
-                                     .build());
+                                    int timeout, int maxTotal, int maxPerRoute) {
+        this(url, OkhttpConfig.builder()
+                .user(user).password(password)
+                .timeout(timeout)
+                .maxTotal(maxTotal)
+                .maxPerRoute(maxPerRoute)
+                .build());
     }
 
     public AbstractRestClient(String url, String user, String password,
-                              int timeout, int maxTotal, int maxPerRoute,
-                              String trustStoreFile,
-                              String trustStorePassword) {
-        this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configUser(user, password)
-                                     .configPool(maxTotal, maxPerRoute)
-                                     .configSSL(trustStoreFile,
-                                                trustStorePassword)
-                                     .build());
+                                    int timeout, int maxTotal, int maxPerRoute,
+                                    String trustStoreFile,
+                                    String trustStorePassword) {
+        this(url, OkhttpConfig.builder()
+                .user(user).password(password)
+                .timeout(timeout)
+                .maxTotal(maxTotal)
+                .maxPerRoute(maxPerRoute)
+                .trustStoreFile(trustStoreFile)
+                .trustStorePassword(trustStorePassword)
+                .build());
     }
 
-    public AbstractRestClient(String url, String token, int timeout) {
-        this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configToken(token)
-                                     .build());
+    public AbstractRestClient(String url, String token, Integer timeout) {
+        this(url, OkhttpConfig.builder()
+                .token(token)
+                .timeout(timeout)
+                .build());
     }
 
-    public AbstractRestClient(String url, String token, int timeout,
-                              int maxTotal, int maxPerRoute) {
-        this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configToken(token)
-                                     .configPool(maxTotal, maxPerRoute)
-                                     .build());
+    public AbstractRestClient(String url, String token, Integer timeout,
+                                    Integer maxTotal, Integer maxPerRoute) {
+        this(url,OkhttpConfig.builder()
+                .token(token)
+                .timeout(timeout)
+                .maxTotal(maxTotal)
+                .maxPerRoute(maxPerRoute)
+                .build());
     }
 
-    public AbstractRestClient(String url, String token, int timeout,
-                              int maxTotal, int maxPerRoute,
-                              String trustStoreFile,
-                              String trustStorePassword) {
-        this(url, new ConfigBuilder().configTimeout(timeout)
-                                     .configToken(token)
-                                     .configPool(maxTotal, maxPerRoute)
-                                     .configSSL(trustStoreFile,
-                                                trustStorePassword)
-                                     .build());
+    public AbstractRestClient(String url, String token, Integer timeout,
+                                    Integer maxTotal, Integer maxPerRoute,
+                                    String trustStoreFile,
+                                    String trustStorePassword) {
+        this(url,OkhttpConfig.builder()
+                .token(token)
+                .timeout(timeout)
+                .maxTotal(maxTotal)
+                .maxPerRoute(maxPerRoute)
+                .trustStoreFile(trustStoreFile)
+                .trustStorePassword(trustStorePassword)
+                .build());
     }
 
-    public AbstractRestClient(String url, ClientConfig config) {
-        configConnectionManager(url, config);
+    public AbstractRestClient(String url, OkhttpConfig okhttpConfig) {
+        this.baseUrl = url;
+        this.client = getOkhttpClient(okhttpConfig);
+    }
 
-        this.client = JerseyClientBuilder.newClient(config);
-        this.client.register(GZipEncoder.class);
-        this.target = this.client.target(url);
-        this.pool = (PoolingHttpClientConnectionManager) config.getProperty(
-                    ApacheClientProperties.CONNECTION_MANAGER);
-        if (this.pool != null) {
-            this.cleanExecutor = ExecutorUtil.newScheduledThreadPool(
-                                              "conn-clean-worker-%d");
-            Number idleTimeProp = (Number) config.getProperty("idleTime");
-            final long idleTime = idleTimeProp == null ?
-                                  IDLE_TIME : idleTimeProp.longValue();
-            final long checkPeriod = idleTime / 2L;
-            this.cleanExecutor.scheduleWithFixedDelay(() -> {
-                PoolStats stats = this.pool.getTotalStats();
-                int using = stats.getLeased() + stats.getPending();
-                if (using > 0) {
-                    // Do clean only when all connections are idle
-                    return;
-                }
-                // Release connections when all clients are inactive
-                this.pool.closeIdleConnections(idleTime, TimeUnit.MILLISECONDS);
-                this.pool.closeExpiredConnections();
-            }, checkPeriod, checkPeriod, TimeUnit.MILLISECONDS);
+    private OkHttpClient getOkhttpClient(OkhttpConfig okhttpConfig) {
+        OkHttpClient.Builder builder = new OkHttpClient.Builder();
+
+        if(okhttpConfig.getTimeout()!=null) {
+            builder.connectTimeout(okhttpConfig.getTimeout(), TimeUnit.MILLISECONDS)
+                    .readTimeout(okhttpConfig.getTimeout(), TimeUnit.MILLISECONDS);
         }
+
+        if(okhttpConfig.getIdleTime()!=null) {
+            ConnectionPool connectionPool = new ConnectionPool(5, okhttpConfig.getIdleTime(), TimeUnit.MILLISECONDS);
+            builder.connectionPool(connectionPool);
+        }
+
+
+        //auth
+        if(StringUtils.isNotBlank(okhttpConfig.getUser()) && StringUtils.isNotBlank(okhttpConfig.getPassword())) {
+            builder.addInterceptor(new OkhttpBasicAuthInterceptor(okhttpConfig.getUser(), okhttpConfig.getPassword()));
+        }
+        if(StringUtils.isNotBlank(okhttpConfig.getToken())) {
+            builder.addInterceptor(new OkhttpTokenInterceptor(okhttpConfig.getToken()));
+        }
+
+        //ssl
+        configSsl(builder, baseUrl, okhttpConfig.getTrustStoreFile(), okhttpConfig.getTrustStorePassword());
+
+        OkHttpClient okHttpClient = builder.build();
+
+        if(okhttpConfig.getMaxTotal()!=null) {
+            okHttpClient.dispatcher().setMaxRequests(okhttpConfig.getMaxTotal());
+        }
+
+        if(okhttpConfig.getMaxPerRoute()!=null) {
+            okHttpClient.dispatcher().setMaxRequestsPerHost(okhttpConfig.getMaxPerRoute());
+        }
+
+        return okHttpClient;
     }
 
-    protected abstract void checkStatus(Response response,
-                                        Response.Status... statuses);
-
-    protected Response request(Callable<Response> method) {
-        try {
-            return method.call();
-        } catch (Exception e) {
-            throw new ClientException("Failed to do request", e);
+    @SneakyThrows
+    private void configSsl(OkHttpClient.Builder builder, String url, String trustStoreFile, String trustStorePass) {
+        if(StringUtils.isBlank(trustStoreFile) || StringUtils.isBlank(trustStorePass)) {
+            return;
         }
+
+        X509TrustManager trustManager = trustManagerForCertificates(trustStoreFile, trustStorePass);
+        SSLContext sslContext = SSLContext.getInstance("TLS");
+        sslContext.init(null, new TrustManager[]{trustManager}, null);
+        SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+
+        builder.sslSocketFactory(sslSocketFactory, trustManager)
+                .hostnameVerifier(new HostNameVerifier(url));
     }
 
     @Override
@@ -207,31 +194,100 @@ public abstract class AbstractRestClient implements RestClient {
     }
 
     @Override
-    public RestResult post(String path, Object object,
-                           MultivaluedMap<String, Object> headers) {
+    public RestResult post(String path, Object object, Headers headers) {
         return this.post(path, object, headers, null);
     }
 
     @Override
-    public RestResult post(String path, Object object,
-                           Map<String, Object> params) {
+    public RestResult post(String path, Object object, Map<String, Object> params) {
         return this.post(path, object, null, params);
     }
 
+    private Request.Builder getRequestBuilder(String path, String id, Headers headers, Map<String, Object> params ) {
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder()
+                .addPathSegments(path);
+        if(id!=null) {
+            urlBuilder.addPathSegment(id);
+        }
+
+        if(params!=null) {
+            params.forEach((name, value) -> {
+                if(value==null){
+                    return;
+                }
+
+                if(value instanceof Collection) {
+                    for (Object i : (Collection<?>) value) {
+                        urlBuilder.addQueryParameter(name, String.valueOf(i));
+                    }
+                } else {
+                    urlBuilder.addQueryParameter(name, String.valueOf(value));
+                }
+            });
+        }
+
+        Request.Builder builder = requestBuilder
+                .url(urlBuilder.build());
+
+        if(headers!=null) {
+            builder.headers(headers);
+        }
+
+        this.attachAuthToRequest(builder);
+
+        return builder;
+    }
+
+    private static RequestBody getRequestBody(Object object, Headers headers) {
+        String contentType = parseContentType(headers);
+        String bodyContent;
+        if("application/json".equals(contentType)) {
+            if(object == null) {
+                bodyContent = "{}";
+            } else {
+                bodyContent = JsonUtil.toJson(object);
+            }
+        } else {
+            bodyContent = String.valueOf(object);
+        }
+        RequestBody requestBody = RequestBody.create(MediaType.parse(contentType), bodyContent);
+
+        if(headers!=null && "gzip".equals(headers.get("Content-Encoding"))) {
+            requestBody = gzip(requestBody);
+        }
+        return requestBody;
+    }
+
+    private static RequestBody gzip(final RequestBody body) {
+        return new RequestBody() {
+            @Override public MediaType contentType() {
+                return body.contentType();
+            }
+
+            @Override public long contentLength() {
+                return -1; // We don't know the compressed length in advance!
+            }
+
+            @Override public void writeTo(BufferedSink sink) throws IOException {
+                BufferedSink gzipSink = Okio.buffer(new GzipSink(sink));
+                body.writeTo(gzipSink);
+                gzipSink.close();
+            }
+        };
+    }
+
+    @SneakyThrows
     @Override
     public RestResult post(String path, Object object,
-                           MultivaluedMap<String, Object> headers,
-                           Map<String, Object> params) {
-        Pair<Builder, Entity<?>> pair = this.buildRequest(path, null, object,
-                                                          headers, params);
-        Response response = this.request(() -> {
-            // pair.getLeft() is builder, pair.getRight() is entity (http body)
-            return pair.getLeft().post(pair.getRight());
-        });
-        // If check status failed, throw client exception.
-        checkStatus(response, Response.Status.CREATED,
-                    Response.Status.OK, Response.Status.ACCEPTED);
-        return new RestResult(response);
+                                 Headers headers,
+                                 Map<String, Object> params) {
+        Request.Builder requestBuilder = getRequestBuilder(path, null, headers, params);
+        requestBuilder.post(getRequestBody(object, headers));
+
+        try (Response response = this.request(() -> client.newCall(requestBuilder.build()).execute())) {
+            checkStatus(response, 200, 201, 202);
+            return new RestResult(response);
+        }
     }
 
     @Override
@@ -241,29 +297,38 @@ public abstract class AbstractRestClient implements RestClient {
 
     @Override
     public RestResult put(String path, String id, Object object,
-                          MultivaluedMap<String, Object> headers) {
+                                Headers headers) {
         return this.put(path, id, object, headers, null);
     }
 
     @Override
     public RestResult put(String path, String id, Object object,
-                          Map<String, Object> params) {
+                                Map<String, Object> params) {
         return this.put(path, id, object, null, params);
     }
 
+    @SneakyThrows
     @Override
     public RestResult put(String path, String id, Object object,
-                          MultivaluedMap<String, Object> headers,
-                          Map<String, Object> params) {
-        Pair<Builder, Entity<?>> pair = this.buildRequest(path, id, object,
-                                                          headers, params);
-        Response response = this.request(() -> {
-            // pair.getLeft() is builder, pair.getRight() is entity (http body)
-            return pair.getLeft().put(pair.getRight());
-        });
-        // If check status failed, throw client exception.
-        checkStatus(response, Response.Status.OK, Response.Status.ACCEPTED);
-        return new RestResult(response);
+                                Headers headers,
+                                Map<String, Object> params) {
+        Request.Builder requestBuilder = getRequestBuilder(path, id, headers, params);
+        requestBuilder.put(getRequestBody(object, headers));
+
+        try (Response response = this.request(() -> client.newCall(requestBuilder.build()).execute())) {
+            checkStatus(response, 200, 202);
+            return new RestResult(response);
+        }
+    }
+
+    private static String parseContentType(Headers headers) {
+        if(headers!=null) {
+            String contentType = headers.get("Content-Type");
+            if(contentType!=null) {
+                return contentType;
+            }
+        }
+        return "application/json";
     }
 
     @Override
@@ -281,30 +346,16 @@ public abstract class AbstractRestClient implements RestClient {
         return this.get(path, id, ImmutableMap.of());
     }
 
+    @SneakyThrows
     private RestResult get(String path, String id, Map<String, Object> params) {
-        Ref<WebTarget> target = Refs.of(this.target);
-        for (String key : params.keySet()) {
-            Object value = params.get(key);
-            if (value instanceof Collection) {
-                for (Object i : (Collection<?>) value) {
-                    target.set(target.get().queryParam(key, i));
-                }
-            } else {
-                target.set(target.get().queryParam(key, value));
-            }
+        Request.Builder requestBuilder = getRequestBuilder(path, id, null, params);
+
+        try (Response response = this.request(() -> client.newCall(requestBuilder.build()).execute())) {
+            checkStatus(response, 200);
+            return new RestResult(response);
         }
-
-        Response response = this.request(() -> {
-            WebTarget webTarget = target.get();
-            Builder builder = id == null ? webTarget.path(path).request() :
-                              webTarget.path(path).path(encode(id)).request();
-            this.attachAuthToRequest(builder);
-            return builder.get();
-        });
-
-        checkStatus(response, Response.Status.OK);
-        return new RestResult(response);
     }
+
 
     @Override
     public RestResult delete(String path, Map<String, Object> params) {
@@ -316,37 +367,42 @@ public abstract class AbstractRestClient implements RestClient {
         return this.delete(path, id, ImmutableMap.of());
     }
 
+    @SneakyThrows
     private RestResult delete(String path, String id,
-                              Map<String, Object> params) {
-        Ref<WebTarget> target = Refs.of(this.target);
-        for (String key : params.keySet()) {
-            target.set(target.get().queryParam(key, params.get(key)));
+                                    Map<String, Object> params) {
+        Request.Builder requestBuilder = getRequestBuilder(path, id, null, params);
+        requestBuilder.delete();
+
+        try (Response response = this.request(() -> client.newCall(requestBuilder.build()).execute())) {
+            checkStatus(response, 204, 202);
+            return new RestResult(response);
         }
-
-        Response response = this.request(() -> {
-            WebTarget webTarget = target.get();
-            Builder builder = id == null ? webTarget.path(path).request() :
-                              webTarget.path(path).path(encode(id)).request();
-            this.attachAuthToRequest(builder);
-            return builder.delete();
-        });
-
-        checkStatus(response, Response.Status.NO_CONTENT,
-                    Response.Status.ACCEPTED);
-        return new RestResult(response);
     }
 
+    protected abstract void checkStatus(Response response, int... statuses);
+
+    protected Response request(Callable<Response> method) {
+        try {
+            return method.call();
+        } catch (Exception e) {
+            throw new ClientException("Failed to do request", e);
+        }
+    }
+
+    @SneakyThrows
     @Override
     public void close() {
-        if (this.pool != null) {
-            this.pool.close();
-            this.cleanExecutor.shutdownNow();
+        if(client!=null) {
+            client.dispatcher().executorService().shutdown();
+            client.connectionPool().evictAll();
+            if(client.cache()!=null) {
+                client.cache().close();
+            }
         }
-        this.client.close();
     }
 
     private final ThreadLocal<String> authContext =
-                                      new InheritableThreadLocal<>();
+            new InheritableThreadLocal<>();
 
     public void setAuthContext(String auth) {
         this.authContext.set(auth);
@@ -360,136 +416,36 @@ public abstract class AbstractRestClient implements RestClient {
         return this.authContext.get();
     }
 
-    private void attachAuthToRequest(Builder builder) {
+    private void attachAuthToRequest(Request.Builder builder) {
         // Add auth header
         String auth = this.getAuthContext();
         if (StringUtils.isNotEmpty(auth)) {
-            builder.header(HttpHeaders.AUTHORIZATION, auth);
+            builder.addHeader("Authorization", auth);
         }
     }
 
-    private Pair<Builder, Entity<?>> buildRequest(
-                                     String path, String id, Object object,
-                                     MultivaluedMap<String, Object> headers,
-                                     Map<String, Object> params) {
-        WebTarget target = this.target;
-        if (params != null && !params.isEmpty()) {
-            for (Map.Entry<String, Object> param : params.entrySet()) {
-                target = target.queryParam(param.getKey(), param.getValue());
-            }
+    @SneakyThrows
+    private X509TrustManager trustManagerForCertificates(String trustStoreFile, String trustStorePass){
+        char[] password = trustStorePass.toCharArray();
+
+        //load keyStore
+        KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+        try(FileInputStream in = new FileInputStream(trustStoreFile)) {
+            keyStore.load(in, password);
         }
 
-        Builder builder = id == null ? target.path(path).request() :
-                          target.path(path).path(encode(id)).request();
+        TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
+        trustManagerFactory.init(keyStore);
 
-        String encoding = null;
-        if (headers != null && !headers.isEmpty()) {
-            // Add headers
-            builder = builder.headers(headers);
-            encoding = (String) headers.getFirst("Content-Encoding");
+        TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
+        if (trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager)) {
+            throw new IllegalStateException("Unexpected default trust managers:"
+                    + Arrays.toString(trustManagers));
         }
-        // Add auth header
-        this.attachAuthToRequest(builder);
-
-        /*
-         * We should specify the encoding of the entity object manually,
-         * because Entity.json() method will reset "content encoding =
-         * null" that has been set up by headers before.
-         */
-        MediaType customContentType = parseCustomContentType(headers);
-        Entity<?> entity;
-        if (encoding == null) {
-            entity = Entity.entity(object, customContentType);
-        } else {
-            Variant variant = new Variant(customContentType,
-                                          (String) null, encoding);
-            entity = Entity.entity(object, variant);
-        }
-        return Pair.of(builder, entity);
-    }
-
-    /**
-     * parse user custom content-type, returns MediaType.APPLICATION_JSON_TYPE default.
-     * @param headers custom http header
-     */
-    private static MediaType parseCustomContentType(MultivaluedMap<String, Object> headers) {
-        String customContentType = null;
-        if (MapUtils.isNotEmpty(headers) && headers.get("Content-Type") != null) {
-            List<?> contentTypeObj = headers.get("Content-Type");
-            if (contentTypeObj != null && !contentTypeObj.isEmpty()) {
-                customContentType = contentTypeObj.get(0).toString();
-            }
-            return MediaType.valueOf(customContentType);
-        }
-        return MediaType.APPLICATION_JSON_TYPE;
-    }
-
-    private static void configConnectionManager(String url, ClientConfig conf) {
-        /*
-         * Using httpclient with connection pooling, and configuring the
-         * jersey connector. But the jersey that has been released in the maven central
-         * repository seems to have a bug: https://github.com/jersey/jersey/pull/3752
-         */
-        PoolingHttpClientConnectionManager pool = connectionManager(url, conf);
-        Object maxTotal = conf.getProperty("maxTotal");
-        Object maxPerRoute = conf.getProperty("maxPerRoute");
-        if (maxTotal != null) {
-            pool.setMaxTotal((int) maxTotal);
-        }
-        if (maxPerRoute != null) {
-            pool.setDefaultMaxPerRoute((int) maxPerRoute);
-        }
-        conf.property(ApacheClientProperties.CONNECTION_MANAGER, pool);
-        conf.connectorProvider(new ApacheConnectorProvider());
-    }
-
-    private static PoolingHttpClientConnectionManager connectionManager(
-                                                      String url,
-                                                      ClientConfig conf) {
-        String protocol = (String) conf.getProperty("protocol");
-        if (protocol == null || "http".equals(protocol)) {
-            return new PoolingHttpClientConnectionManager(TTL, TimeUnit.HOURS);
-        }
-
-        assert "https".equals(protocol);
-        String trustStoreFile = (String) conf.getProperty("trustStoreFile");
-        E.checkArgument(trustStoreFile != null && !trustStoreFile.isEmpty(),
-                        "The trust store file must be set when use https");
-        String trustStorePass = (String) conf.getProperty("trustStorePassword");
-        E.checkArgument(trustStorePass != null,
-                        "The trust store password must be set when use https");
-        SSLContext context = SslConfigurator.newInstance()
-                                            .trustStoreFile(trustStoreFile)
-                                            .trustStorePassword(trustStorePass)
-                                            .securityProtocol("SSL")
-                                            .createSSLContext();
-        TrustManager[] trustAllManager = NoCheckTrustManager.create();
-        try {
-            context.init(null, trustAllManager, new SecureRandom());
-        } catch (KeyManagementException e) {
-            throw new ClientException("Failed to init security management", e);
-        }
-
-        HostnameVerifier verifier = new HostNameVerifier(url);
-        ConnectionSocketFactory httpSocketFactory, httpsSocketFactory;
-        httpSocketFactory = PlainConnectionSocketFactory.getSocketFactory();
-        httpsSocketFactory = new SSLConnectionSocketFactory(context, verifier);
-        Registry<ConnectionSocketFactory> registry =
-                RegistryBuilder.<ConnectionSocketFactory>create()
-                .register("http", httpSocketFactory)
-                .register("https", httpsSocketFactory)
-                .build();
-        return new PoolingHttpClientConnectionManager(registry, null,
-                                                      null, null, TTL,
-                                                      TimeUnit.HOURS);
-    }
-
-    public static String encode(String raw) {
-        return UriComponent.encode(raw, UriComponent.Type.PATH_SEGMENT);
+        return (X509TrustManager) trustManagers[0];
     }
 
     public static class HostNameVerifier implements HostnameVerifier {
-
         private final String url;
 
         public HostNameVerifier(String url) {
@@ -505,107 +461,10 @@ public abstract class AbstractRestClient implements RestClient {
             if (!this.url.isEmpty() && this.url.endsWith(hostname)) {
                 return true;
             } else {
-                HostnameVerifier verifier = HttpsURLConnection
-                                            .getDefaultHostnameVerifier();
+                HostnameVerifier verifier = HttpsURLConnection.getDefaultHostnameVerifier();
                 return verifier.verify(hostname, session);
             }
         }
     }
 
-    private static class NoCheckTrustManager implements X509TrustManager {
-
-        @Override
-        public void checkClientTrusted(X509Certificate[] chain, String authType)
-                                       throws CertificateException {
-        }
-
-        @Override
-        public void checkServerTrusted(X509Certificate[] chain, String authType)
-                                       throws CertificateException {
-        }
-
-        @Override
-        public X509Certificate[] getAcceptedIssuers() {
-            return null;
-        }
-
-        public static TrustManager[] create() {
-            return new TrustManager[]{new NoCheckTrustManager()};
-        }
-    }
-
-    private static class ConfigBuilder {
-
-        private final ClientConfig config;
-
-        ConfigBuilder() {
-            this.config = new ClientConfig();
-        }
-
-        public ConfigBuilder configTimeout(int timeout) {
-            this.config.property(ClientProperties.CONNECT_TIMEOUT, timeout);
-            this.config.property(ClientProperties.READ_TIMEOUT, timeout);
-            return this;
-        }
-
-        public ConfigBuilder configUser(String username, String password) {
-            /*
-             * NOTE: don't use non-preemptive mode
-             * In non-preemptive mode the authentication information is added
-             * only when server refuses the request with 401 status code and
-             * then the request is repeated.
-             * Non-preemptive has negative impact on the performance. The
-             * advantage is it doesn't send credentials when they are not needed
-             * https://jersey.github.io/documentation/latest/client.html#d0e5461
-             */
-            this.config.register(HttpAuthenticationFeature.basic(username,
-                                                                 password));
-            return this;
-        }
-
-        public ConfigBuilder configToken(String token) {
-            this.config.property(TOKEN_KEY, token);
-            this.config.register(BearerRequestFilter.class);
-            return this;
-        }
-
-        public ConfigBuilder configPool(int maxTotal, int maxPerRoute) {
-            this.config.property("maxTotal", maxTotal);
-            this.config.property("maxPerRoute", maxPerRoute);
-            return this;
-        }
-
-        public ConfigBuilder configIdleTime(int idleTime) {
-            this.config.property("idleTime", idleTime);
-            return this;
-        }
-
-        public ConfigBuilder configSSL(String trustStoreFile,
-                                       String trustStorePassword) {
-            if (trustStoreFile == null || trustStoreFile.isEmpty() ||
-                trustStorePassword == null) {
-                this.config.property("protocol", "http");
-            } else {
-                this.config.property("protocol", "https");
-            }
-            this.config.property("trustStoreFile", trustStoreFile);
-            this.config.property("trustStorePassword", trustStorePassword);
-            return this;
-        }
-
-        public ClientConfig build() {
-            return this.config;
-        }
-    }
-
-    public static class BearerRequestFilter implements ClientRequestFilter {
-
-        @Override
-        public void filter(ClientRequestContext context) {
-            String token = context.getClient().getConfiguration()
-                                  .getProperty(TOKEN_KEY).toString();
-            context.getHeaders().add(HttpHeaders.AUTHORIZATION,
-                                     "Bearer " + token);
-        }
-    }
 }

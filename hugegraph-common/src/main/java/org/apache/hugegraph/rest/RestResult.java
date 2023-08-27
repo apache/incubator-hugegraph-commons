@@ -17,33 +17,37 @@
 
 package org.apache.hugegraph.rest;
 
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
-import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Response;
-
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.SneakyThrows;
+import okhttp3.Headers;
+import okhttp3.Response;
+
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class RestResult {
 
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final int status;
-    private final MultivaluedMap<String, Object> headers;
+    private final Headers headers;
     private final String content;
 
     public RestResult(Response response) {
-        this(response.getStatus(), response.readEntity(String.class),
-             response.getHeaders());
+        this(response.code(), getResponseContent(response), response.headers());
+    }
+
+    @SneakyThrows
+    private static String getResponseContent(Response response) {
+        return response.body().string();
     }
 
     public RestResult(int status, String content,
-                      MultivaluedMap<String, Object> headers) {
+                            Headers headers) {
         this.status = status;
         this.headers = headers;
         this.content = content;
@@ -53,7 +57,7 @@ public class RestResult {
         return this.status;
     }
 
-    public MultivaluedMap<String, Object> headers() {
+    public Headers headers() {
         return this.headers;
     }
 
@@ -66,7 +70,7 @@ public class RestResult {
             return MAPPER.readValue(this.content, clazz);
         } catch (Exception e) {
             throw new SerializeException(
-                      "Failed to deserialize: %s", e, this.content);
+                    "Failed to deserialize: %s", e, this.content);
         }
     }
 
@@ -77,35 +81,35 @@ public class RestResult {
             JsonNode element = root.get(key);
             if (element == null) {
                 throw new SerializeException(
-                          "Can't find value of the key: %s in json.", key);
+                        "Can't find value of the key: %s in json.", key);
             }
             JavaType type = MAPPER.getTypeFactory()
-                                  .constructParametrizedType(ArrayList.class,
-                                                             List.class, clazz);
+                    .constructParametrizedType(ArrayList.class,
+                            List.class, clazz);
             return MAPPER.convertValue(element, type);
         } catch (IOException e) {
             throw new SerializeException(
-                      "Failed to deserialize %s", e, this.content);
+                    "Failed to deserialize %s", e, this.content);
         }
     }
 
     @SuppressWarnings("deprecation")
     public <T> List<T> readList(Class<T> clazz) {
         JavaType type = MAPPER.getTypeFactory()
-                              .constructParametrizedType(ArrayList.class,
-                                                         List.class, clazz);
+                .constructParametrizedType(ArrayList.class,
+                        List.class, clazz);
         try {
             return MAPPER.readValue(this.content, type);
         } catch (IOException e) {
             throw new SerializeException(
-                      "Failed to deserialize %s", e, this.content);
+                    "Failed to deserialize %s", e, this.content);
         }
     }
 
     @Override
     public String toString() {
         return String.format("{status=%s, headers=%s, content=%s}",
-                             this.status, this.headers, this.content);
+                this.status, this.headers, this.content);
     }
 
     public static void registerModule(Module module) {

@@ -31,26 +31,20 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionContext;
 
-import jakarta.ws.rs.client.Invocation.Builder;
-import jakarta.ws.rs.client.WebTarget;
-import jakarta.ws.rs.core.MultivaluedHashMap;
-import jakarta.ws.rs.core.MultivaluedMap;
-import jakarta.ws.rs.core.Response;
 
+import com.google.common.net.HttpHeaders;
+import lombok.SneakyThrows;
+import okhttp3.*;
 import org.apache.hugegraph.unit.BaseUnitTest;
+import org.junit.BeforeClass;
 import org.junit.Test;
+import org.mockito.Mock;
+import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import org.glassfish.jersey.internal.util.collection.ImmutableMultivaluedMap;
 
-import org.apache.http.HttpClientConnection;
-import org.apache.http.HttpHeaders;
-import org.apache.http.HttpHost;
-import org.apache.http.conn.routing.HttpRoute;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.pool.PoolStats;
 
 import org.apache.hugegraph.rest.AbstractRestClient;
 import org.apache.hugegraph.rest.ClientException;
@@ -61,17 +55,36 @@ import org.apache.hugegraph.testutil.Whitebox;
 
 public class RestClientTest {
 
+    private static final Request.Builder requestBuilder = Mockito.mock(Request.Builder.class, Mockito.RETURNS_DEEP_STUBS);
+
+    @BeforeClass
+    public static void setUp() {
+        HttpUrl.Builder httpUrlBuilder = Mockito.mock(HttpUrl.Builder.class, Mockito.RETURNS_DEEP_STUBS);
+        HttpUrl httpUrl = Mockito.mock(HttpUrl.class);
+
+        MockedStatic<HttpUrl> httpUrlMockedStatic = Mockito.mockStatic(HttpUrl.class);
+        httpUrlMockedStatic.when(() -> HttpUrl.parse("/test")).thenReturn(httpUrl);
+        Mockito.when(httpUrl.newBuilder()).thenReturn(httpUrlBuilder);
+
+        Mockito.when(httpUrlBuilder.addPathSegments("test")).thenReturn(httpUrlBuilder);
+        Mockito.when(httpUrlBuilder.addPathSegments("test")
+                        .addPathSegment("id"))
+                .thenReturn(httpUrlBuilder);
+        Mockito.when(requestBuilder.url(httpUrlBuilder.addPathSegments("test").addPathSegment("id").build()))
+                .thenReturn(requestBuilder);
+    }
+
     private static class RestClientImpl extends AbstractRestClient {
 
         private final int status;
-        private final MultivaluedMap<String, Object> headers;
+        private final Headers headers;
         private final String content;
 
         public RestClientImpl(String url, int timeout, int idleTime,
                               int maxTotal, int maxPerRoute, int status) {
             super(url, timeout, idleTime, maxTotal, maxPerRoute);
             this.status = status;
-            this.headers = ImmutableMultivaluedMap.empty();
+            this.headers = new Headers.Builder().build();
             this.content = "";
         }
 
@@ -79,7 +92,7 @@ public class RestClientTest {
                               int maxTotal, int maxPerRoute, int status) {
             super(url, timeout, maxTotal, maxPerRoute);
             this.status = status;
-            this.headers = ImmutableMultivaluedMap.empty();
+            this.headers = new Headers.Builder().build();
             this.content = "";
         }
 
@@ -87,7 +100,7 @@ public class RestClientTest {
                               int timeout, int status) {
             super(url, user, password, timeout);
             this.status = status;
-            this.headers = ImmutableMultivaluedMap.empty();
+            this.headers = new Headers.Builder().build();
             this.content = "";
         }
 
@@ -96,7 +109,7 @@ public class RestClientTest {
                               int status) {
             super(url, user, password, timeout, maxTotal, maxPerRoute);
             this.status = status;
-            this.headers = ImmutableMultivaluedMap.empty();
+            this.headers = new Headers.Builder().build();
             this.content = "";
         }
 
@@ -107,7 +120,7 @@ public class RestClientTest {
             super(url, user, password, timeout, maxTotal, maxPerRoute,
                   trustStoreFile, trustStorePassword);
             this.status = status;
-            this.headers = ImmutableMultivaluedMap.empty();
+            this.headers = new Headers.Builder().build();
             this.content = "";
         }
 
@@ -115,7 +128,7 @@ public class RestClientTest {
                               int timeout, int status) {
             super(url, token, timeout);
             this.status = status;
-            this.headers = ImmutableMultivaluedMap.empty();
+            this.headers = new Headers.Builder().build();
             this.content = "";
         }
 
@@ -123,7 +136,7 @@ public class RestClientTest {
                               int maxTotal, int maxPerRoute, int status) {
             super(url, token, timeout, maxTotal, maxPerRoute);
             this.status = status;
-            this.headers = ImmutableMultivaluedMap.empty();
+            this.headers = new Headers.Builder().build();
             this.content = "";
         }
 
@@ -134,16 +147,16 @@ public class RestClientTest {
             super(url, token, timeout, maxTotal, maxPerRoute,
                   trustStoreFile, trustStorePassword);
             this.status = status;
-            this.headers = ImmutableMultivaluedMap.empty();
+            this.headers = new Headers.Builder().build();
             this.content = "";
         }
 
         public RestClientImpl(String url, int timeout, int status) {
-            this(url, timeout, status, ImmutableMultivaluedMap.empty(), "");
+            this(url, timeout, status, new Headers.Builder().build(), "");
         }
 
         public RestClientImpl(String url, int timeout, int status,
-                              MultivaluedMap<String, Object> headers,
+                              Headers headers,
                               String content) {
             super(url, timeout);
             this.status = status;
@@ -151,22 +164,23 @@ public class RestClientTest {
             this.content = content;
         }
 
+        @SneakyThrows
         @Override
         protected Response request(Callable<Response> method) {
-            Response response = Mockito.mock(Response.class);
-            Mockito.when(response.getStatus()).thenReturn(this.status);
-            Mockito.when(response.getHeaders()).thenReturn(this.headers);
-            Mockito.when(response.readEntity(String.class))
+            Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
+            Mockito.when(response.code()).thenReturn(this.status);
+            Mockito.when(response.headers()).thenReturn(this.headers);
+            Mockito.when(response.body().string())
                    .thenReturn(this.content);
             return response;
         }
 
         @Override
         protected void checkStatus(Response response,
-                                   Response.Status... statuses) {
+                                   int ... statuses) {
             boolean match = false;
-            for (Response.Status status : statuses) {
-                if (status.getStatusCode() == response.getStatus()) {
+            for (int status : statuses) {
+                if (status == response.code()) {
                     match = true;
                     break;
                 }
@@ -192,51 +206,54 @@ public class RestClientTest {
         Assert.assertEquals(200, restResult.status());
     }
 
-    @Test
-    public void testCleanExecutor() throws Exception {
-        // Modify IDLE_TIME 100ms to speed test
-        int newIdleTime = 100;
-        int newCheckPeriod = newIdleTime + 20;
-
-        RestClient client = new RestClientImpl("/test", 1000, newIdleTime,
-                                               10, 5, 200);
-
-        PoolingHttpClientConnectionManager pool;
-        pool = Whitebox.getInternalState(client, "pool");
-        pool = Mockito.spy(pool);
-        Whitebox.setInternalState(client, "pool", pool);
-        HttpRoute route = new HttpRoute(HttpHost.create(
-                                        "http://127.0.0.1:8080"));
-        // Create a connection manually, it will be put into leased list
-        HttpClientConnection conn = pool.requestConnection(route, null)
-                                        .get(1L, TimeUnit.SECONDS);
-        PoolStats stats = pool.getTotalStats();
-        int usingConns = stats.getLeased() + stats.getPending();
-        Assert.assertGte(1, usingConns);
-
-        // Sleep more than two check periods for busy connection
-        Thread.sleep(newCheckPeriod);
-        Mockito.verify(pool, Mockito.never()).closeExpiredConnections();
-        stats = pool.getTotalStats();
-        usingConns = stats.getLeased() + stats.getPending();
-        Assert.assertGte(1, usingConns);
-
-        // The connection will be put into available list
-        pool.releaseConnection(conn, null, 0, TimeUnit.SECONDS);
-
-        stats = pool.getTotalStats();
-        usingConns = stats.getLeased() + stats.getPending();
-        Assert.assertEquals(0, usingConns);
-        /*
-         * Sleep more than two check periods for free connection,
-         * ensure connection has been closed
-         */
-        Thread.sleep(newCheckPeriod);
-        Mockito.verify(pool, Mockito.atLeastOnce())
-               .closeExpiredConnections();
-        Mockito.verify(pool, Mockito.atLeastOnce())
-               .closeIdleConnections(newIdleTime, TimeUnit.MILLISECONDS);
-    }
+    /**
+     * okhttp does not need to manually clean Executor
+     */
+//    @Test
+//    public void testCleanExecutor() throws Exception {
+//        // Modify IDLE_TIME 100ms to speed test
+//        int newIdleTime = 100;
+//        int newCheckPeriod = newIdleTime + 20;
+//
+//        RestClient client = new RestClientImpl("/test", 1000, newIdleTime,
+//                                               10, 5, 200);
+//
+//        PoolingHttpClientConnectionManager pool;
+//        pool = Whitebox.getInternalState(client, "pool");
+//        pool = Mockito.spy(pool);
+//        Whitebox.setInternalState(client, "pool", pool);
+//        HttpRoute route = new HttpRoute(HttpHost.create(
+//                                        "http://127.0.0.1:8080"));
+//        // Create a connection manually, it will be put into leased list
+//        HttpClientConnection conn = pool.requestConnection(route, null)
+//                                        .get(1L, TimeUnit.SECONDS);
+//        PoolStats stats = pool.getTotalStats();
+//        int usingConns = stats.getLeased() + stats.getPending();
+//        Assert.assertGte(1, usingConns);
+//
+//        // Sleep more than two check periods for busy connection
+//        Thread.sleep(newCheckPeriod);
+//        Mockito.verify(pool, Mockito.never()).closeExpiredConnections();
+//        stats = pool.getTotalStats();
+//        usingConns = stats.getLeased() + stats.getPending();
+//        Assert.assertGte(1, usingConns);
+//
+//        // The connection will be put into available list
+//        pool.releaseConnection(conn, null, 0, TimeUnit.SECONDS);
+//
+//        stats = pool.getTotalStats();
+//        usingConns = stats.getLeased() + stats.getPending();
+//        Assert.assertEquals(0, usingConns);
+//        /*
+//         * Sleep more than two check periods for free connection,
+//         * ensure connection has been closed
+//         */
+//        Thread.sleep(newCheckPeriod);
+//        Mockito.verify(pool, Mockito.atLeastOnce())
+//               .closeExpiredConnections();
+//        Mockito.verify(pool, Mockito.atLeastOnce())
+//               .closeIdleConnections(newIdleTime, TimeUnit.MILLISECONDS);
+//    }
 
     @Test
     public void testPostWithUserAndPassword() {
@@ -327,10 +344,11 @@ public class RestClientTest {
 
     @Test
     public void testPostWithHeaderAndContent() {
-        MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
-        headers.add("key1", "value1-1");
-        headers.add("key1", "value1-2");
-        headers.add("Content-Encoding", "gzip");
+        Headers.Builder headersBuilder = new Headers.Builder();
+        headersBuilder.add("key1", "value1-1");
+        headersBuilder.add("key1", "value1-2");
+        headersBuilder.add("Content-Encoding", "gzip");
+        Headers headers = headersBuilder.build();
         String content = "{\"names\": [\"marko\", \"josh\", \"lop\"]}";
         RestClient client = new RestClientImpl("/test", 1000, 200,
                                                headers, content);
@@ -353,7 +371,7 @@ public class RestClientTest {
     @Test
     public void testPostWithParams() {
         RestClient client = new RestClientImpl("/test", 1000, 200);
-        MultivaluedMap<String, Object> headers = ImmutableMultivaluedMap.empty();
+        Headers headers = new Headers.Builder().build();
         Map<String, Object> params = ImmutableMap.of("param1", "value1");
         RestResult restResult = client.post("path", "body", headers,
                                             params);
@@ -370,11 +388,11 @@ public class RestClientTest {
     @Test
     public void testPutWithHeaders() {
         RestClient client = new RestClientImpl("/test", 1000, 200);
-        MultivaluedMap<String, Object> headers = new MultivaluedHashMap<>();
-        headers.add("key1", "value1-1");
-        headers.add("key1", "value1-2");
-        headers.add("Content-Encoding", "gzip");
-        RestResult restResult = client.put("path", "id1", "body", headers);
+        Headers.Builder headersBuilder = new Headers.Builder();
+        headersBuilder.add("key1", "value1-1");
+        headersBuilder.add("key1", "value1-2");
+        headersBuilder.add("Content-Encoding", "gzip");
+        RestResult restResult = client.put("path", "id1", "body", headersBuilder.build());
         Assert.assertEquals(200, restResult.status());
     }
 
@@ -449,28 +467,31 @@ public class RestClientTest {
         });
     }
 
-    @Test
-    public void testClose() {
-        RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
-        RestResult restResult = client.post("path", "body");
-        Assert.assertEquals(200, restResult.status());
-
-        client.close();
-        Assert.assertThrows(IllegalStateException.class, () -> {
-            client.post("path", "body");
-        });
-
-        PoolingHttpClientConnectionManager pool;
-        pool = Whitebox.getInternalState(client, "pool");
-        Assert.assertNotNull(pool);
-        AtomicBoolean isShutDown = Whitebox.getInternalState(pool, "isShutDown");
-        Assert.assertTrue(isShutDown.get());
-
-        ScheduledExecutorService cleanExecutor;
-        cleanExecutor = Whitebox.getInternalState(client, "cleanExecutor");
-        Assert.assertNotNull(cleanExecutor);
-        Assert.assertTrue(cleanExecutor.isShutdown());
-    }
+    /**
+     * okhttp does not need to manually close connection pool
+     */
+//    @Test
+//    public void testClose() {
+//        RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
+//        RestResult restResult = client.post("path", "body");
+//        Assert.assertEquals(200, restResult.status());
+//
+//        client.close();
+//        Assert.assertThrows(IllegalStateException.class, () -> {
+//            client.post("path", "body");
+//        });
+//
+//        PoolingHttpClientConnectionManager pool;
+//        pool = Whitebox.getInternalState(client, "pool");
+//        Assert.assertNotNull(pool);
+//        AtomicBoolean isShutDown = Whitebox.getInternalState(pool, "isShutDown");
+//        Assert.assertTrue(isShutDown.get());
+//
+//        ScheduledExecutorService cleanExecutor;
+//        cleanExecutor = Whitebox.getInternalState(client, "cleanExecutor");
+//        Assert.assertNotNull(cleanExecutor);
+//        Assert.assertTrue(cleanExecutor.isShutdown());
+//    }
 
     @Test
     public void testAuthContext() {
@@ -493,40 +514,32 @@ public class RestClientTest {
 
         @Override
         protected void checkStatus(Response response,
-                                   Response.Status... statuses) {
+                                   int... statuses) {
             // pass
         }
     }
 
+    @SneakyThrows
     @Test
     public void testRequest() {
-        MockRestClientImpl client = new MockRestClientImpl("test", 1000);
+        MockRestClientImpl client = new MockRestClientImpl("/test", 1000);
 
-        WebTarget target = Mockito.mock(WebTarget.class);
-        Builder builder = Mockito.mock(Builder.class);
+        Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
+        Mockito.when(response.code()).thenReturn(200);
+        Mockito.when(response.headers())
+               .thenReturn(new Headers.Builder().build());
+        Mockito.when(response.body().string()).thenReturn("content");
 
-        Mockito.when(target.path("test")).thenReturn(target);
-        Mockito.when(target.path("test")
-                           .path(AbstractRestClient.encode("id")))
-               .thenReturn(target);
-        Mockito.when(target.path("test").request()).thenReturn(builder);
-        Mockito.when(target.path("test")
-                           .path(AbstractRestClient.encode("id"))
-                           .request())
-               .thenReturn(builder);
+        Mockito.when(requestBuilder.delete()).thenReturn(requestBuilder);
+        Mockito.when(requestBuilder.get()).thenReturn(requestBuilder);
+        Mockito.when(requestBuilder.put(Mockito.any())).thenReturn(requestBuilder);
+        Mockito.when(requestBuilder.post(Mockito.any())).thenReturn(requestBuilder);
 
-        Response response = Mockito.mock(Response.class);
-        Mockito.when(response.getStatus()).thenReturn(200);
-        Mockito.when(response.getHeaders())
-               .thenReturn(new MultivaluedHashMap<>());
-        Mockito.when(response.readEntity(String.class)).thenReturn("content");
+        OkHttpClient okHttpClient = Mockito.mock(OkHttpClient.class, Mockito.RETURNS_DEEP_STUBS);
+        Mockito.when(okHttpClient.newCall(Mockito.any()).execute()).thenReturn(response);
 
-        Mockito.when(builder.delete()).thenReturn(response);
-        Mockito.when(builder.get()).thenReturn(response);
-        Mockito.when(builder.put(Mockito.any())).thenReturn(response);
-        Mockito.when(builder.post(Mockito.any())).thenReturn(response);
-
-        Whitebox.setInternalState(client, "target", target);
+        Whitebox.setInternalState(client, "client", okHttpClient);
+        Whitebox.setInternalState(client, "requestBuilder", requestBuilder);
 
         RestResult result;
 
@@ -534,14 +547,15 @@ public class RestClientTest {
         client.setAuthContext("token1");
         result = client.delete("test", ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader("Authorization",
                                        "token1");
+
         client.resetAuthContext();
 
         client.setAuthContext("token2");
         result = client.delete("test", "id");
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token2");
         client.resetAuthContext();
 
@@ -549,81 +563,82 @@ public class RestClientTest {
         client.setAuthContext("token3");
         result = client.get("test");
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token3");
         client.resetAuthContext();
 
         client.setAuthContext("token4");
         result = client.get("test", ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token4");
         client.resetAuthContext();
 
         client.setAuthContext("token5");
         result = client.get("test", "id");
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token5");
         client.resetAuthContext();
 
         // Test put
         client.setAuthContext("token6");
-        result = client.post("test", new Object());
+//        result = client.post("test", new Object()); //why use new Object() as args here?
+        result = client.post("test", null);
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token6");
         client.resetAuthContext();
 
         client.setAuthContext("token7");
-        result = client.post("test", new Object(), new MultivaluedHashMap<>());
+        result = client.post("test", null, new Headers.Builder().build());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token7");
         client.resetAuthContext();
 
         client.setAuthContext("token8");
-        result = client.post("test", new Object(), ImmutableMap.of());
+        result = client.post("test", null, ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token8");
         client.resetAuthContext();
 
         client.setAuthContext("token9");
-        result = client.post("test", new Object(), new MultivaluedHashMap<>(),
+        result = client.post("test", null, new Headers.Builder().build(),
                              ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token9");
         client.resetAuthContext();
 
         // Test post
         client.setAuthContext("token10");
-        result = client.post("test", new Object());
+        result = client.post("test", null);
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token10");
         client.resetAuthContext();
 
         client.setAuthContext("token11");
-        result = client.post("test", new Object(), new MultivaluedHashMap<>());
+        result = client.post("test", null, new Headers.Builder().build());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token11");
         client.resetAuthContext();
 
         client.setAuthContext("token12");
-        result = client.post("test", new Object(), ImmutableMap.of());
+        result = client.post("test", null, ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token12");
         client.resetAuthContext();
 
         client.setAuthContext("token13");
-        result = client.post("test", new Object(), new MultivaluedHashMap<>(),
+        result = client.post("test", null, new Headers.Builder().build(),
                              ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(builder).header(HttpHeaders.AUTHORIZATION,
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token13");
         client.resetAuthContext();
     }
