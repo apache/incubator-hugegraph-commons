@@ -17,16 +17,16 @@
 
 package org.apache.hugegraph.rest;
 
+import java.io.IOException;
+
 import okhttp3.Credentials;
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
-import java.io.IOException;
-
 public class OkhttpBasicAuthInterceptor implements Interceptor {
 
-    private String credentials;
+    private final String credentials;
 
     public OkhttpBasicAuthInterceptor(String user, String password) {
         this.credentials = Credentials.basic(user, password);
@@ -35,9 +35,9 @@ public class OkhttpBasicAuthInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
-        if(request.header("Authorization")==null) {
+        if (request.header("Authorization") == null) {
             Request authenticatedRequest = request.newBuilder()
-                    .header("Authorization", credentials).build();
+                                                  .header("Authorization", credentials).build();
             return chain.proceed(authenticatedRequest);
         }
         return chain.proceed(request);

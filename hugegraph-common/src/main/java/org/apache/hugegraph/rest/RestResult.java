@@ -17,17 +17,18 @@
 
 package org.apache.hugegraph.rest;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import lombok.SneakyThrows;
 import okhttp3.Headers;
 import okhttp3.Response;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 
 public class RestResult {
 
@@ -41,16 +42,20 @@ public class RestResult {
         this(response.code(), getResponseContent(response), response.headers());
     }
 
+    public RestResult(int status, String content,
+                      Headers headers) {
+        this.status = status;
+        this.headers = headers;
+        this.content = content;
+    }
+
     @SneakyThrows
     private static String getResponseContent(Response response) {
         return response.body().string();
     }
 
-    public RestResult(int status, String content,
-                            Headers headers) {
-        this.status = status;
-        this.headers = headers;
-        this.content = content;
+    public static void registerModule(Module module) {
+        MAPPER.registerModule(module);
     }
 
     public int status() {
@@ -84,8 +89,8 @@ public class RestResult {
                         "Can't find value of the key: %s in json.", key);
             }
             JavaType type = MAPPER.getTypeFactory()
-                    .constructParametrizedType(ArrayList.class,
-                            List.class, clazz);
+                                  .constructParametrizedType(ArrayList.class,
+                                                             List.class, clazz);
             return MAPPER.convertValue(element, type);
         } catch (IOException e) {
             throw new SerializeException(
@@ -96,8 +101,8 @@ public class RestResult {
     @SuppressWarnings("deprecation")
     public <T> List<T> readList(Class<T> clazz) {
         JavaType type = MAPPER.getTypeFactory()
-                .constructParametrizedType(ArrayList.class,
-                        List.class, clazz);
+                              .constructParametrizedType(ArrayList.class,
+                                                         List.class, clazz);
         try {
             return MAPPER.readValue(this.content, type);
         } catch (IOException e) {
@@ -109,10 +114,6 @@ public class RestResult {
     @Override
     public String toString() {
         return String.format("{status=%s, headers=%s, content=%s}",
-                this.status, this.headers, this.content);
-    }
-
-    public static void registerModule(Module module) {
-        MAPPER.registerModule(module);
+                             this.status, this.headers, this.content);
     }
 }

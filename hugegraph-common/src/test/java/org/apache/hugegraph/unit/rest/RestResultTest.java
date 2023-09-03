@@ -17,20 +17,46 @@
 
 package org.apache.hugegraph.unit.rest;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
-import lombok.SneakyThrows;
-import okhttp3.Headers;
-import okhttp3.Response;
+import java.util.Map;
+
 import org.apache.hugegraph.rest.RestResult;
 import org.apache.hugegraph.rest.SerializeException;
 import org.apache.hugegraph.testutil.Assert;
 import org.junit.Test;
 import org.mockito.Mockito;
 
-import java.util.Map;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+
+import lombok.SneakyThrows;
+import okhttp3.Headers;
+import okhttp3.Response;
 
 public class RestResultTest {
+
+    private static RestResult newRestResult(int status) {
+        return newRestResult(status, "", new Headers.Builder().build());
+    }
+
+    private static RestResult newRestResult(int status, String content) {
+        return newRestResult(status, content, new Headers.Builder().build());
+    }
+
+    private static RestResult newRestResult(int status,
+                                            Headers h) {
+        return newRestResult(status, "", h);
+    }
+
+    @SneakyThrows
+    private static RestResult newRestResult(int status, String content,
+                                            Headers h) {
+        Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
+        Mockito.when(response.code()).thenReturn(status);
+        Mockito.when(response.headers()).thenReturn(h);
+        Mockito.when(response.body().string())
+               .thenReturn(content);
+        return new RestResult(response);
+    }
 
     @Test
     public void testStatus() {
@@ -113,29 +139,5 @@ public class RestResultTest {
         Assert.assertThrows(SerializeException.class, () -> {
             result3.readList(String.class);
         });
-    }
-
-    private static RestResult newRestResult(int status) {
-        return newRestResult(status, "", new Headers.Builder().build());
-    }
-
-    private static RestResult newRestResult(int status, String content) {
-        return newRestResult(status, content, new Headers.Builder().build());
-    }
-
-    private static RestResult newRestResult(int status,
-                                            Headers h) {
-        return newRestResult(status, "", h);
-    }
-
-    @SneakyThrows
-    private static RestResult newRestResult(int status, String content,
-                                            Headers h) {
-        Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
-        Mockito.when(response.code()).thenReturn(status);
-        Mockito.when(response.headers()).thenReturn(h);
-        Mockito.when(response.body().string())
-               .thenReturn(content);
-        return new RestResult(response);
     }
 }
