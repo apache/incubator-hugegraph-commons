@@ -43,7 +43,6 @@ import com.google.common.collect.ImmutableMap;
 
 import lombok.SneakyThrows;
 import okhttp3.ConnectionPool;
-import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -151,7 +150,7 @@ public abstract class AbstractRestClient implements RestClient {
         this.client = getOkhttpClient(okhttpConfig);
     }
 
-    private static RequestBody getRequestBody(Object object, Headers headers) {
+    private static RequestBody getRequestBody(Object object, RestHeaders headers) {
         String contentType = parseContentType(headers);
         String bodyContent;
         if ("application/json".equals(contentType)) {
@@ -192,7 +191,7 @@ public abstract class AbstractRestClient implements RestClient {
         };
     }
 
-    private static String parseContentType(Headers headers) {
+    private static String parseContentType(RestHeaders headers) {
         if (headers != null) {
             String contentType = headers.get("Content-Type");
             if (contentType != null) {
@@ -266,7 +265,7 @@ public abstract class AbstractRestClient implements RestClient {
     }
 
     @Override
-    public RestResult post(String path, Object object, Headers headers) {
+    public RestResult post(String path, Object object, RestHeaders headers) {
         return this.post(path, object, headers, null);
     }
 
@@ -275,7 +274,7 @@ public abstract class AbstractRestClient implements RestClient {
         return this.post(path, object, null, params);
     }
 
-    private Request.Builder getRequestBuilder(String path, String id, Headers headers,
+    private Request.Builder getRequestBuilder(String path, String id, RestHeaders headers,
                                               Map<String, Object> params) {
         HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder()
                                             .addPathSegments(path);
@@ -303,7 +302,7 @@ public abstract class AbstractRestClient implements RestClient {
                 .url(urlBuilder.build());
 
         if (headers != null) {
-            builder.headers(headers);
+            builder.headers(headers.toOkhttpHeader());
         }
 
         this.attachAuthToRequest(builder);
@@ -314,7 +313,7 @@ public abstract class AbstractRestClient implements RestClient {
     @SneakyThrows
     @Override
     public RestResult post(String path, Object object,
-                           Headers headers,
+                           RestHeaders headers,
                            Map<String, Object> params) {
         Request.Builder requestBuilder = getRequestBuilder(path, null, headers, params);
         requestBuilder.post(getRequestBody(object, headers));
@@ -333,7 +332,7 @@ public abstract class AbstractRestClient implements RestClient {
 
     @Override
     public RestResult put(String path, String id, Object object,
-                          Headers headers) {
+                          RestHeaders headers) {
         return this.put(path, id, object, headers, null);
     }
 
@@ -346,7 +345,7 @@ public abstract class AbstractRestClient implements RestClient {
     @SneakyThrows
     @Override
     public RestResult put(String path, String id, Object object,
-                          Headers headers,
+                          RestHeaders headers,
                           Map<String, Object> params) {
         Request.Builder requestBuilder = getRequestBuilder(path, id, headers, params);
         requestBuilder.put(getRequestBody(object, headers));

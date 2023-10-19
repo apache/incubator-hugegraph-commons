@@ -22,36 +22,35 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiFunction;
 
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.SSLSessionContext;
 
-
-import com.google.common.net.HttpHeaders;
-import lombok.SneakyThrows;
-import okhttp3.*;
+import org.apache.hugegraph.rest.AbstractRestClient;
+import org.apache.hugegraph.rest.ClientException;
+import org.apache.hugegraph.rest.RestClient;
+import org.apache.hugegraph.rest.RestHeaders;
+import org.apache.hugegraph.rest.RestResult;
+import org.apache.hugegraph.testutil.Assert;
+import org.apache.hugegraph.testutil.Whitebox;
 import org.apache.hugegraph.unit.BaseUnitTest;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.net.HttpHeaders;
 
-
-import org.apache.hugegraph.rest.AbstractRestClient;
-import org.apache.hugegraph.rest.ClientException;
-import org.apache.hugegraph.rest.RestClient;
-import org.apache.hugegraph.rest.RestResult;
-import org.apache.hugegraph.testutil.Assert;
-import org.apache.hugegraph.testutil.Whitebox;
+import lombok.SneakyThrows;
+import okhttp3.Headers;
+import okhttp3.HttpUrl;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
 
 public class RestClientTest {
 
@@ -77,14 +76,14 @@ public class RestClientTest {
     private static class RestClientImpl extends AbstractRestClient {
 
         private final int status;
-        private final Headers headers;
+        private final RestHeaders headers;
         private final String content;
 
         public RestClientImpl(String url, int timeout, int idleTime,
                               int maxTotal, int maxPerRoute, int status) {
             super(url, timeout, idleTime, maxTotal, maxPerRoute);
             this.status = status;
-            this.headers = new Headers.Builder().build();
+            this.headers = new RestHeaders();
             this.content = "";
         }
 
@@ -92,7 +91,7 @@ public class RestClientTest {
                               int maxTotal, int maxPerRoute, int status) {
             super(url, timeout, maxTotal, maxPerRoute);
             this.status = status;
-            this.headers = new Headers.Builder().build();
+            this.headers = new RestHeaders();
             this.content = "";
         }
 
@@ -100,7 +99,7 @@ public class RestClientTest {
                               int timeout, int status) {
             super(url, user, password, timeout);
             this.status = status;
-            this.headers = new Headers.Builder().build();
+            this.headers = new RestHeaders();
             this.content = "";
         }
 
@@ -109,7 +108,7 @@ public class RestClientTest {
                               int status) {
             super(url, user, password, timeout, maxTotal, maxPerRoute);
             this.status = status;
-            this.headers = new Headers.Builder().build();
+            this.headers = new RestHeaders();
             this.content = "";
         }
 
@@ -120,7 +119,7 @@ public class RestClientTest {
             super(url, user, password, timeout, maxTotal, maxPerRoute,
                   trustStoreFile, trustStorePassword);
             this.status = status;
-            this.headers = new Headers.Builder().build();
+            this.headers = new RestHeaders();
             this.content = "";
         }
 
@@ -128,7 +127,7 @@ public class RestClientTest {
                               int timeout, int status) {
             super(url, token, timeout);
             this.status = status;
-            this.headers = new Headers.Builder().build();
+            this.headers = new RestHeaders();
             this.content = "";
         }
 
@@ -136,7 +135,7 @@ public class RestClientTest {
                               int maxTotal, int maxPerRoute, int status) {
             super(url, token, timeout, maxTotal, maxPerRoute);
             this.status = status;
-            this.headers = new Headers.Builder().build();
+            this.headers = new RestHeaders();
             this.content = "";
         }
 
@@ -147,7 +146,7 @@ public class RestClientTest {
             super(url, token, timeout, maxTotal, maxPerRoute,
                   trustStoreFile, trustStorePassword);
             this.status = status;
-            this.headers = new Headers.Builder().build();
+            this.headers = new RestHeaders();
             this.content = "";
         }
 
@@ -160,7 +159,7 @@ public class RestClientTest {
                               String content) {
             super(url, timeout);
             this.status = status;
-            this.headers = headers;
+            this.headers = new RestHeaders();
             this.content = content;
         }
 
@@ -169,7 +168,7 @@ public class RestClientTest {
         protected Response request(Callable<Response> method) {
             Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
             Mockito.when(response.code()).thenReturn(this.status);
-            Mockito.when(response.headers()).thenReturn(this.headers);
+            Mockito.when(response.headers()).thenReturn(this.headers.toOkhttpHeader());
             Mockito.when(response.body().string())
                    .thenReturn(this.content);
             return response;
@@ -371,7 +370,8 @@ public class RestClientTest {
     @Test
     public void testPostWithParams() {
         RestClient client = new RestClientImpl("/test", 1000, 200);
-        Headers headers = new Headers.Builder().build();
+        RestHeaders headers = new RestHeaders();
+
         Map<String, Object> params = ImmutableMap.of("param1", "value1");
         RestResult restResult = client.post("path", "body", headers,
                                             params);
@@ -388,11 +388,13 @@ public class RestClientTest {
     @Test
     public void testPutWithHeaders() {
         RestClient client = new RestClientImpl("/test", 1000, 200);
-        Headers.Builder headersBuilder = new Headers.Builder();
-        headersBuilder.add("key1", "value1-1");
-        headersBuilder.add("key1", "value1-2");
-        headersBuilder.add("Content-Encoding", "gzip");
-        RestResult restResult = client.put("path", "id1", "body", headersBuilder.build());
+        RestHeaders headers =
+                new RestHeaders().add("key1", "value1-1").add("key2",
+                                                              "value1-2").add("Content-Encoding", "gzip");
+        //headersBuilder.add("key1", "value1-1");
+        //headersBuilder.add("key1", "value1-2");
+        //headersBuilder.add("Content-Encoding", "gzip");
+        RestResult restResult = client.put("path", "id1", "body",headers);
         Assert.assertEquals(200, restResult.status());
     }
 
@@ -556,7 +558,7 @@ public class RestClientTest {
         result = client.delete("test", "id");
         Assert.assertEquals(200, result.status());
         Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                       "token2");
+                                                 "token2");
         client.resetAuthContext();
 
         // Test get
@@ -571,7 +573,7 @@ public class RestClientTest {
         result = client.get("test", ImmutableMap.of());
         Assert.assertEquals(200, result.status());
         Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                       "token4");
+                                                 "token4");
         client.resetAuthContext();
 
         client.setAuthContext("token5");
@@ -591,7 +593,7 @@ public class RestClientTest {
         client.resetAuthContext();
 
         client.setAuthContext("token7");
-        result = client.post("test", null, new Headers.Builder().build());
+        result = client.post("test", null, new RestHeaders());
         Assert.assertEquals(200, result.status());
         Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token7");
@@ -605,7 +607,7 @@ public class RestClientTest {
         client.resetAuthContext();
 
         client.setAuthContext("token9");
-        result = client.post("test", null, new Headers.Builder().build(),
+        result = client.post("test", null, new RestHeaders(),
                              ImmutableMap.of());
         Assert.assertEquals(200, result.status());
         Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
@@ -621,7 +623,7 @@ public class RestClientTest {
         client.resetAuthContext();
 
         client.setAuthContext("token11");
-        result = client.post("test", null, new Headers.Builder().build());
+        result = client.post("test", null, new RestHeaders());
         Assert.assertEquals(200, result.status());
         Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
                                        "token11");
@@ -635,7 +637,7 @@ public class RestClientTest {
         client.resetAuthContext();
 
         client.setAuthContext("token13");
-        result = client.post("test", null, new Headers.Builder().build(),
+        result = client.post("test", null, new RestHeaders(),
                              ImmutableMap.of());
         Assert.assertEquals(200, result.status());
         Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,

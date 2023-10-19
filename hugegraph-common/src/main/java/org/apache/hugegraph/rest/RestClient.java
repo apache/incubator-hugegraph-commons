@@ -19,19 +19,17 @@ package org.apache.hugegraph.rest;
 
 import java.util.Map;
 
-import okhttp3.Headers;
-
 public interface RestClient {
     /**
      * Post method
      */
     RestResult post(String path, Object object);
 
-    RestResult post(String path, Object object, Headers headers);
+    RestResult post(String path, Object object, RestHeaders headers);
 
     RestResult post(String path, Object object, Map<String, Object> params);
 
-    RestResult post(String path, Object object, Headers headers,
+    RestResult post(String path, Object object, RestHeaders headers,
                     Map<String, Object> params);
 
     /**
@@ -39,11 +37,11 @@ public interface RestClient {
      */
     RestResult put(String path, String id, Object object);
 
-    RestResult put(String path, String id, Object object, Headers headers);
+    RestResult put(String path, String id, Object object, RestHeaders headers);
 
     RestResult put(String path, String id, Object object, Map<String, Object> params);
 
-    RestResult put(String path, String id, Object object, Headers headers,
+    RestResult put(String path, String id, Object object, RestHeaders headers,
                    Map<String, Object> params);
 
     /**
