@@ -46,7 +46,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.net.HttpHeaders;
 
 import lombok.SneakyThrows;
-import okhttp3.Headers;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -322,7 +321,7 @@ public class RestClientTest {
         Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
         Mockito.when(response.code()).thenReturn(200);
         Mockito.when(response.headers())
-               .thenReturn(new Headers.Builder().build());
+               .thenReturn(new RestHeaders().toOkhttpHeader());
         Mockito.when(response.body().string()).thenReturn("content");
 
         Mockito.when(requestBuilder.delete()).thenReturn(requestBuilder);

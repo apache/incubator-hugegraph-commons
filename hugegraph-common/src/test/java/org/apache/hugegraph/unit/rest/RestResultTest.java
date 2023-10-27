@@ -19,6 +19,7 @@ package org.apache.hugegraph.unit.rest;
 
 import java.util.Map;
 
+import org.apache.hugegraph.rest.RestHeaders;
 import org.apache.hugegraph.rest.RestResult;
 import org.apache.hugegraph.rest.SerializeException;
 import org.apache.hugegraph.testutil.Assert;
@@ -29,29 +30,28 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 
 import lombok.SneakyThrows;
-import okhttp3.Headers;
 import okhttp3.Response;
 
 public class RestResultTest {
 
     private static RestResult newRestResult(int status) {
-        return newRestResult(status, "", new Headers.Builder().build());
+        return newRestResult(status, "", new RestHeaders());
     }
 
     private static RestResult newRestResult(int status, String content) {
-        return newRestResult(status, content, new Headers.Builder().build());
+        return newRestResult(status, content, new RestHeaders());
     }
 
-    private static RestResult newRestResult(int status, Headers headers) {
+    private static RestResult newRestResult(int status, RestHeaders headers) {
         return newRestResult(status, "", headers);
     }
 
     @SneakyThrows
     private static RestResult newRestResult(int status, String content,
-                                            Headers headers) {
+                                            RestHeaders headers) {
         Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
         Mockito.when(response.code()).thenReturn(status);
-        Mockito.when(response.headers()).thenReturn(headers);
+        Mockito.when(response.headers()).thenReturn(headers.toOkhttpHeader());
         Mockito.when(response.body().string())
                .thenReturn(content);
         return new RestResult(response);
@@ -65,11 +65,10 @@ public class RestResultTest {
 
     @Test
     public void testHeaders() {
-        Headers.Builder headersBuilder = new Headers.Builder();
-        headersBuilder.add("key1", "value1-1");
-        headersBuilder.add("key1", "value1-2");
-        headersBuilder.add("key2", "value2");
-        Headers headers = headersBuilder.build();
+        RestHeaders headers = new RestHeaders();
+        headers.add("key1", "value1-1");
+        headers.add("key1", "value1-2");
+        headers.add("key2", "value2");
         RestResult result = newRestResult(200, headers);
         Assert.assertEquals(200, result.status());
         Assert.assertEquals(headers, result.headers());
