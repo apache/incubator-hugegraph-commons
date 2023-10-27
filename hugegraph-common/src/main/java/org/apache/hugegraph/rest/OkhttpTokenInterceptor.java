@@ -36,7 +36,7 @@ public class OkhttpTokenInterceptor implements Interceptor {
         Request request = chain.request();
         if (request.header("Authorization") == null) {
             Request authenticatedRequest = request.newBuilder()
-                                                  .header("Authorization", "Bearer " + token)
+                                                  .header("Authorization", "Bearer " + this.token)
                                                   .build();
             return chain.proceed(authenticatedRequest);
         }

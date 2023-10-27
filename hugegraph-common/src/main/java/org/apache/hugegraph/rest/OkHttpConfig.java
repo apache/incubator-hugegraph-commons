@@ -24,7 +24,8 @@ import lombok.Setter;
 @Builder
 @Getter
 @Setter
-public class OkhttpConfig {
+public class OkHttpConfig {
+
     private String user;
     private String password;
     private String token;

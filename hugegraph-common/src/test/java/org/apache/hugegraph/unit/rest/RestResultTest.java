@@ -42,17 +42,16 @@ public class RestResultTest {
         return newRestResult(status, content, new Headers.Builder().build());
     }
 
-    private static RestResult newRestResult(int status,
-                                            Headers h) {
-        return newRestResult(status, "", h);
+    private static RestResult newRestResult(int status, Headers headers) {
+        return newRestResult(status, "", headers);
     }
 
     @SneakyThrows
     private static RestResult newRestResult(int status, String content,
-                                            Headers h) {
+                                            Headers headers) {
         Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
         Mockito.when(response.code()).thenReturn(status);
-        Mockito.when(response.headers()).thenReturn(h);
+        Mockito.when(response.headers()).thenReturn(headers);
         Mockito.when(response.body().string())
                .thenReturn(content);
         return new RestResult(response);

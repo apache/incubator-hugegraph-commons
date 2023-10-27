@@ -29,8 +29,7 @@ public interface RestClient {
 
     RestResult post(String path, Object object, Map<String, Object> params);
 
-    RestResult post(String path, Object object, RestHeaders headers,
-                    Map<String, Object> params);
+    RestResult post(String path, Object object, RestHeaders headers, Map<String, Object> params);
 
     /**
      * Put method

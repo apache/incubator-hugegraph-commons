@@ -18,30 +18,60 @@
 package org.apache.hugegraph.rest;
 
 import java.util.Date;
+import java.util.Iterator;
+
+import kotlin.Pair;
+import okhttp3.Headers;
 
 public class RestHeaders {
+
     private final okhttp3.Headers.Builder headersBuilder = new okhttp3.Headers.Builder();
 
     public String get(String key) {
-        return headersBuilder.get(key);
+        return this.headersBuilder.get(key);
     }
 
     public Date getDate(String key) {
-        return headersBuilder.build().getDate(key);
+        return this.headersBuilder.build().getDate(key);
     }
 
     public RestHeaders add(String key, String value) {
-        headersBuilder.add(key, value);
+        this.headersBuilder.add(key, value);
         return this;
     }
 
     public RestHeaders add(String key, Date value) {
-        headersBuilder.add(key, value);
+        this.headersBuilder.add(key, value);
         return this;
     }
 
-    public okhttp3.Headers toOkhttpHeader() {
-        return headersBuilder.build();
+    @Override
+    public int hashCode() {
+        return this.toOkhttpHeader().hashCode();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if(obj instanceof RestHeaders) {
+            return this.toOkhttpHeader().equals(((RestHeaders)obj).toOkhttpHeader());
+        }
+        return false;
+    }
+
+    public okhttp3.Headers toOkhttpHeader() {
+        return this.headersBuilder.build();
+    }
+
+    public static RestHeaders convertRestHeaders(Headers headers) {
+        RestHeaders restHeaders = new RestHeaders();
+
+        if(headers != null) {
+            Iterator<Pair<String, String>> iter = headers.iterator();
+            while(iter.hasNext()) {
+                Pair<String, String> pair = iter.next();
+                restHeaders.add(pair.getFirst(), pair.getSecond());
+            }
+        }
+        return restHeaders;
+    }
 }

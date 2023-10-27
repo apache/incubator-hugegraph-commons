@@ -27,7 +27,6 @@ import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import lombok.SneakyThrows;
-import okhttp3.Headers;
 import okhttp3.Response;
 
 public class RestResult {
@@ -35,15 +34,14 @@ public class RestResult {
     private static final ObjectMapper MAPPER = new ObjectMapper();
 
     private final int status;
-    private final Headers headers;
+    private final RestHeaders headers;
     private final String content;
 
     public RestResult(Response response) {
-        this(response.code(), getResponseContent(response), response.headers());
+        this(response.code(), getResponseContent(response), RestHeaders.convertRestHeaders(response.headers()));
     }
 
-    public RestResult(int status, String content,
-                      Headers headers) {
+    public RestResult(int status, String content, RestHeaders headers) {
         this.status = status;
         this.headers = headers;
         this.content = content;
@@ -62,7 +60,7 @@ public class RestResult {
         return this.status;
     }
 
-    public Headers headers() {
+    public RestHeaders headers() {
         return this.headers;
     }
 

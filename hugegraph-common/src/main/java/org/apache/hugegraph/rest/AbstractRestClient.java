@@ -55,21 +55,20 @@ import okio.Okio;
 
 public abstract class AbstractRestClient implements RestClient {
 
-    private final ThreadLocal<String> authContext =
-            new InheritableThreadLocal<>();
+    private final ThreadLocal<String> authContext = new InheritableThreadLocal<>();
     private final OkHttpClient client;
     private final String baseUrl;
     private final Request.Builder requestBuilder = new Request.Builder();
 
     public AbstractRestClient(String url, int timeout) {
-        this(url, OkhttpConfig.builder()
+        this(url, OkHttpConfig.builder()
                               .timeout(timeout)
                               .build());
     }
 
     public AbstractRestClient(String url, String user, String password,
                               Integer timeout) {
-        this(url, OkhttpConfig.builder()
+        this(url, OkHttpConfig.builder()
                               .user(user).password(password)
                               .timeout(timeout)
                               .build());
@@ -82,7 +81,7 @@ public abstract class AbstractRestClient implements RestClient {
 
     public AbstractRestClient(String url, int timeout, int idleTime,
                               int maxTotal, int maxPerRoute) {
-        this(url, OkhttpConfig.builder()
+        this(url, OkHttpConfig.builder()
                               .idleTime(idleTime)
                               .timeout(timeout)
                               .maxTotal(maxTotal)
@@ -92,7 +91,7 @@ public abstract class AbstractRestClient implements RestClient {
 
     public AbstractRestClient(String url, String user, String password,
                               int timeout, int maxTotal, int maxPerRoute) {
-        this(url, OkhttpConfig.builder()
+        this(url, OkHttpConfig.builder()
                               .user(user).password(password)
                               .timeout(timeout)
                               .maxTotal(maxTotal)
@@ -104,7 +103,7 @@ public abstract class AbstractRestClient implements RestClient {
                               int timeout, int maxTotal, int maxPerRoute,
                               String trustStoreFile,
                               String trustStorePassword) {
-        this(url, OkhttpConfig.builder()
+        this(url, OkHttpConfig.builder()
                               .user(user).password(password)
                               .timeout(timeout)
                               .maxTotal(maxTotal)
@@ -115,7 +114,7 @@ public abstract class AbstractRestClient implements RestClient {
     }
 
     public AbstractRestClient(String url, String token, Integer timeout) {
-        this(url, OkhttpConfig.builder()
+        this(url, OkHttpConfig.builder()
                               .token(token)
                               .timeout(timeout)
                               .build());
@@ -123,7 +122,7 @@ public abstract class AbstractRestClient implements RestClient {
 
     public AbstractRestClient(String url, String token, Integer timeout,
                               Integer maxTotal, Integer maxPerRoute) {
-        this(url, OkhttpConfig.builder()
+        this(url, OkHttpConfig.builder()
                               .token(token)
                               .timeout(timeout)
                               .maxTotal(maxTotal)
@@ -135,7 +134,7 @@ public abstract class AbstractRestClient implements RestClient {
                               Integer maxTotal, Integer maxPerRoute,
                               String trustStoreFile,
                               String trustStorePassword) {
-        this(url, OkhttpConfig.builder()
+        this(url, OkHttpConfig.builder()
                               .token(token)
                               .timeout(timeout)
                               .maxTotal(maxTotal)
@@ -145,22 +144,22 @@ public abstract class AbstractRestClient implements RestClient {
                               .build());
     }
 
-    public AbstractRestClient(String url, OkhttpConfig okhttpConfig) {
+    public AbstractRestClient(String url, OkHttpConfig okhttpConfig) {
         this.baseUrl = url;
-        this.client = getOkhttpClient(okhttpConfig);
+        this.client = buildOkHttpClient(okhttpConfig);
     }
 
-    private static RequestBody getRequestBody(Object object, RestHeaders headers) {
+    private static RequestBody buildRequestBody(Object body, RestHeaders headers) {
         String contentType = parseContentType(headers);
         String bodyContent;
         if ("application/json".equals(contentType)) {
-            if (object == null) {
+            if (body == null) {
                 bodyContent = "{}";
             } else {
-                bodyContent = JsonUtil.toJson(object);
+                bodyContent = JsonUtil.toJson(body);
             }
         } else {
-            bodyContent = String.valueOf(object);
+            bodyContent = String.valueOf(body);
         }
         RequestBody requestBody = RequestBody.create(MediaType.parse(contentType), bodyContent);
 
@@ -201,43 +200,42 @@ public abstract class AbstractRestClient implements RestClient {
         return "application/json";
     }
 
-    private OkHttpClient getOkhttpClient(OkhttpConfig okhttpConfig) {
+    private OkHttpClient buildOkHttpClient(OkHttpConfig okHttpConfig) {
         OkHttpClient.Builder builder = new OkHttpClient.Builder();
 
-        if (okhttpConfig.getTimeout() != null) {
-            builder.connectTimeout(okhttpConfig.getTimeout(), TimeUnit.MILLISECONDS)
-                   .readTimeout(okhttpConfig.getTimeout(), TimeUnit.MILLISECONDS);
+        if (okHttpConfig.getTimeout() != null) {
+            builder.connectTimeout(okHttpConfig.getTimeout(), TimeUnit.MILLISECONDS)
+                   .readTimeout(okHttpConfig.getTimeout(), TimeUnit.MILLISECONDS);
         }
 
-        if (okhttpConfig.getIdleTime() != null) {
+        if (okHttpConfig.getIdleTime() != null) {
             ConnectionPool connectionPool =
-                    new ConnectionPool(5, okhttpConfig.getIdleTime(), TimeUnit.MILLISECONDS);
+                    new ConnectionPool(5, okHttpConfig.getIdleTime(), TimeUnit.MILLISECONDS);
             builder.connectionPool(connectionPool);
         }
 
-
         // auth header interceptor
-        if (StringUtils.isNotBlank(okhttpConfig.getUser()) &&
-            StringUtils.isNotBlank(okhttpConfig.getPassword())) {
-            builder.addInterceptor(new OkhttpBasicAuthInterceptor(okhttpConfig.getUser(),
-                                                                  okhttpConfig.getPassword()));
+        if (StringUtils.isNotBlank(okHttpConfig.getUser()) &&
+            StringUtils.isNotBlank(okHttpConfig.getPassword())) {
+            builder.addInterceptor(new OkhttpBasicAuthInterceptor(okHttpConfig.getUser(),
+                                                                  okHttpConfig.getPassword()));
         }
-        if (StringUtils.isNotBlank(okhttpConfig.getToken())) {
-            builder.addInterceptor(new OkhttpTokenInterceptor(okhttpConfig.getToken()));
+        if (StringUtils.isNotBlank(okHttpConfig.getToken())) {
+            builder.addInterceptor(new OkhttpTokenInterceptor(okHttpConfig.getToken()));
         }
 
         // ssl
-        configSsl(builder, baseUrl, okhttpConfig.getTrustStoreFile(),
-                  okhttpConfig.getTrustStorePassword());
+        configSsl(builder, this.baseUrl, okHttpConfig.getTrustStoreFile(),
+                  okHttpConfig.getTrustStorePassword());
 
         OkHttpClient okHttpClient = builder.build();
 
-        if (okhttpConfig.getMaxTotal() != null) {
-            okHttpClient.dispatcher().setMaxRequests(okhttpConfig.getMaxTotal());
+        if (okHttpConfig.getMaxTotal() != null) {
+            okHttpClient.dispatcher().setMaxRequests(okHttpConfig.getMaxTotal());
         }
 
-        if (okhttpConfig.getMaxPerRoute() != null) {
-            okHttpClient.dispatcher().setMaxRequestsPerHost(okhttpConfig.getMaxPerRoute());
+        if (okHttpConfig.getMaxPerRoute() != null) {
+            okHttpClient.dispatcher().setMaxRequestsPerHost(okHttpConfig.getMaxPerRoute());
         }
 
         return okHttpClient;
@@ -276,7 +274,7 @@ public abstract class AbstractRestClient implements RestClient {
 
     private Request.Builder getRequestBuilder(String path, String id, RestHeaders headers,
                                               Map<String, Object> params) {
-        HttpUrl.Builder urlBuilder = HttpUrl.parse(baseUrl).newBuilder()
+        HttpUrl.Builder urlBuilder = HttpUrl.parse(this.baseUrl).newBuilder()
                                             .addPathSegments(path);
         if (id != null) {
             urlBuilder.addPathSegment(id);
@@ -298,8 +296,7 @@ public abstract class AbstractRestClient implements RestClient {
             });
         }
 
-        Request.Builder builder = requestBuilder
-                .url(urlBuilder.build());
+        Request.Builder builder = requestBuilder.url(urlBuilder.build());
 
         if (headers != null) {
             builder.headers(headers.toOkhttpHeader());
@@ -312,11 +309,10 @@ public abstract class AbstractRestClient implements RestClient {
 
     @SneakyThrows
     @Override
-    public RestResult post(String path, Object object,
-                           RestHeaders headers,
+    public RestResult post(String path, Object object, RestHeaders headers,
                            Map<String, Object> params) {
         Request.Builder requestBuilder = getRequestBuilder(path, null, headers, params);
-        requestBuilder.post(getRequestBody(object, headers));
+        requestBuilder.post(buildRequestBody(object, headers));
 
         try (Response response = this.request(
                 () -> client.newCall(requestBuilder.build()).execute())) {
@@ -348,7 +344,7 @@ public abstract class AbstractRestClient implements RestClient {
                           RestHeaders headers,
                           Map<String, Object> params) {
         Request.Builder requestBuilder = getRequestBuilder(path, id, headers, params);
-        requestBuilder.put(getRequestBody(object, headers));
+        requestBuilder.put(buildRequestBody(object, headers));
 
         try (Response response = this.request(
                 () -> client.newCall(requestBuilder.build()).execute())) {
@@ -453,7 +449,7 @@ public abstract class AbstractRestClient implements RestClient {
                                                          String trustStorePass) {
         char[] password = trustStorePass.toCharArray();
 
-        //load keyStore
+        // load keyStore
         KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
         try (FileInputStream in = new FileInputStream(trustStoreFile)) {
             keyStore.load(in, password);
@@ -472,6 +468,7 @@ public abstract class AbstractRestClient implements RestClient {
     }
 
     public static class HostNameVerifier implements HostnameVerifier {
+
         private final String url;
 
         public HostNameVerifier(String url) {

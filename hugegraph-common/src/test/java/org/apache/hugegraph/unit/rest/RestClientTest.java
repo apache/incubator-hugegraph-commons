@@ -91,54 +91,6 @@ public class RestClientTest {
         Assert.assertEquals(200, restResult.status());
     }
 
-    /**
-     * okhttp does not need to manually clean Executor
-     */
-//    @Test
-//    public void testCleanExecutor() throws Exception {
-//        // Modify IDLE_TIME 100ms to speed test
-//        int newIdleTime = 100;
-//        int newCheckPeriod = newIdleTime + 20;
-//
-//        RestClient client = new RestClientImpl("/test", 1000, newIdleTime,
-//                                               10, 5, 200);
-//
-//        PoolingHttpClientConnectionManager pool;
-//        pool = Whitebox.getInternalState(client, "pool");
-//        pool = Mockito.spy(pool);
-//        Whitebox.setInternalState(client, "pool", pool);
-//        HttpRoute route = new HttpRoute(HttpHost.create(
-//                                        "http://127.0.0.1:8080"));
-//        // Create a connection manually, it will be put into leased list
-//        HttpClientConnection conn = pool.requestConnection(route, null)
-//                                        .get(1L, TimeUnit.SECONDS);
-//        PoolStats stats = pool.getTotalStats();
-//        int usingConns = stats.getLeased() + stats.getPending();
-//        Assert.assertGte(1, usingConns);
-//
-//        // Sleep more than two check periods for busy connection
-//        Thread.sleep(newCheckPeriod);
-//        Mockito.verify(pool, Mockito.never()).closeExpiredConnections();
-//        stats = pool.getTotalStats();
-//        usingConns = stats.getLeased() + stats.getPending();
-//        Assert.assertGte(1, usingConns);
-//
-//        // The connection will be put into available list
-//        pool.releaseConnection(conn, null, 0, TimeUnit.SECONDS);
-//
-//        stats = pool.getTotalStats();
-//        usingConns = stats.getLeased() + stats.getPending();
-//        Assert.assertEquals(0, usingConns);
-//        /*
-//         * Sleep more than two check periods for free connection,
-//         * ensure connection has been closed
-//         */
-//        Thread.sleep(newCheckPeriod);
-//        Mockito.verify(pool, Mockito.atLeastOnce())
-//               .closeExpiredConnections();
-//        Mockito.verify(pool, Mockito.atLeastOnce())
-//               .closeIdleConnections(newIdleTime, TimeUnit.MILLISECONDS);
-//    }
     @Test
     public void testPostWithUserAndPassword() {
         RestClient client = new RestClientImpl("/test", "user", "", 1000, 200);
@@ -228,16 +180,15 @@ public class RestClientTest {
 
     @Test
     public void testPostWithHeaderAndContent() {
-        RestHeaders headers = new RestHeaders()
-                .add("key1", "value1-1")
-                .add("key1", "value1-2")
-                .add("Content-Encoding", "gzip");
+        RestHeaders headers = new RestHeaders().add("key1", "value1-1")
+                                               .add("key1", "value1-2")
+                                               .add("Content-Encoding", "gzip");
         String content = "{\"names\": [\"marko\", \"josh\", \"lop\"]}";
         RestClient client = new RestClientImpl("/test", 1000, 200,
                                                headers, content);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
-        Assert.assertEquals(headers.toOkhttpHeader(), restResult.headers());
+        Assert.assertEquals(headers, restResult.headers());
         Assert.assertEquals(content, restResult.content());
         Assert.assertEquals(ImmutableList.of("marko", "josh", "lop"),
                             restResult.readList("names", String.class));
@@ -272,10 +223,9 @@ public class RestClientTest {
     @Test
     public void testPutWithHeaders() {
         RestClient client = new RestClientImpl("/test", 1000, 200);
-        RestHeaders headers =
-                new RestHeaders().add("key1", "value1-1").add("key2",
-                                                              "value1-2")
-                                 .add("Content-Encoding", "gzip");
+        RestHeaders headers = new RestHeaders().add("key1", "value1-1")
+                                               .add("key2", "value1-2")
+                                               .add("Content-Encoding", "gzip");
         RestResult restResult = client.put("path", "id1", "body", headers);
         Assert.assertEquals(200, restResult.status());
     }
@@ -351,31 +301,6 @@ public class RestClientTest {
         });
     }
 
-    /**
-     * okhttp does not need to manually close connection pool
-     */
-//    @Test
-//    public void testClose() {
-//        RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
-//        RestResult restResult = client.post("path", "body");
-//        Assert.assertEquals(200, restResult.status());
-//
-//        client.close();
-//        Assert.assertThrows(IllegalStateException.class, () -> {
-//            client.post("path", "body");
-//        });
-//
-//        PoolingHttpClientConnectionManager pool;
-//        pool = Whitebox.getInternalState(client, "pool");
-//        Assert.assertNotNull(pool);
-//        AtomicBoolean isShutDown = Whitebox.getInternalState(pool, "isShutDown");
-//        Assert.assertTrue(isShutDown.get());
-//
-//        ScheduledExecutorService cleanExecutor;
-//        cleanExecutor = Whitebox.getInternalState(client, "cleanExecutor");
-//        Assert.assertNotNull(cleanExecutor);
-//        Assert.assertTrue(cleanExecutor.isShutdown());
-//    }
     @Test
     public void testAuthContext() {
         RestClientImpl client = new RestClientImpl("/test", 1000, 10, 5, 200);
