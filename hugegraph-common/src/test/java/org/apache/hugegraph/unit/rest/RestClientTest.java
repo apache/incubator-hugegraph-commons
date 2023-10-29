@@ -30,6 +30,7 @@ import javax.net.ssl.SSLSessionContext;
 
 import org.apache.hugegraph.rest.AbstractRestClient;
 import org.apache.hugegraph.rest.ClientException;
+import org.apache.hugegraph.rest.RequestHeaders;
 import org.apache.hugegraph.rest.RestClient;
 import org.apache.hugegraph.rest.RestHeaders;
 import org.apache.hugegraph.rest.RestResult;
@@ -321,7 +322,7 @@ public class RestClientTest {
         Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
         Mockito.when(response.code()).thenReturn(200);
         Mockito.when(response.headers())
-               .thenReturn(new RestHeaders().toOkhttpHeader());
+               .thenReturn(new RestHeaders().toOkHttpHeader());
         Mockito.when(response.body().string()).thenReturn("content");
 
         Mockito.when(requestBuilder.delete()).thenReturn(requestBuilder);
@@ -341,38 +342,33 @@ public class RestClientTest {
         client.setAuthContext("token1");
         result = client.delete("test", ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader("Authorization",
-                                                 "token1");
+        Mockito.verify(requestBuilder).addHeader(RequestHeaders.AUTHORIZATION,"token1");
 
         client.resetAuthContext();
 
         client.setAuthContext("token2");
         result = client.delete("test", "id");
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token2");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token2");
         client.resetAuthContext();
 
         // Test get
         client.setAuthContext("token3");
         result = client.get("test");
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token3");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token3");
         client.resetAuthContext();
 
         client.setAuthContext("token4");
         result = client.get("test", ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token4");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token4");
         client.resetAuthContext();
 
         client.setAuthContext("token5");
         result = client.get("test", "id");
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token5");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token5");
         client.resetAuthContext();
 
         // Test put
@@ -380,60 +376,52 @@ public class RestClientTest {
 //        result = client.post("test", new Object()); //why use new Object() as args here?
         result = client.post("test", null);
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token6");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token6");
         client.resetAuthContext();
 
         client.setAuthContext("token7");
         result = client.post("test", null, new RestHeaders());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token7");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token7");
         client.resetAuthContext();
 
         client.setAuthContext("token8");
         result = client.post("test", null, ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token8");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token8");
         client.resetAuthContext();
 
         client.setAuthContext("token9");
         result = client.post("test", null, new RestHeaders(),
                              ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token9");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token9");
         client.resetAuthContext();
 
         // Test post
         client.setAuthContext("token10");
         result = client.post("test", null);
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token10");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token10");
         client.resetAuthContext();
 
         client.setAuthContext("token11");
         result = client.post("test", null, new RestHeaders());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token11");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token11");
         client.resetAuthContext();
 
         client.setAuthContext("token12");
         result = client.post("test", null, ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token12");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token12");
         client.resetAuthContext();
 
         client.setAuthContext("token13");
         result = client.post("test", null, new RestHeaders(),
                              ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,
-                                                 "token13");
+        Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION,"token13");
         client.resetAuthContext();
     }
 
@@ -532,7 +520,7 @@ public class RestClientTest {
         protected Response request(Callable<Response> method) {
             Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
             Mockito.when(response.code()).thenReturn(this.status);
-            Mockito.when(response.headers()).thenReturn(this.headers.toOkhttpHeader());
+            Mockito.when(response.headers()).thenReturn(this.headers.toOkHttpHeader());
             Mockito.when(response.body().string())
                    .thenReturn(this.content);
             return response;

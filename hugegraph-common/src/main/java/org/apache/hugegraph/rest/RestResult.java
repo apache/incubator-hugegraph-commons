@@ -38,7 +38,8 @@ public class RestResult {
     private final String content;
 
     public RestResult(Response response) {
-        this(response.code(), getResponseContent(response), RestHeaders.convertRestHeaders(response.headers()));
+        this(response.code(), getResponseContent(response),
+             RestHeaders.convertToRestHeaders(response.headers()));
     }
 
     public RestResult(int status, String content, RestHeaders headers) {

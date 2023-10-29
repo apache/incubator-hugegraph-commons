@@ -21,11 +21,27 @@ import java.util.Date;
 import java.util.Iterator;
 
 import kotlin.Pair;
-import okhttp3.Headers;
 
 public class RestHeaders {
 
-    private final okhttp3.Headers.Builder headersBuilder = new okhttp3.Headers.Builder();
+    private final okhttp3.Headers.Builder headersBuilder;
+
+    public RestHeaders() {
+        this.headersBuilder = new okhttp3.Headers.Builder();
+    }
+
+    public static RestHeaders convertToRestHeaders(okhttp3.Headers headers) {
+        RestHeaders restHeaders = new RestHeaders();
+
+        if (headers != null) {
+            Iterator<Pair<String, String>> iter = headers.iterator();
+            while (iter.hasNext()) {
+                Pair<String, String> pair = iter.next();
+                restHeaders.add(pair.getFirst(), pair.getSecond());
+            }
+        }
+        return restHeaders;
+    }
 
     public String get(String key) {
         return this.headersBuilder.get(key);
@@ -47,31 +63,18 @@ public class RestHeaders {
 
     @Override
     public int hashCode() {
-        return this.toOkhttpHeader().hashCode();
+        return this.toOkHttpHeader().hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if(obj instanceof RestHeaders) {
-            return this.toOkhttpHeader().equals(((RestHeaders)obj).toOkhttpHeader());
+        if (obj instanceof RestHeaders) {
+            return this.toOkHttpHeader().equals(((RestHeaders) obj).toOkHttpHeader());
         }
         return false;
     }
 
-    public okhttp3.Headers toOkhttpHeader() {
+    public okhttp3.Headers toOkHttpHeader() {
         return this.headersBuilder.build();
-    }
-
-    public static RestHeaders convertRestHeaders(Headers headers) {
-        RestHeaders restHeaders = new RestHeaders();
-
-        if(headers != null) {
-            Iterator<Pair<String, String>> iter = headers.iterator();
-            while(iter.hasNext()) {
-                Pair<String, String> pair = iter.next();
-                restHeaders.add(pair.getFirst(), pair.getSecond());
-            }
-        }
-        return restHeaders;
     }
 }

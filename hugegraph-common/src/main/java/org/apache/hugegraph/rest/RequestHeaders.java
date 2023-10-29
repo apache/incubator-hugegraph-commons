@@ -17,29 +17,10 @@
 
 package org.apache.hugegraph.rest;
 
-import java.io.IOException;
+public class RequestHeaders {
 
-import okhttp3.Interceptor;
-import okhttp3.Request;
-import okhttp3.Response;
-
-public class OkhttpTokenInterceptor implements Interceptor {
-
-    private final String token;
-
-    public OkhttpTokenInterceptor(String token) {
-        this.token = token;
-    }
-
-    @Override
-    public Response intercept(Chain chain) throws IOException {
-        Request request = chain.request();
-        if (request.header(RequestHeaders.AUTHORIZATION) == null) {
-            Request authenticatedRequest = request.newBuilder()
-                                                  .header(RequestHeaders.AUTHORIZATION, "Bearer " + this.token)
-                                                  .build();
-            return chain.proceed(authenticatedRequest);
-        }
-        return chain.proceed(request);
-    }
+    public static final String CONTENT_TYPE = "Content-Type";
+    public static final String CONTENT_ENCODING = "Content-Encoding";
+    public static final String APPLICATION_JSON = "application/json";
+    public static final String AUTHORIZATION = "Authorization";
 }

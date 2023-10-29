@@ -51,7 +51,7 @@ public class RestResultTest {
                                             RestHeaders headers) {
         Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
         Mockito.when(response.code()).thenReturn(status);
-        Mockito.when(response.headers()).thenReturn(headers.toOkhttpHeader());
+        Mockito.when(response.headers()).thenReturn(headers.toOkHttpHeader());
         Mockito.when(response.body().string())
                .thenReturn(content);
         return new RestResult(response);

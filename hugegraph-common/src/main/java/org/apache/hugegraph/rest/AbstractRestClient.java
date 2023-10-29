@@ -55,10 +55,10 @@ import okio.Okio;
 
 public abstract class AbstractRestClient implements RestClient {
 
-    private final ThreadLocal<String> authContext = new InheritableThreadLocal<>();
+    private final ThreadLocal<String> authContext;
     private final OkHttpClient client;
     private final String baseUrl;
-    private final Request.Builder requestBuilder = new Request.Builder();
+    private final Request.Builder requestBuilder;
 
     public AbstractRestClient(String url, int timeout) {
         this(url, OkHttpConfig.builder()
@@ -147,12 +147,14 @@ public abstract class AbstractRestClient implements RestClient {
     public AbstractRestClient(String url, OkHttpConfig okhttpConfig) {
         this.baseUrl = url;
         this.client = buildOkHttpClient(okhttpConfig);
+        this.requestBuilder = new Request.Builder();
+        this.authContext = new InheritableThreadLocal<>();
     }
 
     private static RequestBody buildRequestBody(Object body, RestHeaders headers) {
         String contentType = parseContentType(headers);
         String bodyContent;
-        if ("application/json".equals(contentType)) {
+        if (RequestHeaders.APPLICATION_JSON.equals(contentType)) {
             if (body == null) {
                 bodyContent = "{}";
             } else {
@@ -163,7 +165,7 @@ public abstract class AbstractRestClient implements RestClient {
         }
         RequestBody requestBody = RequestBody.create(MediaType.parse(contentType), bodyContent);
 
-        if (headers != null && "gzip".equals(headers.get("Content-Encoding"))) {
+        if (headers != null && "gzip".equals(headers.get(RequestHeaders.CONTENT_ENCODING))) {
             requestBody = gzip(requestBody);
         }
         return requestBody;
@@ -192,12 +194,12 @@ public abstract class AbstractRestClient implements RestClient {
 
     private static String parseContentType(RestHeaders headers) {
         if (headers != null) {
-            String contentType = headers.get("Content-Type");
+            String contentType = headers.get(RequestHeaders.CONTENT_TYPE);
             if (contentType != null) {
                 return contentType;
             }
         }
-        return "application/json";
+        return RequestHeaders.APPLICATION_JSON;
     }
 
     private OkHttpClient buildOkHttpClient(OkHttpConfig okHttpConfig) {
@@ -299,7 +301,7 @@ public abstract class AbstractRestClient implements RestClient {
         Request.Builder builder = requestBuilder.url(urlBuilder.build());
 
         if (headers != null) {
-            builder.headers(headers.toOkhttpHeader());
+            builder.headers(headers.toOkHttpHeader());
         }
 
         this.attachAuthToRequest(builder);
@@ -327,14 +329,12 @@ public abstract class AbstractRestClient implements RestClient {
     }
 
     @Override
-    public RestResult put(String path, String id, Object object,
-                          RestHeaders headers) {
+    public RestResult put(String path, String id, Object object, RestHeaders headers) {
         return this.put(path, id, object, headers, null);
     }
 
     @Override
-    public RestResult put(String path, String id, Object object,
-                          Map<String, Object> params) {
+    public RestResult put(String path, String id, Object object, Map<String, Object> params) {
         return this.put(path, id, object, null, params);
     }
 
@@ -440,7 +440,7 @@ public abstract class AbstractRestClient implements RestClient {
         // Add auth header
         String auth = this.getAuthContext();
         if (StringUtils.isNotEmpty(auth)) {
-            builder.addHeader("Authorization", auth);
+            builder.addHeader(RequestHeaders.AUTHORIZATION, auth);
         }
     }
 
