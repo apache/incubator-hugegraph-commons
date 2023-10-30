@@ -24,7 +24,6 @@ import java.security.KeyStore;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
-import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
@@ -316,8 +315,7 @@ public abstract class AbstractRestClient implements RestClient {
         Request.Builder requestBuilder = getRequestBuilder(path, null, headers, params);
         requestBuilder.post(buildRequestBody(object, headers));
 
-        try (Response response = this.request(
-                () -> client.newCall(requestBuilder.build()).execute())) {
+        try (Response response = request(requestBuilder)) {
             checkStatus(response, 200, 201, 202);
             return new RestResult(response);
         }
@@ -346,8 +344,7 @@ public abstract class AbstractRestClient implements RestClient {
         Request.Builder requestBuilder = getRequestBuilder(path, id, headers, params);
         requestBuilder.put(buildRequestBody(object, headers));
 
-        try (Response response = this.request(
-                () -> client.newCall(requestBuilder.build()).execute())) {
+        try (Response response = request(requestBuilder)) {
             checkStatus(response, 200, 202);
             return new RestResult(response);
         }
@@ -372,8 +369,7 @@ public abstract class AbstractRestClient implements RestClient {
     private RestResult get(String path, String id, Map<String, Object> params) {
         Request.Builder requestBuilder = getRequestBuilder(path, id, null, params);
 
-        try (Response response = this.request(
-                () -> client.newCall(requestBuilder.build()).execute())) {
+        try (Response response = request(requestBuilder)) {
             checkStatus(response, 200);
             return new RestResult(response);
         }
@@ -395,8 +391,7 @@ public abstract class AbstractRestClient implements RestClient {
         Request.Builder requestBuilder = getRequestBuilder(path, id, null, params);
         requestBuilder.delete();
 
-        try (Response response = this.request(
-                () -> client.newCall(requestBuilder.build()).execute())) {
+        try (Response response = request(requestBuilder)) {
             checkStatus(response, 204, 202);
             return new RestResult(response);
         }
@@ -404,12 +399,9 @@ public abstract class AbstractRestClient implements RestClient {
 
     protected abstract void checkStatus(Response response, int... statuses);
 
-    protected Response request(Callable<Response> method) {
-        try {
-            return method.call();
-        } catch (Exception e) {
-            throw new ClientException("Failed to do request", e);
-        }
+    @SneakyThrows
+    protected Response request(Request.Builder requestBuilder) {
+        return client.newCall(requestBuilder.build()).execute();
     }
 
     @SneakyThrows
