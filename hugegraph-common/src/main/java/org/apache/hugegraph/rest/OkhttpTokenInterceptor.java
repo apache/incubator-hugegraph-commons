@@ -34,9 +34,10 @@ public class OkhttpTokenInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
-        if (request.header(RequestHeaders.AUTHORIZATION) == null) {
+        if (request.header(RestHeaders.AUTHORIZATION) == null) {
             Request authenticatedRequest = request.newBuilder()
-                                                  .header(RequestHeaders.AUTHORIZATION, "Bearer " + this.token)
+                                                  .header(RestHeaders.AUTHORIZATION,
+                                                          "Bearer " + this.token)
                                                   .build();
             return chain.proceed(authenticatedRequest);
         }

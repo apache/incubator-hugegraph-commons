@@ -153,7 +153,7 @@ public abstract class AbstractRestClient implements RestClient {
     private static RequestBody buildRequestBody(Object body, RestHeaders headers) {
         String contentType = parseContentType(headers);
         String bodyContent;
-        if (RequestHeaders.APPLICATION_JSON.equals(contentType)) {
+        if (RestHeaders.APPLICATION_JSON.equals(contentType)) {
             if (body == null) {
                 bodyContent = "{}";
             } else {
@@ -164,7 +164,7 @@ public abstract class AbstractRestClient implements RestClient {
         }
         RequestBody requestBody = RequestBody.create(MediaType.parse(contentType), bodyContent);
 
-        if (headers != null && "gzip".equals(headers.get(RequestHeaders.CONTENT_ENCODING))) {
+        if (headers != null && "gzip".equals(headers.get(RestHeaders.CONTENT_ENCODING))) {
             requestBody = gzip(requestBody);
         }
         return requestBody;
@@ -193,12 +193,12 @@ public abstract class AbstractRestClient implements RestClient {
 
     private static String parseContentType(RestHeaders headers) {
         if (headers != null) {
-            String contentType = headers.get(RequestHeaders.CONTENT_TYPE);
+            String contentType = headers.get(RestHeaders.CONTENT_TYPE);
             if (contentType != null) {
                 return contentType;
             }
         }
-        return RequestHeaders.APPLICATION_JSON;
+        return RestHeaders.APPLICATION_JSON;
     }
 
     private OkHttpClient buildOkHttpClient(OkHttpConfig okHttpConfig) {
@@ -401,17 +401,17 @@ public abstract class AbstractRestClient implements RestClient {
 
     @SneakyThrows
     protected Response request(Request.Builder requestBuilder) {
-        return client.newCall(requestBuilder.build()).execute();
+        return this.client.newCall(requestBuilder.build()).execute();
     }
 
     @SneakyThrows
     @Override
     public void close() {
-        if (client != null) {
-            client.dispatcher().executorService().shutdown();
-            client.connectionPool().evictAll();
-            if (client.cache() != null) {
-                client.cache().close();
+        if (this.client != null) {
+            this.client.dispatcher().executorService().shutdown();
+            this.client.connectionPool().evictAll();
+            if (this.client.cache() != null) {
+                this.client.cache().close();
             }
         }
     }
@@ -432,7 +432,7 @@ public abstract class AbstractRestClient implements RestClient {
         // Add auth header
         String auth = this.getAuthContext();
         if (StringUtils.isNotEmpty(auth)) {
-            builder.addHeader(RequestHeaders.AUTHORIZATION, auth);
+            builder.addHeader(RestHeaders.AUTHORIZATION, auth);
         }
     }
 
@@ -453,8 +453,8 @@ public abstract class AbstractRestClient implements RestClient {
 
         TrustManager[] trustManagers = trustManagerFactory.getTrustManagers();
         if (trustManagers.length != 1 || !(trustManagers[0] instanceof X509TrustManager)) {
-            throw new IllegalStateException("Unexpected default trust managers:"
-                                            + Arrays.toString(trustManagers));
+            throw new IllegalStateException("Unexpected default trust managers:" +
+                                            Arrays.toString(trustManagers));
         }
         return (X509TrustManager) trustManagers[0];
     }

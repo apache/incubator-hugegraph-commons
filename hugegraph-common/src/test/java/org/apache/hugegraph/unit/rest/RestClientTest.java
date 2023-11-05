@@ -29,7 +29,6 @@ import javax.net.ssl.SSLSessionContext;
 
 import org.apache.hugegraph.rest.AbstractRestClient;
 import org.apache.hugegraph.rest.ClientException;
-import org.apache.hugegraph.rest.RequestHeaders;
 import org.apache.hugegraph.rest.RestClient;
 import org.apache.hugegraph.rest.RestHeaders;
 import org.apache.hugegraph.rest.RestResult;
@@ -341,7 +340,7 @@ public class RestClientTest {
         client.setAuthContext("token1");
         result = client.delete("test", ImmutableMap.of());
         Assert.assertEquals(200, result.status());
-        Mockito.verify(requestBuilder).addHeader(RequestHeaders.AUTHORIZATION, "token1");
+        Mockito.verify(requestBuilder).addHeader(RestHeaders.AUTHORIZATION, "token1");
 
         client.resetAuthContext();
 
