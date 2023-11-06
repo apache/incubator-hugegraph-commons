@@ -37,9 +37,8 @@ public class RestResult {
     private final RestHeaders headers;
     private final String content;
 
-    @SneakyThrows
     public RestResult(Response response) {
-        this(response.code(), response.body().string(),
+        this(response.code(), getResponseContent(response),
              RestHeaders.convertToRestHeaders(response.headers()));
     }
 
@@ -47,6 +46,11 @@ public class RestResult {
         this.status = status;
         this.headers = headers;
         this.content = content;
+    }
+
+    @SneakyThrows
+    private static String getResponseContent(Response response) {
+        return response.body().string();
     }
 
     public static void registerModule(Module module) {
