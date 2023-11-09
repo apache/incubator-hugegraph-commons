@@ -83,16 +83,14 @@ public class RestResult {
             JsonNode root = MAPPER.readTree(this.content);
             JsonNode element = root.get(key);
             if (element == null) {
-                throw new SerializeException(
-                        "Can't find value of the key: %s in json.", key);
+                throw new SerializeException("Can't find value of the key: %s in json.", key);
             }
             JavaType type = MAPPER.getTypeFactory()
                                   .constructParametrizedType(ArrayList.class,
                                                              List.class, clazz);
             return MAPPER.convertValue(element, type);
         } catch (IOException e) {
-            throw new SerializeException(
-                    "Failed to deserialize %s", e, this.content);
+            throw new SerializeException("Failed to deserialize %s", e, this.content);
         }
     }
 
@@ -104,14 +102,13 @@ public class RestResult {
         try {
             return MAPPER.readValue(this.content, type);
         } catch (IOException e) {
-            throw new SerializeException(
-                    "Failed to deserialize %s", e, this.content);
+            throw new SerializeException("Failed to deserialize %s", e, this.content);
         }
     }
 
     @Override
     public String toString() {
-        return String.format("{status=%s, headers=%s, content=%s}",
-                             this.status, this.headers, this.content);
+        return String.format("{status=%s, headers=%s, content=%s}", this.status, this.headers,
+                             this.content);
     }
 }

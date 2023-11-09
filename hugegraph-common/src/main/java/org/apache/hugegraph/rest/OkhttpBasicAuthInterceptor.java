@@ -35,9 +35,9 @@ public class OkhttpBasicAuthInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
-        if (request.header(RestHeaders.AUTHORIZATION) == null) {
+        if (request.header(HttpHeadersConstant.AUTHORIZATION) == null) {
             Request authenticatedRequest = request.newBuilder()
-                                                  .header(RestHeaders.AUTHORIZATION,
+                                                  .header(HttpHeadersConstant.AUTHORIZATION,
                                                           this.credentials)
                                                   .build();
             return chain.proceed(authenticatedRequest);

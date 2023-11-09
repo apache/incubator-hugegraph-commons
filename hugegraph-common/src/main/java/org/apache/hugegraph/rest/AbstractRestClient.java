@@ -153,7 +153,7 @@ public abstract class AbstractRestClient implements RestClient {
     private static RequestBody buildRequestBody(Object body, RestHeaders headers) {
         String contentType = parseContentType(headers);
         String bodyContent;
-        if (RestHeaders.APPLICATION_JSON.equals(contentType)) {
+        if (HttpHeadersConstant.APPLICATION_JSON.equals(contentType)) {
             if (body == null) {
                 bodyContent = "{}";
             } else {
@@ -164,7 +164,7 @@ public abstract class AbstractRestClient implements RestClient {
         }
         RequestBody requestBody = RequestBody.create(MediaType.parse(contentType), bodyContent);
 
-        if (headers != null && "gzip".equals(headers.get(RestHeaders.CONTENT_ENCODING))) {
+        if (headers != null && "gzip".equals(headers.get(HttpHeadersConstant.CONTENT_ENCODING))) {
             requestBody = gzip(requestBody);
         }
         return requestBody;
@@ -193,12 +193,12 @@ public abstract class AbstractRestClient implements RestClient {
 
     private static String parseContentType(RestHeaders headers) {
         if (headers != null) {
-            String contentType = headers.get(RestHeaders.CONTENT_TYPE);
+            String contentType = headers.get(HttpHeadersConstant.CONTENT_TYPE);
             if (contentType != null) {
                 return contentType;
             }
         }
-        return RestHeaders.APPLICATION_JSON;
+        return HttpHeadersConstant.APPLICATION_JSON;
     }
 
     private OkHttpClient buildOkHttpClient(OkHttpConfig okHttpConfig) {
@@ -432,7 +432,7 @@ public abstract class AbstractRestClient implements RestClient {
         // Add auth header
         String auth = this.getAuthContext();
         if (StringUtils.isNotEmpty(auth)) {
-            builder.addHeader(RestHeaders.AUTHORIZATION, auth);
+            builder.addHeader(HttpHeadersConstant.AUTHORIZATION, auth);
         }
     }
 
