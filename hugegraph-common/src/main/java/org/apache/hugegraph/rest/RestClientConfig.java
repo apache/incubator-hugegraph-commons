@@ -24,15 +24,16 @@ import lombok.Setter;
 @Builder
 @Getter
 @Setter
-public class OkHttpConfig {
+public class RestClientConfig {
 
     private String user;
     private String password;
     private String token;
     private Integer timeout;
-    private Integer maxTotal;
-    private Integer maxPerRoute;
-    private Integer idleTime;
+    private Integer maxConns;
+    private Integer maxConnsPerRoute;
+    private Integer idleTime = 5;
+    private Integer maxIdleConnections = 5;
     private String trustStoreFile;
     private String trustStorePassword;
 }

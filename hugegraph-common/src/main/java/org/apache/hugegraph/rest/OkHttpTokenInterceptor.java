@@ -17,27 +17,32 @@
 
 package org.apache.hugegraph.rest;
 
+import static org.apache.hugegraph.rest.HttpHeadersConstant.AUTHORIZATION;
+import static org.apache.hugegraph.rest.HttpHeadersConstant.BEARER;
+import static org.apache.hugegraph.rest.HttpHeadersConstant.SPACE;
+
 import java.io.IOException;
 
 import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class OkhttpTokenInterceptor implements Interceptor {
+
+public class OkHttpTokenInterceptor implements Interceptor {
 
     private final String token;
 
-    public OkhttpTokenInterceptor(String token) {
+    public OkHttpTokenInterceptor(String token) {
         this.token = token;
     }
 
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
-        if (request.header(HttpHeadersConstant.AUTHORIZATION) == null) {
+        if (request.header(AUTHORIZATION) == null) {
             Request authenticatedRequest = request.newBuilder()
-                                                  .header(HttpHeadersConstant.AUTHORIZATION,
-                                                          "Bearer " + this.token)
+                                                  .header(AUTHORIZATION,
+                                                          BEARER + SPACE + this.token)
                                                   .build();
             return chain.proceed(authenticatedRequest);
         }

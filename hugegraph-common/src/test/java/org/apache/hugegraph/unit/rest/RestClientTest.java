@@ -84,7 +84,7 @@ public class RestClientTest {
 
     @Test
     // TODO: How to verify it?
-    public void testPostWithMaxTotalAndPerRoute() {
+    public void testPostWithmaxConnsAndPerRoute() {
         RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
@@ -431,16 +431,16 @@ public class RestClientTest {
         private final String content;
 
         public RestClientImpl(String url, int timeout, int idleTime,
-                              int maxTotal, int maxPerRoute, int status) {
-            super(url, timeout, idleTime, maxTotal, maxPerRoute);
+                              int maxConns, int maxConnsPerRoute, int status) {
+            super(url, timeout, idleTime, maxConns, maxConnsPerRoute);
             this.status = status;
             this.headers = new RestHeaders();
             this.content = "";
         }
 
         public RestClientImpl(String url, int timeout,
-                              int maxTotal, int maxPerRoute, int status) {
-            super(url, timeout, maxTotal, maxPerRoute);
+                              int maxConns, int maxConnsPerRoute, int status) {
+            super(url, timeout, maxConns, maxConnsPerRoute);
             this.status = status;
             this.headers = new RestHeaders();
             this.content = "";
@@ -455,19 +455,19 @@ public class RestClientTest {
         }
 
         public RestClientImpl(String url, String user, String password,
-                              int timeout, int maxTotal, int maxPerRoute,
+                              int timeout, int maxConns, int maxConnsPerRoute,
                               int status) {
-            super(url, user, password, timeout, maxTotal, maxPerRoute);
+            super(url, user, password, timeout, maxConns, maxConnsPerRoute);
             this.status = status;
             this.headers = new RestHeaders();
             this.content = "";
         }
 
         public RestClientImpl(String url, String user, String password,
-                              int timeout, int maxTotal, int maxPerRoute,
+                              int timeout, int maxConns, int maxConnsPerRoute,
                               String trustStoreFile, String trustStorePassword,
                               int status) {
-            super(url, user, password, timeout, maxTotal, maxPerRoute,
+            super(url, user, password, timeout, maxConns, maxConnsPerRoute,
                   trustStoreFile, trustStorePassword);
             this.status = status;
             this.headers = new RestHeaders();
@@ -483,18 +483,18 @@ public class RestClientTest {
         }
 
         public RestClientImpl(String url, String token, int timeout,
-                              int maxTotal, int maxPerRoute, int status) {
-            super(url, token, timeout, maxTotal, maxPerRoute);
+                              int maxConns, int maxConnsPerRoute, int status) {
+            super(url, token, timeout, maxConns, maxConnsPerRoute);
             this.status = status;
             this.headers = new RestHeaders();
             this.content = "";
         }
 
         public RestClientImpl(String url, String token, int timeout,
-                              int maxTotal, int maxPerRoute,
+                              int maxConns, int maxConnsPerRoute,
                               String trustStoreFile,
                               String trustStorePassword, int status) {
-            super(url, token, timeout, maxTotal, maxPerRoute,
+            super(url, token, timeout, maxConns, maxConnsPerRoute,
                   trustStoreFile, trustStorePassword);
             this.status = status;
             this.headers = new RestHeaders();

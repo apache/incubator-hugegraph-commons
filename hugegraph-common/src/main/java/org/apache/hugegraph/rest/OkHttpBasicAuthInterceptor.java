@@ -24,11 +24,11 @@ import okhttp3.Interceptor;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class OkhttpBasicAuthInterceptor implements Interceptor {
+public class OkHttpBasicAuthInterceptor implements Interceptor {
 
     private final String credentials;
 
-    public OkhttpBasicAuthInterceptor(String user, String password) {
+    public OkHttpBasicAuthInterceptor(String user, String password) {
         this.credentials = Credentials.basic(user, password);
     }
 
