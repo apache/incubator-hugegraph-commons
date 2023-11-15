@@ -31,14 +31,13 @@ import org.apache.hugegraph.rest.AbstractRestClient;
 import org.apache.hugegraph.rest.ClientException;
 import org.apache.hugegraph.rest.HttpHeadersConstant;
 import org.apache.hugegraph.rest.RestClient;
+import org.apache.hugegraph.rest.RestClientConfig;
 import org.apache.hugegraph.rest.RestHeaders;
 import org.apache.hugegraph.rest.RestResult;
 import org.apache.hugegraph.testutil.Assert;
 import org.apache.hugegraph.testutil.Whitebox;
 import org.apache.hugegraph.unit.BaseUnitTest;
-import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.MockedStatic;
 import org.mockito.Mockito;
 
 import com.google.common.collect.ImmutableList;
@@ -53,69 +52,60 @@ import okhttp3.Response;
 
 public class RestClientTest {
 
-    private static final Request.Builder requestBuilder =
-            Mockito.mock(Request.Builder.class, Mockito.RETURNS_DEEP_STUBS);
-
-    @BeforeClass
-    public static void setUp() {
-        HttpUrl.Builder httpUrlBuilder =
-                Mockito.mock(HttpUrl.Builder.class, Mockito.RETURNS_DEEP_STUBS);
-        HttpUrl httpUrl = Mockito.mock(HttpUrl.class);
-
-        MockedStatic<HttpUrl> httpUrlMockedStatic = Mockito.mockStatic(HttpUrl.class);
-        httpUrlMockedStatic.when(() -> HttpUrl.parse("/test")).thenReturn(httpUrl);
-        Mockito.when(httpUrl.newBuilder()).thenReturn(httpUrlBuilder);
-
-        Mockito.when(httpUrlBuilder.addPathSegments("test")).thenReturn(httpUrlBuilder);
-        Mockito.when(httpUrlBuilder.addPathSegments("test")
-                                   .addPathSegment("id"))
-               .thenReturn(httpUrlBuilder);
-        Mockito.when(requestBuilder.url(httpUrlBuilder.addPathSegments("test")
-                                                      .addPathSegment("id").build()))
-               .thenReturn(requestBuilder);
-    }
+    private static final String TEST_URL = "http://localhost:8080";
 
     @Test
     public void testPost() {
-        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     // TODO: How to verify it?
-    public void testPostWithmaxConnsAndPerRoute() {
-        RestClient client = new RestClientImpl("/test", 1000, 10, 5, 200);
+    public void testPostWithMaxConnsAndPerRoute() {
+        RestClientConfig restClientConfig =
+                RestClientConfig.builder().timeout(1000).maxConns(10).maxConnsPerRoute(5).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testPostWithUserAndPassword() {
-        RestClient client = new RestClientImpl("/test", "user", "", 1000, 200);
+        RestClientConfig restClientConfig =
+                RestClientConfig.builder().user("user").password("").timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testPostWithToken() {
-        RestClient client = new RestClientImpl("/test", "token", 1000, 200);
+        RestClientConfig restClientConfig =
+                RestClientConfig.builder().token("token").timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testPostWithAllParams() {
-        RestClient client = new RestClientImpl("/test", "user", "", 1000,
-                                               10, 5, 200);
+        RestClientConfig restClientConfig =
+                RestClientConfig.builder().user("user").password("").timeout(1000).maxConns(10)
+                                .maxConnsPerRoute(5).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testPostWithTokenAndAllParams() {
-        RestClient client = new RestClientImpl("/test", "token", 1000,
-                                               10, 5, 200);
+        RestClientConfig restClientConfig =
+                RestClientConfig.builder().token("token").timeout(1000).maxConns(10)
+                                .maxConnsPerRoute(5).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
@@ -128,9 +118,11 @@ public class RestClientTest {
         BaseUnitTest.downloadFileByUrl(url, trustStoreFile);
 
         String trustStorePassword = "changeit";
-        RestClient client = new RestClientImpl("/test", "user", "", 1000,
-                                               10, 5, trustStoreFile,
-                                               trustStorePassword, 200);
+        RestClientConfig restClientConfig =
+                RestClientConfig.builder().user("user").password("").timeout(1000).maxConns(10)
+                                .maxConnsPerRoute(5).trustStoreFile(trustStoreFile)
+                                .trustStorePassword(trustStorePassword).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
@@ -143,9 +135,11 @@ public class RestClientTest {
         BaseUnitTest.downloadFileByUrl(url, trustStoreFile);
 
         String trustStorePassword = "changeit";
-        RestClient client = new RestClientImpl("/test", "token", 1000,
-                                               10, 5, trustStoreFile,
-                                               trustStorePassword, 200);
+        RestClientConfig restClientConfig =
+                RestClientConfig.builder().token("token").timeout(1000).maxConns(10)
+                                .maxConnsPerRoute(5).trustStoreFile(trustStoreFile)
+                                .trustStorePassword(trustStorePassword).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
     }
@@ -183,8 +177,8 @@ public class RestClientTest {
                                                .add("key1", "value1-2")
                                                .add("Content-Encoding", "gzip");
         String content = "{\"names\": [\"marko\", \"josh\", \"lop\"]}";
-        RestClient client = new RestClientImpl("/test", 1000, 200,
-                                               headers, content);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200, headers, content);
         RestResult restResult = client.post("path", "body");
         Assert.assertEquals(200, restResult.status());
         Assert.assertEquals(headers, restResult.headers());
@@ -195,7 +189,8 @@ public class RestClientTest {
 
     @Test
     public void testPostWithException() {
-        RestClient client = new RestClientImpl("/test", 1000, 400);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 400);
         Assert.assertThrows(ClientException.class, () -> {
             client.post("path", "body");
         });
@@ -203,7 +198,8 @@ public class RestClientTest {
 
     @Test
     public void testPostWithParams() {
-        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestHeaders headers = new RestHeaders();
 
         Map<String, Object> params = ImmutableMap.of("param1", "value1");
@@ -214,14 +210,16 @@ public class RestClientTest {
 
     @Test
     public void testPut() {
-        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.put("path", "id1", "body");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testPutWithHeaders() {
-        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestHeaders headers = new RestHeaders().add("key1", "value1-1")
                                                .add("key2", "value1-2")
                                                .add("Content-Encoding", "gzip");
@@ -231,7 +229,8 @@ public class RestClientTest {
 
     @Test
     public void testPutWithParams() {
-        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         Map<String, Object> params = ImmutableMap.of("param1", "value1");
         RestResult restResult = client.put("path", "id1", "body", params);
         Assert.assertEquals(200, restResult.status());
@@ -239,7 +238,8 @@ public class RestClientTest {
 
     @Test
     public void testPutWithException() {
-        RestClient client = new RestClientImpl("/test", 1000, 400);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 400);
         Assert.assertThrows(ClientException.class, () -> {
             client.put("path", "id1", "body");
         });
@@ -247,21 +247,24 @@ public class RestClientTest {
 
     @Test
     public void testGet() {
-        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.get("path");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testGetWithId() {
-        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         RestResult restResult = client.get("path", "id1");
         Assert.assertEquals(200, restResult.status());
     }
 
     @Test
     public void testGetWithParams() {
-        RestClient client = new RestClientImpl("/test", 1000, 200);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         Map<String, Object> params = new HashMap<>();
         params.put("key1", ImmutableList.of("value1-1", "value1-2"));
         params.put("key2", "value2");
@@ -271,7 +274,8 @@ public class RestClientTest {
 
     @Test
     public void testGetWithException() {
-        RestClient client = new RestClientImpl("/test", 1000, 400);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 400);
         Assert.assertThrows(ClientException.class, () -> {
             client.get("path", "id1");
         });
@@ -279,14 +283,16 @@ public class RestClientTest {
 
     @Test
     public void testDeleteWithId() {
-        RestClient client = new RestClientImpl("/test", 1000, 204);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 204);
         RestResult restResult = client.delete("path", "id1");
         Assert.assertEquals(204, restResult.status());
     }
 
     @Test
     public void testDeleteWithParams() {
-        RestClient client = new RestClientImpl("/test", 1000, 204);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 204);
         Map<String, Object> params = ImmutableMap.of("param1", "value1");
         RestResult restResult = client.delete("path", params);
         Assert.assertEquals(204, restResult.status());
@@ -294,7 +300,8 @@ public class RestClientTest {
 
     @Test
     public void testDeleteWithException() {
-        RestClient client = new RestClientImpl("/test", 1000, 400);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClient client = new RestClientImpl(TEST_URL, restClientConfig, 400);
         Assert.assertThrows(ClientException.class, () -> {
             client.delete("path", "id1");
         });
@@ -302,7 +309,8 @@ public class RestClientTest {
 
     @Test
     public void testAuthContext() {
-        RestClientImpl client = new RestClientImpl("/test", 1000, 10, 5, 200);
+        RestClientConfig restClientConfig = RestClientConfig.builder().timeout(1000).build();
+        RestClientImpl client = new RestClientImpl(TEST_URL, restClientConfig, 200);
         Assert.assertNull(client.getAuthContext());
 
         String token = UUID.randomUUID().toString();
@@ -316,24 +324,30 @@ public class RestClientTest {
     @SneakyThrows
     @Test
     public void testRequest() {
-        MockRestClientImpl client = new MockRestClientImpl("/test", 1000);
-
         Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
         Mockito.when(response.code()).thenReturn(200);
         Mockito.when(response.headers())
                .thenReturn(new RestHeaders().toOkHttpHeader());
         Mockito.when(response.body().string()).thenReturn("content");
 
+        Request.Builder requestBuilder = Mockito.mock(Request.Builder.class,
+                                                      Mockito.RETURNS_DEEP_STUBS);
         Mockito.when(requestBuilder.delete()).thenReturn(requestBuilder);
         Mockito.when(requestBuilder.get()).thenReturn(requestBuilder);
         Mockito.when(requestBuilder.put(Mockito.any())).thenReturn(requestBuilder);
         Mockito.when(requestBuilder.post(Mockito.any())).thenReturn(requestBuilder);
+        Mockito.when(requestBuilder.url((HttpUrl) Mockito.any())).thenReturn(requestBuilder);
+        MockRestClientImpl client = new MockRestClientImpl(TEST_URL, 1000) {
+            @Override
+            protected Request.Builder newRequestBuilder() {
+                return requestBuilder;
+            }
+        };
 
         OkHttpClient okHttpClient = Mockito.mock(OkHttpClient.class, Mockito.RETURNS_DEEP_STUBS);
         Mockito.when(okHttpClient.newCall(Mockito.any()).execute()).thenReturn(response);
 
         Whitebox.setInternalState(client, "client", okHttpClient);
-        Whitebox.setInternalState(client, "requestBuilder", requestBuilder);
 
         RestResult result;
 
@@ -372,7 +386,6 @@ public class RestClientTest {
 
         // Test put
         client.setAuthContext("token6");
-//        result = client.post("test", new Object()); //why use new Object() as args here?
         result = client.post("test", null);
         Assert.assertEquals(200, result.status());
         Mockito.verify(requestBuilder).addHeader(HttpHeaders.AUTHORIZATION, "token6");
@@ -430,82 +443,13 @@ public class RestClientTest {
         private final RestHeaders headers;
         private final String content;
 
-        public RestClientImpl(String url, int timeout, int idleTime,
-                              int maxConns, int maxConnsPerRoute, int status) {
-            super(url, timeout, idleTime, maxConns, maxConnsPerRoute);
-            this.status = status;
-            this.headers = new RestHeaders();
-            this.content = "";
+        public RestClientImpl(String url, RestClientConfig config, int status) {
+            this(url, config, status, new RestHeaders(), "");
         }
 
-        public RestClientImpl(String url, int timeout,
-                              int maxConns, int maxConnsPerRoute, int status) {
-            super(url, timeout, maxConns, maxConnsPerRoute);
-            this.status = status;
-            this.headers = new RestHeaders();
-            this.content = "";
-        }
-
-        public RestClientImpl(String url, String user, String password,
-                              int timeout, int status) {
-            super(url, user, password, timeout);
-            this.status = status;
-            this.headers = new RestHeaders();
-            this.content = "";
-        }
-
-        public RestClientImpl(String url, String user, String password,
-                              int timeout, int maxConns, int maxConnsPerRoute,
-                              int status) {
-            super(url, user, password, timeout, maxConns, maxConnsPerRoute);
-            this.status = status;
-            this.headers = new RestHeaders();
-            this.content = "";
-        }
-
-        public RestClientImpl(String url, String user, String password,
-                              int timeout, int maxConns, int maxConnsPerRoute,
-                              String trustStoreFile, String trustStorePassword,
-                              int status) {
-            super(url, user, password, timeout, maxConns, maxConnsPerRoute,
-                  trustStoreFile, trustStorePassword);
-            this.status = status;
-            this.headers = new RestHeaders();
-            this.content = "";
-        }
-
-        public RestClientImpl(String url, String token, int timeout, int status) {
-            super(url, token, timeout);
-            this.status = status;
-            this.headers = new RestHeaders();
-            this.content = "";
-        }
-
-        public RestClientImpl(String url, String token, int timeout,
-                              int maxConns, int maxConnsPerRoute, int status) {
-            super(url, token, timeout, maxConns, maxConnsPerRoute);
-            this.status = status;
-            this.headers = new RestHeaders();
-            this.content = "";
-        }
-
-        public RestClientImpl(String url, String token, int timeout,
-                              int maxConns, int maxConnsPerRoute,
-                              String trustStoreFile, String trustStorePassword, int status) {
-            super(url, token, timeout, maxConns, maxConnsPerRoute,
-                  trustStoreFile, trustStorePassword);
-            this.status = status;
-            this.headers = new RestHeaders();
-            this.content = "";
-        }
-
-        public RestClientImpl(String url, int timeout, int status) {
-            this(url, timeout, status, new RestHeaders(), "");
-        }
-
-        public RestClientImpl(String url, int timeout, int status,
-                              RestHeaders headers, String content) {
-            super(url, timeout);
+        public RestClientImpl(String url, RestClientConfig config, int status, RestHeaders headers,
+                              String content) {
+            super(url, config);
             this.status = status;
             this.headers = headers;
             this.content = content;

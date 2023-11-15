@@ -18,8 +18,7 @@
 package org.apache.hugegraph.rest;
 
 import static org.apache.hugegraph.rest.HttpHeadersConstant.AUTHORIZATION;
-import static org.apache.hugegraph.rest.HttpHeadersConstant.BEARER;
-import static org.apache.hugegraph.rest.HttpHeadersConstant.SPACE;
+import static org.apache.hugegraph.rest.HttpHeadersConstant.BEARER_PREFIX;
 
 import java.io.IOException;
 
@@ -42,7 +41,7 @@ public class OkHttpTokenInterceptor implements Interceptor {
         if (request.header(AUTHORIZATION) == null) {
             Request authenticatedRequest = request.newBuilder()
                                                   .header(AUTHORIZATION,
-                                                          BEARER + SPACE + this.token)
+                                                          BEARER_PREFIX + this.token)
                                                   .build();
             return chain.proceed(authenticatedRequest);
         }

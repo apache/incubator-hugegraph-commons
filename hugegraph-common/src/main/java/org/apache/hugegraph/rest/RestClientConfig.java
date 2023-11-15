@@ -17,6 +17,8 @@
 
 package org.apache.hugegraph.rest;
 
+import java.util.concurrent.TimeUnit;
+
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,7 +35,8 @@ public class RestClientConfig {
     private Integer maxConns;
     private Integer maxConnsPerRoute;
     private Integer idleTime = 5;
-    private Integer maxIdleConnections = 5;
+    private TimeUnit idleTimeUnit = TimeUnit.MINUTES;
+    private Integer maxIdleConns = 5;
     private String trustStoreFile;
     private String trustStorePassword;
 }

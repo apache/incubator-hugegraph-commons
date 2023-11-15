@@ -18,7 +18,7 @@
 package org.apache.hugegraph.rest;
 
 public class HttpHeadersConstant {
-    
+
     public static final String CONTENT_TYPE = "Content-Type";
 
     public static final String CONTENT_ENCODING = "Content-Encoding";
@@ -27,8 +27,7 @@ public class HttpHeadersConstant {
 
     public static final String APPLICATION_JSON = "application/json";
 
-    public static final String BEARER = "Bearer";
+    public static final String BEARER_PREFIX = "Bearer ";
 
-    public static final String SPACE = " ";
 
 }

@@ -62,9 +62,10 @@ import okio.Okio;
 public abstract class AbstractRestClient implements RestClient {
 
     private final ThreadLocal<String> authContext;
+
     private final OkHttpClient client;
+
     private final String baseUrl;
-    private final Request.Builder requestBuilder;
 
     public AbstractRestClient(String url, int timeout) {
         this(url, RestClientConfig.builder().timeout(timeout).build());
@@ -78,12 +79,8 @@ public abstract class AbstractRestClient implements RestClient {
                                   .build());
     }
 
-    public AbstractRestClient(String url, int timeout, int maxConns, int maxConnsPerRoute) {
-        this(url, null, null, timeout, maxConns, maxConnsPerRoute);
-    }
-
-    public AbstractRestClient(String url, int timeout, int idleTime,
-                              int maxConns, int maxConnsPerRoute) {
+    public AbstractRestClient(String url, int timeout, int idleTime, int maxConns,
+                              int maxConnsPerRoute) {
         this(url, RestClientConfig.builder()
                                   .idleTime(idleTime)
                                   .timeout(timeout)
@@ -92,20 +89,8 @@ public abstract class AbstractRestClient implements RestClient {
                                   .build());
     }
 
-    public AbstractRestClient(String url, String user, String password,
-                              int timeout, int maxConns, int maxConnsPerRoute) {
-        this(url, RestClientConfig.builder()
-                                  .user(user)
-                                  .password(password)
-                                  .timeout(timeout)
-                                  .maxConns(maxConns)
-                                  .maxConnsPerRoute(maxConnsPerRoute)
-                                  .build());
-    }
-
-    public AbstractRestClient(String url, String user, String password,
-                              int timeout, int maxConns, int maxConnsPerRoute,
-                              String trustStoreFile,
+    public AbstractRestClient(String url, String user, String password, int timeout, int maxConns,
+                              int maxConnsPerRoute, String trustStoreFile,
                               String trustStorePassword) {
         this(url, RestClientConfig.builder()
                                   .user(user).password(password)
@@ -117,26 +102,9 @@ public abstract class AbstractRestClient implements RestClient {
                                   .build());
     }
 
-    public AbstractRestClient(String url, String token, int timeout) {
-        this(url, RestClientConfig.builder()
-                                  .token(token)
-                                  .timeout(timeout)
-                                  .build());
-    }
-
-    public AbstractRestClient(String url, String token, int timeout,
-                              int maxConns, int maxConnsPerRoute) {
-        this(url, RestClientConfig.builder()
-                                  .token(token)
-                                  .timeout(timeout)
-                                  .maxConns(maxConns)
-                                  .maxConnsPerRoute(maxConnsPerRoute)
-                                  .build());
-    }
-
-    public AbstractRestClient(String url, String token, int timeout,
-                              int maxConns, int maxConnsPerRoute,
-                              String trustStoreFile, String trustStorePassword) {
+    public AbstractRestClient(String url, String token, int timeout, int maxConns,
+                              int maxConnsPerRoute, String trustStoreFile,
+                              String trustStorePassword) {
         this(url, RestClientConfig.builder()
                                   .token(token)
                                   .timeout(timeout)
@@ -150,7 +118,6 @@ public abstract class AbstractRestClient implements RestClient {
     public AbstractRestClient(String url, RestClientConfig config) {
         this.baseUrl = url;
         this.client = buildOkHttpClient(config);
-        this.requestBuilder = new Request.Builder();
         this.authContext = new InheritableThreadLocal<>();
     }
 
@@ -214,10 +181,10 @@ public abstract class AbstractRestClient implements RestClient {
                    .readTimeout(config.getTimeout(), TimeUnit.MILLISECONDS);
         }
 
-        if (config.getMaxIdleConnections() != null || config.getIdleTime() != null) {
-            ConnectionPool connectionPool = new ConnectionPool(config.getMaxIdleConnections(),
+        if (config.getMaxIdleConns() != null || config.getIdleTime() != null) {
+            ConnectionPool connectionPool = new ConnectionPool(config.getMaxIdleConns(),
                                                                config.getIdleTime(),
-                                                               TimeUnit.MILLISECONDS);
+                                                               TimeUnit.MINUTES);
             builder.connectionPool(connectionPool);
         }
 
@@ -304,7 +271,7 @@ public abstract class AbstractRestClient implements RestClient {
             });
         }
 
-        Request.Builder builder = requestBuilder.url(urlBuilder.build());
+        Request.Builder builder = newRequestBuilder().url(urlBuilder.build());
 
         if (headers != null) {
             builder.headers(headers.toOkHttpHeader());
@@ -313,6 +280,10 @@ public abstract class AbstractRestClient implements RestClient {
         this.attachAuthToRequest(builder);
 
         return builder;
+    }
+
+    protected Request.Builder newRequestBuilder() {
+        return new Request.Builder();
     }
 
     @SneakyThrows
