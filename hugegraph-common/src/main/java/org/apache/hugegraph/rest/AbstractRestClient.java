@@ -24,6 +24,7 @@ import java.security.KeyStore;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 import javax.net.ssl.HostnameVerifier;
@@ -37,6 +38,7 @@ import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hugegraph.util.JsonUtil;
+import org.jetbrains.annotations.NotNull;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -52,6 +54,11 @@ import okio.BufferedSink;
 import okio.GzipSink;
 import okio.Okio;
 
+/**
+ * This class provides an abstract implementation of the RestClient interface.
+ * It provides methods for making HTTP requests (GET, POST, PUT, DELETE) to a REST API.
+ * Note: It uses the OkHttp library to make these requests for now.
+ */
 public abstract class AbstractRestClient implements RestClient {
 
     private final ThreadLocal<String> authContext;
@@ -63,8 +70,7 @@ public abstract class AbstractRestClient implements RestClient {
         this(url, RestClientConfig.builder().timeout(timeout).build());
     }
 
-    public AbstractRestClient(String url, String user, String password,
-                              int timeout) {
+    public AbstractRestClient(String url, String user, String password, int timeout) {
         this(url, RestClientConfig.builder()
                                   .user(user)
                                   .password(password)
@@ -72,8 +78,7 @@ public abstract class AbstractRestClient implements RestClient {
                                   .build());
     }
 
-    public AbstractRestClient(String url, int timeout,
-                              int maxConns, int maxConnsPerRoute) {
+    public AbstractRestClient(String url, int timeout, int maxConns, int maxConnsPerRoute) {
         this(url, null, null, timeout, maxConns, maxConnsPerRoute);
     }
 
@@ -131,8 +136,7 @@ public abstract class AbstractRestClient implements RestClient {
 
     public AbstractRestClient(String url, String token, int timeout,
                               int maxConns, int maxConnsPerRoute,
-                              String trustStoreFile,
-                              String trustStorePassword) {
+                              String trustStoreFile, String trustStorePassword) {
         this(url, RestClientConfig.builder()
                                   .token(token)
                                   .timeout(timeout)
@@ -162,7 +166,8 @@ public abstract class AbstractRestClient implements RestClient {
         } else {
             bodyContent = String.valueOf(body);
         }
-        RequestBody requestBody = RequestBody.create(MediaType.parse(contentType), bodyContent);
+        RequestBody requestBody = RequestBody.create(bodyContent.getBytes(),
+                                                     MediaType.parse(contentType));
 
         if (headers != null && "gzip".equals(headers.get(HttpHeadersConstant.CONTENT_ENCODING))) {
             requestBody = gzipBody(requestBody);
@@ -183,7 +188,7 @@ public abstract class AbstractRestClient implements RestClient {
             }
 
             @Override
-            public void writeTo(BufferedSink sink) throws IOException {
+            public void writeTo(@NotNull BufferedSink sink) throws IOException {
                 BufferedSink gzipSink = Okio.buffer(new GzipSink(sink));
                 body.writeTo(gzipSink);
                 gzipSink.close();
@@ -210,9 +215,9 @@ public abstract class AbstractRestClient implements RestClient {
         }
 
         if (config.getMaxIdleConnections() != null || config.getIdleTime() != null) {
-            ConnectionPool connectionPool =
-                    new ConnectionPool(config.getMaxIdleConnections(), config.getIdleTime(),
-                                       TimeUnit.MILLISECONDS);
+            ConnectionPool connectionPool = new ConnectionPool(config.getMaxIdleConnections(),
+                                                               config.getIdleTime(),
+                                                               TimeUnit.MILLISECONDS);
             builder.connectionPool(connectionPool);
         }
 
@@ -276,7 +281,8 @@ public abstract class AbstractRestClient implements RestClient {
 
     private Request.Builder getRequestBuilder(String path, String id, RestHeaders headers,
                                               Map<String, Object> params) {
-        HttpUrl.Builder urlBuilder = HttpUrl.parse(this.baseUrl).newBuilder()
+        HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.parse(this.baseUrl))
+                                            .newBuilder()
                                             .addPathSegments(path);
         if (id != null) {
             urlBuilder.addPathSegment(id);
@@ -482,5 +488,4 @@ public abstract class AbstractRestClient implements RestClient {
             }
         }
     }
-
 }

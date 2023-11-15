@@ -70,8 +70,8 @@ public class RestClientTest {
         Mockito.when(httpUrlBuilder.addPathSegments("test")
                                    .addPathSegment("id"))
                .thenReturn(httpUrlBuilder);
-        Mockito.when(requestBuilder.url(
-                       httpUrlBuilder.addPathSegments("test").addPathSegment("id").build()))
+        Mockito.when(requestBuilder.url(httpUrlBuilder.addPathSegments("test")
+                                                      .addPathSegment("id").build()))
                .thenReturn(requestBuilder);
     }
 
@@ -474,8 +474,7 @@ public class RestClientTest {
             this.content = "";
         }
 
-        public RestClientImpl(String url, String token,
-                              int timeout, int status) {
+        public RestClientImpl(String url, String token, int timeout, int status) {
             super(url, token, timeout);
             this.status = status;
             this.headers = new RestHeaders();
@@ -492,8 +491,7 @@ public class RestClientTest {
 
         public RestClientImpl(String url, String token, int timeout,
                               int maxConns, int maxConnsPerRoute,
-                              String trustStoreFile,
-                              String trustStorePassword, int status) {
+                              String trustStoreFile, String trustStorePassword, int status) {
             super(url, token, timeout, maxConns, maxConnsPerRoute,
                   trustStoreFile, trustStorePassword);
             this.status = status;
@@ -506,8 +504,7 @@ public class RestClientTest {
         }
 
         public RestClientImpl(String url, int timeout, int status,
-                              RestHeaders headers,
-                              String content) {
+                              RestHeaders headers, String content) {
             super(url, timeout);
             this.status = status;
             this.headers = headers;
@@ -520,14 +517,12 @@ public class RestClientTest {
             Response response = Mockito.mock(Response.class, Mockito.RETURNS_DEEP_STUBS);
             Mockito.when(response.code()).thenReturn(this.status);
             Mockito.when(response.headers()).thenReturn(this.headers.toOkHttpHeader());
-            Mockito.when(response.body().string())
-                   .thenReturn(this.content);
+            Mockito.when(response.body().string()).thenReturn(this.content);
             return response;
         }
 
         @Override
-        protected void checkStatus(Response response,
-                                   int... statuses) {
+        protected void checkStatus(Response response, int... statuses) {
             boolean match = false;
             for (int status : statuses) {
                 if (status == response.code()) {
@@ -548,8 +543,7 @@ public class RestClientTest {
         }
 
         @Override
-        protected void checkStatus(Response response,
-                                   int... statuses) {
+        protected void checkStatus(Response response, int... statuses) {
             // pass
         }
     }
