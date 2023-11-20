@@ -29,10 +29,10 @@ import javax.net.ssl.SSLSessionContext;
 
 import org.apache.hugegraph.rest.AbstractRestClient;
 import org.apache.hugegraph.rest.ClientException;
-import org.apache.hugegraph.rest.HttpHeadersConstant;
 import org.apache.hugegraph.rest.RestClient;
 import org.apache.hugegraph.rest.RestClientConfig;
 import org.apache.hugegraph.rest.RestHeaders;
+import org.apache.hugegraph.rest.RestHeaders.HttpHeadersConstant;
 import org.apache.hugegraph.rest.RestResult;
 import org.apache.hugegraph.testutil.Assert;
 import org.apache.hugegraph.testutil.Whitebox;

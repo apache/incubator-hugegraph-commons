@@ -19,6 +19,8 @@ package org.apache.hugegraph.rest;
 
 import java.io.IOException;
 
+import org.apache.hugegraph.rest.RestHeaders.HttpHeadersConstant;
+
 import okhttp3.Credentials;
 import okhttp3.Interceptor;
 import okhttp3.Request;

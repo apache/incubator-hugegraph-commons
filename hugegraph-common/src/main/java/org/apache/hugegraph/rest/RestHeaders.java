@@ -77,4 +77,18 @@ public class RestHeaders {
     public okhttp3.Headers toOkHttpHeader() {
         return this.headersBuilder.build();
     }
+
+    public static class HttpHeadersConstant {
+
+        public static final String CONTENT_TYPE = "Content-Type";
+
+        public static final String CONTENT_ENCODING = "Content-Encoding";
+
+        public static final String AUTHORIZATION = "Authorization";
+
+        public static final String APPLICATION_JSON = "application/json";
+
+        public static final String BEARER_PREFIX = "Bearer ";
+    }
+
 }

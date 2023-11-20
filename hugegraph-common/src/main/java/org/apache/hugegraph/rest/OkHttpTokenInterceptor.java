@@ -17,8 +17,8 @@
 
 package org.apache.hugegraph.rest;
 
-import static org.apache.hugegraph.rest.HttpHeadersConstant.AUTHORIZATION;
-import static org.apache.hugegraph.rest.HttpHeadersConstant.BEARER_PREFIX;
+import static org.apache.hugegraph.rest.RestHeaders.HttpHeadersConstant.AUTHORIZATION;
+import static org.apache.hugegraph.rest.RestHeaders.HttpHeadersConstant.BEARER_PREFIX;
 
 import java.io.IOException;
 

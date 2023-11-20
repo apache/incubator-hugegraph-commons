@@ -37,6 +37,7 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.hugegraph.rest.RestHeaders.HttpHeadersConstant;
 import org.apache.hugegraph.util.JsonUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -79,8 +80,8 @@ public abstract class AbstractRestClient implements RestClient {
                                   .build());
     }
 
-    public AbstractRestClient(String url, int timeout, int idleTime, int maxConns,
-                              int maxConnsPerRoute) {
+    public AbstractRestClient(String url, int timeout, int idleTime,
+                              int maxConns, int maxConnsPerRoute) {
         this(url, RestClientConfig.builder()
                                   .idleTime(idleTime)
                                   .timeout(timeout)
@@ -89,9 +90,9 @@ public abstract class AbstractRestClient implements RestClient {
                                   .build());
     }
 
-    public AbstractRestClient(String url, String user, String password, int timeout, int maxConns,
-                              int maxConnsPerRoute, String trustStoreFile,
-                              String trustStorePassword) {
+    public AbstractRestClient(String url, String user, String password, int timeout,
+                              int maxConns, int maxConnsPerRoute,
+                              String trustStoreFile, String trustStorePassword) {
         this(url, RestClientConfig.builder()
                                   .user(user).password(password)
                                   .timeout(timeout)
@@ -102,9 +103,9 @@ public abstract class AbstractRestClient implements RestClient {
                                   .build());
     }
 
-    public AbstractRestClient(String url, String token, int timeout, int maxConns,
-                              int maxConnsPerRoute, String trustStoreFile,
-                              String trustStorePassword) {
+    public AbstractRestClient(String url, String token, int timeout,
+                              int maxConns, int maxConnsPerRoute,
+                              String trustStoreFile, String trustStorePassword) {
         this(url, RestClientConfig.builder()
                                   .token(token)
                                   .timeout(timeout)
@@ -136,7 +137,8 @@ public abstract class AbstractRestClient implements RestClient {
         RequestBody requestBody = RequestBody.create(bodyContent.getBytes(),
                                                      MediaType.parse(contentType));
 
-        if (headers != null && "gzip".equals(headers.get(HttpHeadersConstant.CONTENT_ENCODING))) {
+        if (headers != null &&
+            "gzip".equals(headers.get(HttpHeadersConstant.CONTENT_ENCODING))) {
             requestBody = gzipBody(requestBody);
         }
         return requestBody;
@@ -184,7 +186,7 @@ public abstract class AbstractRestClient implements RestClient {
         if (config.getMaxIdleConns() != null || config.getIdleTime() != null) {
             ConnectionPool connectionPool = new ConnectionPool(config.getMaxIdleConns(),
                                                                config.getIdleTime(),
-                                                               TimeUnit.MINUTES);
+                                                               config.getIdleTimeUnit());
             builder.connectionPool(connectionPool);
         }
 
@@ -246,7 +248,7 @@ public abstract class AbstractRestClient implements RestClient {
         return this.post(path, object, null, params);
     }
 
-    private Request.Builder getRequestBuilder(String path, String id, RestHeaders headers,
+    private Request.Builder genRequestBuilder(String path, String id, RestHeaders headers,
                                               Map<String, Object> params) {
         HttpUrl.Builder urlBuilder = Objects.requireNonNull(HttpUrl.parse(this.baseUrl))
                                             .newBuilder()
@@ -282,6 +284,9 @@ public abstract class AbstractRestClient implements RestClient {
         return builder;
     }
 
+    /**
+     * In order to provide subclasses with overloading opportunities
+     */
     protected Request.Builder newRequestBuilder() {
         return new Request.Builder();
     }
@@ -290,7 +295,7 @@ public abstract class AbstractRestClient implements RestClient {
     @Override
     public RestResult post(String path, Object object, RestHeaders headers,
                            Map<String, Object> params) {
-        Request.Builder requestBuilder = getRequestBuilder(path, null, headers, params);
+        Request.Builder requestBuilder = genRequestBuilder(path, null, headers, params);
         requestBuilder.post(buildRequestBody(object, headers));
 
         try (Response response = request(requestBuilder)) {
@@ -319,7 +324,7 @@ public abstract class AbstractRestClient implements RestClient {
     public RestResult put(String path, String id, Object object,
                           RestHeaders headers,
                           Map<String, Object> params) {
-        Request.Builder requestBuilder = getRequestBuilder(path, id, headers, params);
+        Request.Builder requestBuilder = genRequestBuilder(path, id, headers, params);
         requestBuilder.put(buildRequestBody(object, headers));
 
         try (Response response = request(requestBuilder)) {
@@ -345,7 +350,7 @@ public abstract class AbstractRestClient implements RestClient {
 
     @SneakyThrows
     private RestResult get(String path, String id, Map<String, Object> params) {
-        Request.Builder requestBuilder = getRequestBuilder(path, id, null, params);
+        Request.Builder requestBuilder = genRequestBuilder(path, id, null, params);
 
         try (Response response = request(requestBuilder)) {
             checkStatus(response, 200);
@@ -366,7 +371,7 @@ public abstract class AbstractRestClient implements RestClient {
     @SneakyThrows
     private RestResult delete(String path, String id,
                               Map<String, Object> params) {
-        Request.Builder requestBuilder = getRequestBuilder(path, id, null, params);
+        Request.Builder requestBuilder = genRequestBuilder(path, id, null, params);
         requestBuilder.delete();
 
         try (Response response = request(requestBuilder)) {

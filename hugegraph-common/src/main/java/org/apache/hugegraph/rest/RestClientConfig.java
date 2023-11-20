@@ -34,8 +34,8 @@ public class RestClientConfig {
     private Integer timeout;
     private Integer maxConns;
     private Integer maxConnsPerRoute;
-    private Integer idleTime = 5;
-    private TimeUnit idleTimeUnit = TimeUnit.MINUTES;
+    private Integer idleTime = 30;
+    private TimeUnit idleTimeUnit = TimeUnit.SECONDS;
     private Integer maxIdleConns = 5;
     private String trustStoreFile;
     private String trustStorePassword;
