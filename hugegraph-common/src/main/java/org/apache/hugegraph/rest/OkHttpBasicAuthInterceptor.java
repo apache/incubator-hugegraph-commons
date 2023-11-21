@@ -19,8 +19,6 @@ package org.apache.hugegraph.rest;
 
 import java.io.IOException;
 
-import org.apache.hugegraph.rest.RestHeaders.HttpHeadersConstant;
-
 import okhttp3.Credentials;
 import okhttp3.Interceptor;
 import okhttp3.Request;
@@ -37,9 +35,9 @@ public class OkHttpBasicAuthInterceptor implements Interceptor {
     @Override
     public Response intercept(Chain chain) throws IOException {
         Request request = chain.request();
-        if (request.header(HttpHeadersConstant.AUTHORIZATION) == null) {
+        if (request.header(RestHeaders.AUTHORIZATION) == null) {
             Request authenticatedRequest = request.newBuilder()
-                                                  .header(HttpHeadersConstant.AUTHORIZATION,
+                                                  .header(RestHeaders.AUTHORIZATION,
                                                           this.credentials)
                                                   .build();
             return chain.proceed(authenticatedRequest);

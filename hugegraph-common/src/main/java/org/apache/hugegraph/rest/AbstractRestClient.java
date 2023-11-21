@@ -37,7 +37,6 @@ import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.hugegraph.rest.RestHeaders.HttpHeadersConstant;
 import org.apache.hugegraph.util.JsonUtil;
 import org.jetbrains.annotations.NotNull;
 
@@ -125,7 +124,7 @@ public abstract class AbstractRestClient implements RestClient {
     private static RequestBody buildRequestBody(Object body, RestHeaders headers) {
         String contentType = parseContentType(headers);
         String bodyContent;
-        if (HttpHeadersConstant.APPLICATION_JSON.equals(contentType)) {
+        if (RestHeaders.APPLICATION_JSON.equals(contentType)) {
             if (body == null) {
                 bodyContent = "{}";
             } else {
@@ -138,7 +137,7 @@ public abstract class AbstractRestClient implements RestClient {
                                                      MediaType.parse(contentType));
 
         if (headers != null &&
-            "gzip".equals(headers.get(HttpHeadersConstant.CONTENT_ENCODING))) {
+            "gzip".equals(headers.get(RestHeaders.CONTENT_ENCODING))) {
             requestBody = gzipBody(requestBody);
         }
         return requestBody;
@@ -167,12 +166,12 @@ public abstract class AbstractRestClient implements RestClient {
 
     private static String parseContentType(RestHeaders headers) {
         if (headers != null) {
-            String contentType = headers.get(HttpHeadersConstant.CONTENT_TYPE);
+            String contentType = headers.get(RestHeaders.CONTENT_TYPE);
             if (contentType != null) {
                 return contentType;
             }
         }
-        return HttpHeadersConstant.APPLICATION_JSON;
+        return RestHeaders.APPLICATION_JSON;
     }
 
     private OkHttpClient buildOkHttpClient(RestClientConfig config) {
@@ -186,7 +185,7 @@ public abstract class AbstractRestClient implements RestClient {
         if (config.getMaxIdleConns() != null || config.getIdleTime() != null) {
             ConnectionPool connectionPool = new ConnectionPool(config.getMaxIdleConns(),
                                                                config.getIdleTime(),
-                                                               config.getIdleTimeUnit());
+                                                               TimeUnit.SECONDS);
             builder.connectionPool(connectionPool);
         }
 
@@ -415,7 +414,7 @@ public abstract class AbstractRestClient implements RestClient {
         // Add auth header
         String auth = this.getAuthContext();
         if (StringUtils.isNotEmpty(auth)) {
-            builder.addHeader(HttpHeadersConstant.AUTHORIZATION, auth);
+            builder.addHeader(RestHeaders.AUTHORIZATION, auth);
         }
     }
 
