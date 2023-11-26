@@ -218,8 +218,7 @@ public class AssertTest extends BaseUnitTest {
                 Assert.assertEquals("fake-error-typo", e.getMessage());
             });
             Assert.fail("Expect error");
-        } catch (Exception e) {
-            Assert.assertInstanceOf(RuntimeException.class, e); // not AssertionError
+        } catch (AssertionError e) {
             Assert.assertContains("expected:<fake-error[-typo]> but was:<fake-error[]>",
                                   e.getMessage());
         }

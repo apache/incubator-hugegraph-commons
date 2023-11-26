@@ -17,11 +17,9 @@
 
 package org.apache.hugegraph.testutil;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
-import org.apache.hugegraph.util.ExceptionUtil;
 import org.hamcrest.BaseMatcher;
 import org.hamcrest.CoreMatchers;
 import org.hamcrest.Description;
@@ -38,44 +36,36 @@ public class Assert extends org.junit.Assert {
         void accept(T t) throws Throwable;
     }
 
-    public static Throwable assertThrows(Class<? extends Throwable> throwable,
-                                         ThrowableRunnable runnable) {
-        CompletableFuture<Throwable> future = assertThrowsFuture(throwable, runnable);
-        future.thenAccept(System.err::println);
-        return ExceptionUtil.futureGet(future);
-    }
-
-    public static void assertThrows(Class<? extends Throwable> throwable,
+    public static void assertThrows(Class<? extends Throwable> clazz,
                                     ThrowableRunnable runnable,
                                     Consumer<Throwable> exceptionConsumer) {
-        CompletableFuture<Throwable> future = assertThrowsFuture(throwable, runnable);
-        CompletableFuture<Void> futureConsumer = future.thenAccept(exceptionConsumer);
-        ExceptionUtil.futureGet(futureConsumer);
+        Throwable expectedException = assertThrows(clazz, runnable);
+        assert expectedException != null;
+        exceptionConsumer.accept(expectedException);
     }
 
-    public static CompletableFuture<Throwable> assertThrowsFuture(
-                                               Class<? extends Throwable> clazz,
-                                               ThrowableRunnable runnable) {
-        CompletableFuture<Throwable> future = new CompletableFuture<>();
-        boolean noException = false;
+    public static Throwable assertThrows(Class<? extends Throwable> clazz,
+                                         ThrowableRunnable runnable) {
         try {
+            // expect throwing here
             runnable.run();
-            noException = true;
         } catch (Throwable e) {
             if (!clazz.isInstance(e)) {
-                Assert.fail(String.format(
-                            "Bad exception type %s(expected %s)",
-                            e.getClass().getName(), clazz.getName()));
+                // exception type not matched
+                Assert.fail(String.format("Bad exception type %s(expected %s)",
+                                          e.getClass().getName(), clazz.getName()));
             }
-            future.complete(e);
+
+            return e;
         }
-        if (noException) {
-            String msg = String.format("No exception was thrown(expected %s)",
-                                       clazz.getName());
-            future.completeExceptionally(new AssertionError(msg));
-            Assert.fail(msg);
-        }
-        return future;
+
+        // no exception
+        Assert.fail(String.format("No exception was thrown(expected %s)",
+                                  clazz.getName()));
+
+        // unavailable
+        assert false;
+        return null;
     }
 
     public static void assertEquals(byte expected, Object actual) {
