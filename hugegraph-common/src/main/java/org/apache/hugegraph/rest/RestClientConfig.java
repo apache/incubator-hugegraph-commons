@@ -40,7 +40,7 @@ public class RestClientConfig {
     private Integer timeout;
     /** unit in milliseconds */
     private Integer connectTimeout;
-    // unit in milliseconds
+    /** unit in milliseconds */
     private Integer readTimeout;
     private Integer maxConns;
     private Integer maxConnsPerRoute;
