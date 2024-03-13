@@ -324,17 +324,18 @@ public class RestClientTest {
     @SneakyThrows
     @Test
     public void testBuilderCallback() {
-        //default config
+        // default configs
         MockRestClientImpl restClient = new MockRestClientImpl(TEST_URL,
                                                                RestClientConfig.builder().build());
         OkHttpClient okHttpClient = Whitebox.getInternalState(restClient, "client");
         Assert.assertEquals(okHttpClient.connectTimeoutMillis(), 10000);
         Assert.assertEquals(okHttpClient.readTimeoutMillis(), 10000);
 
-        //set config by builderCallback
+        // set config by (user)builderCallback
         RestClientConfig config = RestClientConfig.builder().builderCallback(
                 builder -> builder.connectTimeout(5, TimeUnit.SECONDS)
-                                  .readTimeout(30, TimeUnit.SECONDS)).build();
+                                  .readTimeout(30, TimeUnit.SECONDS))
+                                  .build();
 
         restClient = new MockRestClientImpl(TEST_URL, config);
         okHttpClient = Whitebox.getInternalState(restClient, "client");
