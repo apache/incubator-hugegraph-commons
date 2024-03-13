@@ -331,7 +331,7 @@ public class RestClientTest {
         Assert.assertEquals(okHttpClient.connectTimeoutMillis(), 10000);
         Assert.assertEquals(okHttpClient.readTimeoutMillis(), 10000);
 
-        //set config by builderCallback
+        // set config by (user)builderCallback
         RestClientConfig config = RestClientConfig.builder().builderCallback(
                 builder -> builder.connectTimeout(5, TimeUnit.SECONDS)
                                   .readTimeout(30, TimeUnit.SECONDS))
