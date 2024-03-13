@@ -324,7 +324,7 @@ public class RestClientTest {
     @SneakyThrows
     @Test
     public void testBuilderCallback() {
-        //default config
+        // default configs
         MockRestClientImpl restClient = new MockRestClientImpl(TEST_URL,
                                                                RestClientConfig.builder().build());
         OkHttpClient okHttpClient = Whitebox.getInternalState(restClient, "client");
