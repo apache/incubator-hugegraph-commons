@@ -334,7 +334,8 @@ public class RestClientTest {
         //set config by builderCallback
         RestClientConfig config = RestClientConfig.builder().builderCallback(
                 builder -> builder.connectTimeout(5, TimeUnit.SECONDS)
-                                  .readTimeout(30, TimeUnit.SECONDS)).build();
+                                  .readTimeout(30, TimeUnit.SECONDS))
+                                  .build();
 
         restClient = new MockRestClientImpl(TEST_URL, config);
         okHttpClient = Whitebox.getInternalState(restClient, "client");
