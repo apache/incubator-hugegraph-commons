@@ -211,7 +211,7 @@ public abstract class AbstractRestClient implements RestClient {
         configSsl(builder, this.baseUrl, config.getTrustStoreFile(),
                   config.getTrustStorePassword());
 
-        //execute builder callback before builder.build()
+        // Execute builder callback before builder.build() for user configs
         if (config.getBuilderCallback() != null) {
             config.getBuilderCallback().accept(builder);
         }
