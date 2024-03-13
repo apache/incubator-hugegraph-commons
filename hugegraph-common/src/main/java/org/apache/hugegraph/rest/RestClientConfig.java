@@ -38,7 +38,7 @@ public class RestClientConfig {
      */
     @Deprecated
     private Integer timeout;
-    // unit in milliseconds
+    /** unit in milliseconds */
     private Integer connectTimeout;
     // unit in milliseconds
     private Integer readTimeout;
