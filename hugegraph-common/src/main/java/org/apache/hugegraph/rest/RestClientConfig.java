@@ -34,7 +34,7 @@ public class RestClientConfig {
     private String password;
     private String token;
     /**
-     * @deprecated  use connectTimeout and readTimeout instead
+     * @deprecated use connectTimeout and readTimeout instead
      */
     @Deprecated
     private Integer timeout;

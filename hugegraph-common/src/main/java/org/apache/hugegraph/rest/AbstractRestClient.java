@@ -183,10 +183,10 @@ public abstract class AbstractRestClient implements RestClient {
             builder.connectTimeout(config.getTimeout(), TimeUnit.MILLISECONDS)
                    .readTimeout(config.getTimeout(), TimeUnit.MILLISECONDS);
         }
-        if(config.getConnectTimeout() != null) {
+        if (config.getConnectTimeout() != null) {
             builder.connectTimeout(config.getConnectTimeout(), TimeUnit.MILLISECONDS);
         }
-        if(config.getReadTimeout() != null) {
+        if (config.getReadTimeout() != null) {
             builder.readTimeout(config.getReadTimeout(), TimeUnit.MILLISECONDS);
         }
 
