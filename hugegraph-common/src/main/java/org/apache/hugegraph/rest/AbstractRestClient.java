@@ -19,7 +19,10 @@ package org.apache.hugegraph.rest;
 
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URLEncoder;
 import java.security.KeyStore;
 import java.util.Arrays;
 import java.util.Collection;
@@ -36,6 +39,7 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 import javax.net.ssl.X509TrustManager;
 
+import com.google.common.net.UrlEscapers;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.hugegraph.util.JsonUtilCommon;
 import org.jetbrains.annotations.NotNull;
@@ -408,6 +412,15 @@ public abstract class AbstractRestClient implements RestClient {
             if (this.client.cache() != null) {
                 this.client.cache().close();
             }
+        }
+    }
+
+    public static String encode(String raw) {
+        try {
+            URI uri = new URI(null, null, raw, null);
+            return uri.toASCIIString();
+        } catch (URISyntaxException e) {
+            throw new IllegalArgumentException("Failed to encode string: " + raw, e);
         }
     }
 
