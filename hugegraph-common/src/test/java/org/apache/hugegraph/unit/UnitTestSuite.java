@@ -83,6 +83,7 @@ import org.apache.hugegraph.unit.util.VersionUtilTest;
     EventHubTest.class,
     PerfUtilTest.class,
     StopwatchTest.class,
+    AbstractRestClientTest.class,
     RestClientTest.class,
     RestResultTest.class,
     VersionTest.class,
