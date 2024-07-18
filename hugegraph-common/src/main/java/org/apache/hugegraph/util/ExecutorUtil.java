@@ -49,7 +49,7 @@ public final class ExecutorUtil {
                 unit,
                 workQueue,
                 factory,
-                new ThreadPoolExecutor.CallerRunsPolicy() // 饱和策略
+                new ThreadPoolExecutor.CallerRunsPolicy()
         );
 
         workQueue.setThreadPoolExecutor(threadPoolExecutor);
