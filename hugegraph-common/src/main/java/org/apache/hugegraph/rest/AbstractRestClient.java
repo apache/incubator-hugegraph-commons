@@ -416,14 +416,7 @@ public abstract class AbstractRestClient implements RestClient {
 
     public static String encode(String raw) {
         try {
-            String encoded = URLEncoder.encode(raw, StandardCharsets.UTF_8.toString());
-            return encoded.replace("+", "%2B")
-                    .replace(" ", "%20")
-                    .replace("/", "%2F")
-                    .replace("?", "%3F")
-                    .replace("#", "%23")
-                    .replace("&", "%26")
-                    .replace("=", "%3D");
+            return URLEncoder.encode(raw, StandardCharsets.UTF_8.toString()).replace("+", "%2B");
         } catch (UnsupportedEncodingException e) {
             throw new IllegalArgumentException("Failed to encode string: " + raw, e);
         }
