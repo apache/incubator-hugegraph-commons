@@ -26,7 +26,7 @@ public class AbstractRestClientTest {
     @Test
     public void testEncodeWithSpaces() {
         String raw = "hello world";
-        String expected = "hello%20world";
+        String expected = "hello%2Bworld";
         String encoded = AbstractRestClient.encode(raw);
         Assert.assertEquals(expected, encoded);
     }
