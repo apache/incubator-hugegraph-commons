@@ -23,8 +23,8 @@ github:
     wiki: true
     # Enable projects for project management boards
     projects: true
-  description: Please visit Apache HugeGraph, Thanks
-  homepage: https://github.com/apache/incubator-hugegraph/tree/master/hugegraph-commons
+  description: (Archived Warning)Please visit "apache/hugegraph" repo instead
+  homepage: https://github.com/apache/hugegraph/tree/master/hugegraph-commons
   del_branch_on_merge: true
   #labels:
 

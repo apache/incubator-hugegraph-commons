@@ -1,5 +1,5 @@
 > [!WARNING]
-> All contents of this repository have been migrated to https://github.com/apache/incubator-hugegraph/tree/master/hugegraph-commons. This repository will be archived soon.
+> All contents of this repository have been migrated to https://github.com/apache/hugegraph/tree/master/hugegraph-commons. This repository will be archived soon.
 
 # hugegraph-commons
 
