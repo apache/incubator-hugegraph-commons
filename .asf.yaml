@@ -23,8 +23,8 @@ github:
     wiki: true
     # Enable projects for project management boards
     projects: true
-  description: HugeGraph Commons - include common library & RPC module
-  homepage: https://hugegraph.apache.org/
+  description: (Archived Warning)Please visit "apache/hugegraph" repo instead
+  homepage: https://github.com/apache/hugegraph/tree/master/hugegraph-commons
   del_branch_on_merge: true
   #labels:
 

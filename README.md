@@ -1,3 +1,6 @@
+> [!WARNING]
+> All contents of this repository have been migrated to https://github.com/apache/hugegraph/tree/master/hugegraph-commons. This repository will be archived soon.
+
 # hugegraph-commons
 
 [![License](https://img.shields.io/badge/license-Apache%202-0E78BA.svg)](https://www.apache.org/licenses/LICENSE-2.0.html)
