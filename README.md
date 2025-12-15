@@ -64,6 +64,7 @@ Same as HugeGraph, hugegraph-commons are also licensed under [Apache 2.0](./LICE
 
  - [GitHub Issues](https://github.com/apache/incubator-hugegraph-commons/issues): Feedback on usage issues and functional requirements (quick response)
  - Feedback Email: [dev@hugegraph.apache.org](mailto:dev@hugegraph.apache.org) ([subscriber](https://hugegraph.apache.org/docs/contribution-guidelines/subscribe/) only)
+ - Slack: [join the ASF HugeGraph channel](https://the-asf.slack.com/archives/C059UU2FJ23)
  - WeChat public account: Apache HugeGraph, welcome to scan this QR code to follow us.
 
  <img src="https://raw.githubusercontent.com/apache/incubator-hugegraph-doc/master/assets/images/wechat.png" alt="QR png" width="350"/>
